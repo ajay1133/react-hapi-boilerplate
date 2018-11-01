@@ -1,0 +1,24 @@
+#!/bin/sh
+source /home/ec2-user/.bash_profile
+PATH=$PATH:/usr/local/bin
+app_name=fan
+app_home=/home/ec2-user/$app_name
+
+echo "==> cd to $app_home"
+cd $app_home
+
+echo "==> install npm packages..."
+
+export NODE_ENV=production
+
+. ./bin/live/tag-env-vars
+
+npm install --production
+
+
+echo "==> Running Migrations.."
+
+./node_modules/.bin/sequelize db:migrate
+./node_modules/.bin/sequelize db:seed:all
+
+echo "*** done ***"

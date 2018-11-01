@@ -1,0 +1,11 @@
+- invitelink = '' + model.invitelink
+doctype html
+html(lang='en')
+  head
+    meta(charset='utf-8')
+    title account confirmation email
+  body
+    p(style='font-size:10px;color:#000000;margin-bottom:10px;padding-top:5px;text-align:center;')
+      p Hi #{model.name},
+      p You are invited to join fan engagement and create new events
+      a(href=invitelink, title='Accept Invitation', style='text-decoration:none;') Accept Invitation

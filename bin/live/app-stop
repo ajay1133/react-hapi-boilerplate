@@ -1,0 +1,13 @@
+#!/bin/bash
+source /home/ec2-user/.bash_profile
+PATH=$PATH:/usr/local/bin
+app_name=fan
+apps=($app_name-api)
+
+for i in "${apps[@]}"
+do
+    if pm2 list | grep $i > /dev/null
+    then
+        pm2 stop $i
+    fi
+done

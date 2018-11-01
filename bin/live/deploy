@@ -1,0 +1,57 @@
+#!/bin/sh
+
+orig_path=`pwd`
+source_dir=$(cd "$(dirname "$0")"; pwd)
+
+
+bucket="deploy.fan.com"
+
+app_name=fan
+build_version=`date +"%Y-%m-%d-%H%M%S"`
+build_dir=./build_dir
+build_file=$app_name-$build_version.zip
+
+cd $source_dir
+cd ../../
+
+echo "==> Creating build "
+npm run build
+
+echo "Creating build"
+rm -rf $build_dir
+mkdir -p $build_dir
+
+cp ./bin/live/appspec.yml $build_dir
+
+cp -R ./bin $build_dir
+cp -R ./api $build_dir
+cp -R ./config $build_dir
+
+cp ./package.json $build_dir
+cp ./.sequelizerc $build_dir
+cp ./api.js $build_dir
+cp ./.babelrc $build_dir
+
+echo "Creating a new revision..."
+
+aws --profile fan-deploy \
+  deploy push \
+  --no-ignore-hidden-files \
+  --application-name $app_name \
+  --s3-location s3://$bucket/$app_name/$build_file \
+  --source $build_dir
+
+rm -rf $build_dir
+
+echo "*** Revision: s3://$bucket/$app_name/$build_file"
+
+echo "Creating Deployment"
+aws --profile fan-deploy deploy create-deployment \
+  --application-name $app_name \
+  --deployment-config-name CodeDeployDefault.AllAtOnce \
+  --deployment-group-name Live \
+  --s3-location bundleType=zip,bucket=$bucket,key=$app_name/$build_file
+
+aws --profile fan-deploy s3 sync build/ s3://app.fan.com  --cache-control max-age=3600
+
+cd $orig_path

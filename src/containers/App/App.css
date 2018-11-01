@@ -1,0 +1,81 @@
+
+.ml-05{
+  margin-left:5px !important;
+}
+
+
+
+.ui.visible.thin.left.sidebar ~ .fixed, .ui.visible.thin.left.sidebar ~ .pusher {
+  -webkit-transform: translate3d(300px, 0, 0) !important;
+  transform: translate3d(300px, 0, 0) !important;
+}
+.full-height{
+ height: 100%;
+}
+#root {
+  height: 100%;
+}
+.fan-sidebar {
+  background: #eeeeee;
+  height: '100vh';
+}
+.ui.thin.left.sidebar, .ui.thin.right.sidebar {
+  width: 300px;
+  background-color: #F4F5F7;
+  box-shadow: 0 0 1px 1px #D1E6FB;
+}
+.pushable .ui.visible.overlay.sidebar ~ .pusher {
+  padding-right: 300px;
+  padding-left: 20px;
+}
+.ui.borderless.menu {
+  border: transparent;
+  box-shadow: none;
+}
+.ui.right.floated {
+  float: right;
+}
+.ui.basic.table {
+  background: transparent;
+  border: 0px solid rgba(34, 36, 38, 0.15);
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+.ui.celled.table tr th, .ui.celled.table tr td {
+  border-left: 0px solid rgba(34, 36, 38, 0.1);
+}
+a {
+  color: #091E42;
+  text-decoration: none;
+}
+
+.ui.table thead th{
+  border-bottom: 1px solid rgb(33, 33, 33);
+}
+.ui.table thead th.active.sortDesc {
+  border-bottom: 2px solid #3981D9;
+ }
+
+
+.ui.table thead th.active.sortDesc ~ i.sort.amount.down.icon{
+  color: blue !important;
+}
+
+a.ui.basic.button.page-item.active {
+  background: transparent !important;
+  border: 0px !important;
+  box-shadow: none;
+  font-weight: bold;
+}
+
+.pagination .ui.right.floated.menu {
+  float: right;
+  margin: 0rem 0rem 0rem 0.5rem;
+  box-shadow: none;
+  border-radius: 30px;
+  border: transparent;
+  background-color: #EEEEEE;
+}
+.ui.icon.buttons .button > .icon, .ui.icon.button > .icon {
+  vertical-align: middle;
+}

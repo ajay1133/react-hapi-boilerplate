@@ -1,0 +1,4 @@
+{
+  "name": "ForgotPasswordMailer",
+  "main": "forgotPassword.js"
+}

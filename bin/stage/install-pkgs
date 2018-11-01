@@ -1,0 +1,24 @@
+#!/bin/sh
+source /home/ec2-user/.bash_profile
+PATH=$PATH:/usr/local/bin
+app_name=fan
+app_home=/home/ec2-user/$app_name
+
+echo "==> cd to $app_home"
+cd $app_home
+
+echo "==> install npm packages..."
+
+export NODE_ENV=staging
+
+. ./bin/stage/tag-env-vars
+
+npm install --production
+npm install -g sequelize-cli
+
+echo "==> Running Migrations.."
+
+sequelize db:migrate
+sequelize db:seed:all
+
+echo "*** done ***"
