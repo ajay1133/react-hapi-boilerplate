@@ -97,6 +97,7 @@
     "yar": "^9.0.1"
   },
   "scripts": {
+    "db": "sequelize db:create && sequelize db:migrate && sequelize db:seed:all",
     "dev-api": "node api",
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",

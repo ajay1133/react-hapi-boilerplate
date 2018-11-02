@@ -21,7 +21,7 @@ module.exports = {
     }
   },
   BasePath:{
-    host: "http://fan.simsaw.com"
+    host: "http://compass.simsaw.com"
   },
   emailUrl: {
     host: 'smtps://username:password@smtp.example.com/?pool=true'
