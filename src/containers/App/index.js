@@ -10,31 +10,31 @@ import 'semantic-ui-css/semantic.css';
 import '../../style/css/style.css';
 
 class App extends Component {
-	render () {
-		const { history, isShow = true } = this.props;
+    render () {
+		    const { history, isShow = true } = this.props;
 		
-		return (
-      <div className="full-height">
-          <Sidebar.Pushable as={ Segment }>
+        return (
+          <div className="full-height">
+            <Sidebar.Pushable as={Segment}>
               <Sidebar.Pusher>
-                  <Segment basic>
-										{
-											isShow &&
+                <Segment basic>
+                  {
+                      isShow &&
                       <Grid>
-                          <Grid.Row>
-                              <Grid.Column width={16} className="pt-20 pb-30">
-                                  <NavBar isShow={ isShow }/>
+                      <Grid.Row>
+                          <Grid.Column width={16} className="pt-20 pb-30">
+                              <NavBar isShow={isShow}/>
                               </Grid.Column>
                           </Grid.Row>
                       </Grid>
-										}
-										<ConnectedRouter history={ history }>{ routes }</ConnectedRouter>
-                  </Segment>
+                  }
+                  <ConnectedRouter history={history}>{ routes }</ConnectedRouter>
+                </Segment>
               </Sidebar.Pusher>
-          </Sidebar.Pushable>
-      </div>
-		);
-	}
+            </Sidebar.Pushable>
+          </div>
+        );
+    }
 }
 
 App.propTypes = {

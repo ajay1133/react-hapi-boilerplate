@@ -47,12 +47,11 @@ export default function reducer(state = initialState, action) {
 export const pullBitBucketRepositories = () => async (dispatch, getState, api) => {
 	const user = getState().get('auth').get('user');
 	
-	debugger;
 	dispatch({ type: LOAD });
 	
 	try {
 		const res = await api.get('/repositoriesGet');
-		debugger;
+		
 		if (!res.values) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull repositories' });
 			return;

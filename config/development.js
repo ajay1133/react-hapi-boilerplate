@@ -11,11 +11,15 @@ module.exports = {
   redis: {
     host: db.redis.host,
     port: db.redis.port,
-    prefix: 'fan_'
+    prefix: 'com_'
   },
   aws: {
     accessKeyId: db.aws.key,
     secretAccessKey: db.aws.secret,
+  },
+  bitBucket: {
+    accessKeyId: db.bitBucket.key,
+    secretAccessKey: db.bitBucket.secret,
   },
   emailUrl:{
     host: ''

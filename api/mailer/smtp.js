@@ -7,7 +7,7 @@ const config = require('config');
 //For production sesTransport({ ses })
 const transporter = nodemailer.createTransport(sesTransport({ ses }));
 const internals = {};
-const FROM_EMAIL = 'Fan Engagement <mohits@simsaw.com>';
+const FROM_EMAIL = 'Compass <mohits@simsaw.com>';
 
 exports.send = (to, subject, model, templateDir) =>
   new Promise((resolve, reject) => {
