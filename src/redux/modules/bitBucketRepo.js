@@ -4,7 +4,7 @@ const LOAD = 'bitBucketRepo/LOAD';
 const LOAD_SUCCESS = 'bitBucketRepo/LOAD_SUCCESS';
 const LOAD_FAIL = 'bitBucketRepo/LOAD_FAIL';
 
-const PULL_REPO = 'bitBucketRepo/PULL_REPO';
+const BIT_BUCKET_LISTING = 'bitBucketRepo/BIT_BUCKET_LISTING';
 
 const FLUSH = 'bitBucketRepo/FLUSH';
 
@@ -30,9 +30,9 @@ export default function reducer(state = initialState, action) {
 				.set('isLoad', false)
 				.set('loadErr', action.error);
 		
-		case PULL_REPO:
+		case BIT_BUCKET_LISTING:
 			return state
-				.set('repositories', action.repositories);
+				.set('bitBucketList', action.repositories);
 		
 		case FLUSH: {
 			return initialState;
@@ -43,21 +43,20 @@ export default function reducer(state = initialState, action) {
 	}
 }
 
-export const bitBucketListing = () => async (dispatch, getState, api) => {
-	const user = getState().get('auth').get('user');
-	
+export const bitBucketListing = (token) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
+	let params = { token };
 	
 	try {
-		const res = await api.get('/repoListing');
+		const res = await api.get('/repoListing', { params });
 		
-		if (!res.values) {
+		if (!res) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull repositories' });
 			return;
 		}
 		
 		dispatch({ type: LOAD_SUCCESS });
-		dispatch({ type: PULL_REPO, repositories: res.values });
+		dispatch({ type: BIT_BUCKET_LISTING, bitBucketList: res });
 		
 		return res;
 	} catch (error) {

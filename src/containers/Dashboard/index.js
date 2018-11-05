@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import MarkDown from 'markdown-it';
+import Markup from 'react-html-markup';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Button } from 'semantic-ui-react';
@@ -6,11 +8,21 @@ import config from '../../config';
 import { bitBucketListing } from '../../redux/modules/bitBucketRepo';
 
 const { bitBucket } = config;
+const md = MarkDown({
+  html: false,
+  linkify: true,
+  typographer: true
+});
 
 class Dashboard extends Component {
+  state = {
+    token: null
+  };
+  
 	static propTypes = {
 		dispatch: PropTypes.func,
-    location: PropTypes.object
+    location: PropTypes.object,
+    bitBucketList: PropTypes.array
 	};
  
 	getHashParams = (hash) => {
@@ -32,9 +44,12 @@ class Dashboard extends Component {
 	componentDidMount = () => {
 		const { dispatch, location } = this.props;
 		const params = this.getHashParams(location.hash);
-		console.log('Here are params --- ', params);
 		
-		dispatch(bitBucketListing());
+		if (params) {
+		  const token = params.access_token;
+      this.setState({ token });
+      dispatch(bitBucketListing(token));
+    }
 	};
  
 	bitBucketConnect = () => {
@@ -42,9 +57,41 @@ class Dashboard extends Component {
       `https://bitbucket.org/site/oauth2/authorize?client_id=${bitBucket.key}&response_type=token`;
 	};
   
+	getMd = () => {
+    return md.render(`
+# Horizontal Rules
+
+- __[pica](https://nodeca.github.io/pica/demo/)__ - high quality and fast image
+  resize in browser.
+- __[babelfish](https://github.com/nodeca/babelfish/)__ - developer friendly
+  i18n with plurals support and easy syntax.
+
+You will like those projects!
+
+---
+
+# h1 Heading 8-)
+## h2 Heading
+### h3 Heading
+#### h4 Heading
+##### h5 Heading
+###### h6 Heading
+`);
+  };
+  
+  getMdParse = () => {
+    return (
+      <Markup
+        htmlString= { this.getMd() }
+      />
+    );
+  };
+  
   render () {
-	  const { user, isLoad, loadErr, repositories } = this.props;
+	  const { user, isLoad, loadErr, bitBucketList } = this.props;
     
+	  console.log('bitBucketList -------- ', bitBucketList);
+	  
     if (!user || (isLoad && loadErr)) {
       return (
         <div>
@@ -72,13 +119,8 @@ class Dashboard extends Component {
           </div>
   
           <div className="content">
-            {
-	            repositories.map(repo => {
-	              return (
-                  <div>repo.description</div>
-                );
-              })
-            }
+            { this.getMd() }
+            { this.getMdParse() }
           </div>
         </div>
       </div>
@@ -90,5 +132,5 @@ export default connect(state => ({
 	user: state.get('auth').get('user'),
   isLoad: state.get('bitBucketRepo').get('isLoad'),
 	loadErr: state.get('bitBucketRepo').get('loadErr'),
-	repositories: state.get('bitBucketRepo').get('repositories')
+  bitBucketList: state.get('bitBucketRepo').get('bitBucketList')
 }))(Dashboard);
