@@ -50,6 +50,7 @@
     "mysql2": "^1.6.1",
     "nodemailer": "^4.6.8",
     "nodemailer-ses-transport": "^1.5.1",
+    "nodemon": "^1.18.5",
     "object-assign": "4.1.1",
     "postcss-flexbugs-fixes": "3.2.0",
     "postcss-loader": "2.0.8",
@@ -98,7 +99,7 @@
   },
   "scripts": {
     "db": "sequelize db:create && sequelize db:migrate && sequelize db:seed:all",
-    "dev-api": "node api",
+    "dev-api": "nodemon api",
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom"

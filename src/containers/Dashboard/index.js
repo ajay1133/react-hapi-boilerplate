@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Button } from 'semantic-ui-react';
 import config from '../../config';
-import { pullBitBucketRepositories } from '../../redux/modules/bitBucketRepo';
+import { bitBucketListing } from '../../redux/modules/bitBucketRepo';
 
 const { bitBucket } = config;
 
@@ -34,13 +34,12 @@ class Dashboard extends Component {
 		const params = this.getHashParams(location.hash);
 		console.log('Here are params --- ', params);
 		
-		dispatch(pullBitBucketRepositories());
+		dispatch(bitBucketListing());
 	};
  
-	getAccessToken = () => {
-		console.log('I am here');
-		window.location =
-			`https://bitbucket.org/site/oauth2/authorize?client_id=${bitBucket.key}&response_type=token`;
+	bitBucketConnect = () => {
+    window.location =
+      `https://bitbucket.org/site/oauth2/authorize?client_id=${bitBucket.key}&response_type=token`;
 	};
   
   render () {
@@ -62,7 +61,8 @@ class Dashboard extends Component {
           <h3 className="">WELCOME {user.firstName + ' ' + user.lastName}</h3>
         </div>
   
-        <Button className='ui facebook button' style={{ marginLeft: '20px' }} role='button' onClick={ this.getAccessToken }>
+        <Button className='ui facebook button' style={{ marginLeft: '20px' }} role='button'
+                onClick={ this.bitBucketConnect }>
           <i aria-hidden='true' className='bitbucket icon' /> Bitbucket
         </Button>
   

@@ -1,7 +1,9 @@
+const prefix = '/bitBucket';
+
 module.exports = [
   {
-    path: '/repositoriesGet',
+    path: `${prefix}/listing`,
     method: 'GET',
-    config: require('./repositoriesGet'),
+    config: require('./repoListing'),
   }
 ];

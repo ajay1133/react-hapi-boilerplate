@@ -1,4 +1,5 @@
 const prefix = '/account';
+
 module.exports = [
   {
     path: `${prefix}/all`,

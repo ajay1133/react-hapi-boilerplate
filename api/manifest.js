@@ -26,6 +26,10 @@ module.exports = {
         {
           plugin: require('hapi-swagger'),
           options:  {
+            pathPrefixSize: 1,
+            grouping: 'tags',
+            sortTags: 'name',
+            expanded: 'none',
             info: {
               title: `${rootPackage.name} Documentation`,
               version: rootPackage.version,

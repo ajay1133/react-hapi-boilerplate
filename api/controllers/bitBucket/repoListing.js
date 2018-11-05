@@ -12,7 +12,7 @@ module.exports = {
   
   tags: ['api', 'bitBucket'],
   
-  description: 'GET repositories',
+  description: 'Listing of repositories',
   
   notes: 'Returns repositories',
   

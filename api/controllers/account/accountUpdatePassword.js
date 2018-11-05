@@ -11,7 +11,7 @@ module.exports = {
     },
   },
   // auth: 'default',
-  tags: ['api', 'campaign'],
+  tags: ['api', 'account'],
   description: 'Update user',
 
   notes: 'update password',

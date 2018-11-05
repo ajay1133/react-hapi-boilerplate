@@ -9,7 +9,7 @@ module.exports = {
     },
   },
   
-  tags: ['api', 'user'],
+  tags: ['api', 'account'],
   
   description: 'get user',
   
