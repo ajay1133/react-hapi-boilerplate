@@ -18,6 +18,7 @@ const md = MarkDown({
 class Dashboard extends Component {
   state = {
     loading: false,
+    hideRepoListingAreaFlag: false,
     token: null
   };
   
@@ -65,7 +66,15 @@ class Dashboard extends Component {
     window.location =
       `https://bitbucket.org/site/oauth2/authorize?client_id=${bitBucket.key}&response_type=token`;
 	};
- 
+	
+	hideRepoListingArea = () => {
+	  const { hideRepoListingAreaFlag } = this.state;
+	  
+	  this.setState({
+		  hideRepoListingAreaFlag: !hideRepoListingAreaFlag
+    })
+  };
+  
 	getMd = () => md.render();
   
   getMdParse = () => {
@@ -104,7 +113,7 @@ class Dashboard extends Component {
   
   render () {
 	  const { user, isLoad, loadErr, bitBucketList } = this.props;
-	  const { token } = this.state;
+	  const { hideRepoListingAreaFlag, token } = this.state;
 	  
 	  const validUserNameFlag = user && user.firstName && user.lastName;
 	  const loadingCompleteFlag = !isLoad && !loadErr;
@@ -135,10 +144,10 @@ class Dashboard extends Component {
         {
           !token &&
           <Button
-            className='ui facebook button'
+            className='ui facebook button hand-pointer'
             style={{ marginLeft: '20px', marginTop: '-10px' }}
             role='button'
-            onClick={ this.bitBucketConnect }
+            onClick={ () => this.bitBucketConnect() }
           >
             <i aria-hidden='true' className='bitbucket icon' />Fetch Data From BitBucket
           </Button>
@@ -155,9 +164,19 @@ class Dashboard extends Component {
           token &&
           <div className="ui card fluid cardShadow">
             <div className="content pageMainTitle">
-              <h4>{ loadingCompleteFlag ? 'Listing' : 'Loading' } Files From BitBucket Repository</h4>
+              <h4>
+                { loadingCompleteFlag ? 'Listing' : 'Loading' } Files From BitBucket Repository
+                <Button
+                  className='float-right button hand-pointer'
+                  style={{ float: 'right' }}
+                  role='button'
+                  onClick={ () => this.hideRepoListingArea() }
+                >
+		              { hideRepoListingAreaFlag ? 'Expand' : 'Collapse' }
+                </Button>
+              </h4>
               {
-	              loadingCompleteFlag &&
+	              loadingCompleteFlag && !hideRepoListingAreaFlag &&
                 <span>
                   Click on the folder/file icon flag to view the contents. Click on the back icon to go back.
                 </span>
@@ -165,7 +184,7 @@ class Dashboard extends Component {
             </div>
   
             {
-	            validBitBucketListFlag && !!bitBucketList.length &&
+	            validBitBucketListFlag && !!bitBucketList.length && !hideRepoListingAreaFlag &&
               <div className="content">
                 <List>
                   <List.Item>
@@ -205,16 +224,16 @@ class Dashboard extends Component {
             }
             
             {
-	            loadingCompleteFlag && !bitBucketList.length &&
+	            loadingCompleteFlag && !bitBucketList.length && !hideRepoListingAreaFlag &&
               <div className="content">
                 No files found
               </div>
             }
             
             {
-	            !loadingCompleteFlag &&
+	            !loadingCompleteFlag && !hideRepoListingAreaFlag &&
               <div className="content">
-                <Loader active inline='centered' />
+                <Loader active inline='centered'>Loading</Loader>
               </div>
             }
           </div>
