@@ -20,6 +20,7 @@ module.exports = {
   bitBucket: {
     accessKeyId: db.bitBucket.key,
     secretAccessKey: db.bitBucket.secret,
+    basePath: 'https://api.bitbucket.org/2.0/repositories/simsaw/compass-hugo'
   },
   emailUrl:{
     host: ''

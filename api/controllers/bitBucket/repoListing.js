@@ -1,6 +1,7 @@
 const joi = require('joi');
 const boom = require('boom');
 const superagent = require('superagent');
+const config = require('config');
 
 module.exports = {
   plugins: {
@@ -20,19 +21,26 @@ module.exports = {
   validate: {
     query: {
       token: joi.string()
-                .required()
+                .required(),
+      
+      path: joi.string()
+               .allow('')
     },
     options: { abortEarly: false },
   },
   
   handler: async (request, h) => {
-    let res = {};
     const { query } = request;
-    const { token } = query;
+    const { token, path = '' } = query;
+    
+    let res = {};
+    const url = `${config.bitBucket.basePath}/src${path}`;
+    
+    console.log(' ====== url ---- ', url);
     
     try {
-      res = await superagent.get('https://api.bitbucket.org/2.0/repositories/simsaw/compass-hugo/src')
-                            .set('Authorization', 'Bearer' + token);
+      res = await superagent.get(url)
+                            .set('Authorization', `Bearer ${token}`);
     } catch(err) {
       return boom.badRequest(err);
     }

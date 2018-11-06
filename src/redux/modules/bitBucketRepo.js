@@ -32,7 +32,7 @@ export default function reducer(state = initialState, action) {
 		
 		case BIT_BUCKET_LISTING:
 			return state
-				.set('bitBucketList', action.repositories);
+				.set('bitBucketList', action.result);
 		
 		case FLUSH: {
 			return initialState;
@@ -43,23 +43,20 @@ export default function reducer(state = initialState, action) {
 	}
 }
 
-export const bitBucketListing = (token) => async (dispatch, getState, api) => {
+export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
-	let params = { token };
-	
-	try {
-		const res = await api.get('/repoListing', { params });
-		
-		if (!res) {
+  let res = {};
+  
+  try {
+		res = await api.get('/bitBucket/listing', { params });
+    if (!res) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull repositories' });
 			return;
 		}
-		
-		dispatch({ type: LOAD_SUCCESS });
-		dispatch({ type: BIT_BUCKET_LISTING, bitBucketList: res });
-		
-		return res;
+		dispatch({ type: BIT_BUCKET_LISTING, result: res });
+    dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 	}
+  return res;
 };
