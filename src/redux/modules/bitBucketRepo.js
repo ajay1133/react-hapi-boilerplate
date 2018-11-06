@@ -12,7 +12,8 @@ const FLUSH = 'bitBucketRepo/FLUSH';
 const initialState = Immutable.fromJS({
 	isLoad: false,
 	loadErr: null,
-	repositories: []
+	repositories: [],
+	bitBucketView: null
 });
 
 export default function reducer(state = initialState, action) {
@@ -71,14 +72,17 @@ export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 
 export const bitBucketView = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
-  let res = {};
+ 
+	let res = {};
   
   try {
 		res = await api.get('/bitBucket/view', { params });
+		
     if (!res) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull file' });
 			return;
 		}
+		
 		dispatch({ type: BIT_BUCKET_VIEW, result: res.data });
     dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {

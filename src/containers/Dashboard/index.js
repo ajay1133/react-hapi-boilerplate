@@ -3,7 +3,7 @@ import MarkDown from 'markdown-it';
 import Markup from 'react-html-markup';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Button, List, Dimmer, Loader, Container, Divider } from 'semantic-ui-react';
+import { Button, List, Loader, Modal, Icon } from 'semantic-ui-react';
 import config from '../../config';
 import { getHashParams } from '../../utils/commonutils';
 import { bitBucketListing, bitBucketView } from '../../redux/modules/bitBucketRepo';
@@ -20,6 +20,8 @@ class Dashboard extends Component {
   state = {
     loading: false,
     hideRepoListingAreaFlag: false,
+    modalOpenFlag: false,
+	  modalHeader: null,
     token: null
   };
   
@@ -34,7 +36,9 @@ class Dashboard extends Component {
     const { dispatch, location } = this.props;
     const params = getHashParams(location.hash);
     
-    if (params) {
+    const validParamsFlag = params && Object.keys(params).length && params.access_token;
+    
+    if (validParamsFlag) {
       const token = params.access_token;
       
       this.setState({
@@ -61,26 +65,30 @@ class Dashboard extends Component {
     })
   };
   
-  getMd = () => md.render();
+  getMd = (content) => md.render(content);
   
-  getMdParse = () => {
-    return (
-      <Markup
-        htmlString= { this.getMd() }
-      />
-    );
-  };
-  
-  getBitBucketData = (e, href, type) => {
+  getBitBucketData = async (e, href, type, displayName) => {
     const { dispatch } = this.props;
     const { token } = this.state;
-    const listData = Object.assign({}, { token, path: href.split('/src')[1] });
+    
+    const listData = Object.assign({}, {
+      token,
+      path: href.split('/src')[1]
+    });
+    
+    this.setState({ loading: true });
     
     if (type === 'commit_directory') {
-      dispatch(bitBucketListing(listData));
+      await dispatch(bitBucketListing(listData));
     } else {
-      dispatch(bitBucketView(listData));
+      await dispatch(bitBucketView(listData));
     }
+    
+    this.setState({
+      loading: false,
+      modalOpenFlag: type !== 'commit_directory',
+      modalHeader: type !== 'commit_directory' ? displayName : null
+    });
   };
   
   getLevelUp = (repo) => {
@@ -99,11 +107,18 @@ class Dashboard extends Component {
     }
   };
   
+  modalClose = () => {
+    const { modalOpenFlag } = this.state;
+    
+    this.setState({
+      modalOpenFlag: !modalOpenFlag
+    });
+  };
+  
   render () {
     const { user, isLoad, loadErr, bitBucketList, bitBucketView } = this.props;
-	  const { hideRepoListingAreaFlag, token } = this.state;
+	  const { loading, hideRepoListingAreaFlag, modalHeader, modalOpenFlag, token } = this.state;
     
-    const validUserNameFlag = user && user.firstName && user.lastName;
     const loadingCompleteFlag = !isLoad && !loadErr;
     const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList);
     
@@ -111,7 +126,10 @@ class Dashboard extends Component {
       return (
         <div>
           {
-            user && <h3>An Error Occurred : { loadErr }</h3>
+            user && <span style={{ color: 'red' }}>An Error Occurred : { loadErr }</span>
+          }
+          {
+            !user && <span style={{ color: 'red' }}>Session Expired</span>
           }
         </div>
       );
@@ -123,7 +141,7 @@ class Dashboard extends Component {
           !token &&
           <Button
             className='ui facebook button hand-pointer'
-            style={{ marginLeft: '20px', marginTop: '-10px' }}
+            style={{ marginTop: '-10px' }}
             role='button'
             onClick={ () => this.bitBucketConnect() }
           >
@@ -157,7 +175,7 @@ class Dashboard extends Component {
               {
 	              loadingCompleteFlag && !hideRepoListingAreaFlag &&
                 <span>
-                  Click on the folder/file icon flag to view the contents. Click on the back icon to go back.
+                  Click on the name/icon to view the contents. Click on the back icon to go back.
                 </span>
               }
             </div>
@@ -182,7 +200,12 @@ class Dashboard extends Component {
                               <List.Item
                                 as='a'
                                 key={idx}
-                                onClick={ (e) => this.getBitBucketData(e, repo.links.self.href, repo.type) }
+                                onClick={ (e) => this.getBitBucketData(
+                                  e,
+                                  repo.links.self.href,
+                                  repo.type,
+                                  repo.path.split('/').pop()
+                                ) }
                               >
                                 <List.Icon
                                   size='large'
@@ -221,13 +244,33 @@ class Dashboard extends Component {
           </div>
         }
   
-        <Container textAlign='justified'>
-          <b>Justified</b>
-          <Divider />
-          <p>
-            { bitBucketView }
-          </p>
-        </Container>
+        {
+	        !loading && loadingCompleteFlag && modalOpenFlag &&
+          <Modal
+            open={ true }
+            dimmer="blurring"
+            closeOnEscape={ true }
+            closeOnDimmerClick={ true }
+            onClose={ () => this.modalClose() }
+            size="large"
+          >
+            <Modal.Header>
+              {
+                <span><Icon name='file' size='large' /><span style={{ marginLeft: '5px' }}>{ modalHeader }</span></span>
+              }
+            </Modal.Header>
+            <Modal.Content>
+              {
+                bitBucketView &&
+                <Markup htmlString= { this.getMd(bitBucketView) } />
+              }
+	            {
+		            !bitBucketView &&
+                <span style={{ color: 'red' }}>Error fetching content</span>
+	            }
+            </Modal.Content>
+          </Modal>
+        }
       </div>
     );
   }
