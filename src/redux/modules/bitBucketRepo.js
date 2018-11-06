@@ -5,6 +5,7 @@ const LOAD_SUCCESS = 'bitBucketRepo/LOAD_SUCCESS';
 const LOAD_FAIL = 'bitBucketRepo/LOAD_FAIL';
 
 const BIT_BUCKET_LISTING = 'bitBucketRepo/BIT_BUCKET_LISTING';
+const BIT_BUCKET_VIEW = 'bitBucketRepo/BIT_BUCKET_VIEW';
 
 const FLUSH = 'bitBucketRepo/FLUSH';
 
@@ -34,6 +35,10 @@ export default function reducer(state = initialState, action) {
 			return state
 				.set('bitBucketList', action.result);
 		
+		case BIT_BUCKET_VIEW:
+			return state
+				.set('bitBucketView', action.result);
+		
 		case FLUSH: {
 			return initialState;
 		}
@@ -54,6 +59,24 @@ export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 			return;
 		}
 		dispatch({ type: BIT_BUCKET_LISTING, result: res });
+    dispatch({ type: LOAD_SUCCESS });
+	} catch (error) {
+		dispatch({ type: LOAD_FAIL, error });
+	}
+  return res;
+};
+
+export const bitBucketView = (params) => async (dispatch, getState, api) => {
+	dispatch({ type: LOAD });
+  let res = {};
+  
+  try {
+		res = await api.get('/bitBucket/view', { params });
+    if (!res) {
+			dispatch({ type: LOAD_FAIL, error: 'Unable to pull file' });
+			return;
+		}
+		dispatch({ type: BIT_BUCKET_VIEW, result: res.data });
     dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
