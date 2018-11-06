@@ -14,9 +14,9 @@ module.exports = {
   
   tags: ['api', 'bitBucket'],
   
-  description: 'Listing of repositories',
+  description: 'view of file',
   
-  notes: 'Returns repositories',
+  notes: 'Returns content',
   
   validate: {
     query: {
@@ -33,15 +33,16 @@ module.exports = {
     const { query } = request;
     const { token, path = '' } = query;
     
-    let res = {};
     const url = `${config.bitBucket.basePath}/src${path}`;
     
     try {
-      res = await superagent.get(url)
-                            .set('Authorization', `Bearer ${token}`);
+      const res = await superagent
+        .get(url)
+        .set('Authorization', `Bearer ${token}`);
+      
+	    return h.response({ data: res.text });
     } catch(err) {
       return boom.badRequest(err);
     }
-    return h.response(res.body.values);
   },
 };

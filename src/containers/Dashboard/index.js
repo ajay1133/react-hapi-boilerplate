@@ -3,9 +3,10 @@ import MarkDown from 'markdown-it';
 import Markup from 'react-html-markup';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Button, List, Dimmer, Loader } from 'semantic-ui-react';
+import { Button, List, Dimmer, Loader, Container, Divider } from 'semantic-ui-react';
 import config from '../../config';
-import { bitBucketListing } from '../../redux/modules/bitBucketRepo';
+import { getHashParams } from '../../utils/commonutils';
+import { bitBucketListing, bitBucketView } from '../../redux/modules/bitBucketRepo';
 
 const { bitBucket } = config;
 
@@ -22,50 +23,35 @@ class Dashboard extends Component {
     token: null
   };
   
-	static propTypes = {
-		dispatch: PropTypes.func,
+  static propTypes = {
+    dispatch: PropTypes.func,
     location: PropTypes.object,
-    bitBucketList: PropTypes.array
-	};
- 
-	componentDidMount = () => {
-		const { dispatch, location } = this.props;
-		const params = this.getHashParams(location.hash);
-		
-		if (params) {
-		  const token = params.access_token;
+    bitBucketList: PropTypes.array,
+    bitBucketView: PropTypes.string
+  };
+  
+  componentDidMount = () => {
+    const { dispatch, location } = this.props;
+    const params = getHashParams(location.hash);
     
-		  this.setState({
+    if (params) {
+      const token = params.access_token;
+      
+      this.setState({
         loading: true,
         token
       });
-		  
+      
       dispatch(bitBucketListing({ token }))
         .then(() => this.setState({ loading: false }))
         .catch(() => this.setState({ loading: false }));
     }
-	};
-  
-  getHashParams = (hash) => {
-    let hashParams = {};
-    let e,
-      a = /\+/g,  // Regex for replacing addition symbol with a space
-      r = /([^&;=]+)=?([^&;]*)/g,
-      d = function (s) {
-        return decodeURIComponent(s.replace(a, " "));
-      },
-      q = hash.toString().substring(1);
-    
-    while ((e = r.exec(q)))
-      hashParams[d(e[1])] = d(e[2]);
-    
-    return hashParams;
   };
   
   bitBucketConnect = () => {
     window.location =
       `https://bitbucket.org/site/oauth2/authorize?client_id=${bitBucket.key}&response_type=token`;
-	};
+  };
 	
 	hideRepoListingArea = () => {
 	  const { hideRepoListingAreaFlag } = this.state;
@@ -75,7 +61,7 @@ class Dashboard extends Component {
     })
   };
   
-	getMd = () => md.render();
+  getMd = () => md.render();
   
   getMdParse = () => {
     return (
@@ -88,10 +74,12 @@ class Dashboard extends Component {
   getBitBucketData = (e, href, type) => {
     const { dispatch } = this.props;
     const { token } = this.state;
+    const listData = Object.assign({}, { token, path: href.split('/src')[1] });
     
     if (type === 'commit_directory') {
-      const listData = Object.assign({}, { token, path: href.split('/src')[1] });
       dispatch(bitBucketListing(listData));
+    } else {
+      dispatch(bitBucketView(listData));
     }
   };
   
@@ -112,13 +100,13 @@ class Dashboard extends Component {
   };
   
   render () {
-	  const { user, isLoad, loadErr, bitBucketList } = this.props;
+    const { user, isLoad, loadErr, bitBucketList, bitBucketView } = this.props;
 	  const { hideRepoListingAreaFlag, token } = this.state;
-	  
-	  const validUserNameFlag = user && user.firstName && user.lastName;
-	  const loadingCompleteFlag = !isLoad && !loadErr;
-	  const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList);
-	  
+    
+    const validUserNameFlag = user && user.firstName && user.lastName;
+    const loadingCompleteFlag = !isLoad && !loadErr;
+    const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList);
+    
     if (!user || (isLoad && loadErr)) {
       return (
         <div>
@@ -142,11 +130,12 @@ class Dashboard extends Component {
             <i aria-hidden='true' className='bitbucket icon' />Fetch Data From BitBucket
           </Button>
         }
-  
+        
         {
           !token &&
           <div className="row" style={{ marginTop: '20px' }}>
-            Click on the "Fetch Data From BitBucket" button above to get access from BitBucket where you will need to login to grant access to "your" BitBucket repository
+            Click on the "Fetch Data From BitBucket" button above to get access from BitBucket where you will
+            need to login to grant access to "your" BitBucket repository
           </div>
         }
         
@@ -172,24 +161,24 @@ class Dashboard extends Component {
                 </span>
               }
             </div>
-  
+            
             {
 	            validBitBucketListFlag && !!bitBucketList.length && !hideRepoListingAreaFlag &&
               <div className="content">
                 <List>
                   <List.Item>
-				            { this.getLevelUp(bitBucketList[0]) }
+                    { this.getLevelUp(bitBucketList[0]) }
                   </List.Item>
                   <List.Item>
-				            { <List.Icon size='large' name='folder open'/> }
+                    { <List.Icon size='large' name='folder open'/> }
                     <List.Content>
                       <List.Header>
-						            { bitBucketList[0].path.split('/').slice(-2, -1)[0] || 'src' }
+                        { bitBucketList[0].path.split('/').slice(-2, -1)[0] || 'src' }
                       </List.Header>
                       <List.List>
-						            {
-							            bitBucketList.map((repo, idx) => {
-								            return (
+                        {
+                          bitBucketList.map((repo, idx) => {
+                            return (
                               <List.Item
                                 as='a'
                                 key={idx}
@@ -206,9 +195,9 @@ class Dashboard extends Component {
                                   </List.Header>
                                 </List.Content>
                               </List.Item>
-								            );
-							            })
-						            }
+                            );
+                          })
+                        }
                       </List.List>
                     </List.Content>
                   </List.Item>
@@ -231,14 +220,23 @@ class Dashboard extends Component {
             }
           </div>
         }
+  
+        <Container textAlign='justified'>
+          <b>Justified</b>
+          <Divider />
+          <p>
+            { bitBucketView }
+          </p>
+        </Container>
       </div>
     );
   }
 }
 
 export default connect(state => ({
-	user: state.get('auth').get('user'),
+  user: state.get('auth').get('user'),
   isLoad: state.get('bitBucketRepo').get('isLoad'),
-	loadErr: state.get('bitBucketRepo').get('loadErr'),
-  bitBucketList: state.get('bitBucketRepo').get('bitBucketList')
+  loadErr: state.get('bitBucketRepo').get('loadErr'),
+  bitBucketList: state.get('bitBucketRepo').get('bitBucketList'),
+  bitBucketView: state.get('bitBucketRepo').get('bitBucketView')
 }))(Dashboard);
