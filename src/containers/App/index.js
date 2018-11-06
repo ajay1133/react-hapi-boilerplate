@@ -21,11 +21,11 @@ class App extends Component {
                   {
                       isShow &&
                       <Grid>
-                      <Grid.Row>
+                        <Grid.Row>
                           <Grid.Column width={16} className="pt-20 pb-30">
-                              <NavBar isShow={isShow}/>
-                              </Grid.Column>
-                          </Grid.Row>
+                            <NavBar isShow={isShow}/>
+                          </Grid.Column>
+                        </Grid.Row>
                       </Grid>
                   }
                   <ConnectedRouter history={history}>{ routes }</ConnectedRouter>

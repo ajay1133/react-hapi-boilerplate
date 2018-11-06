@@ -45,14 +45,17 @@ export default function reducer(state = initialState, action) {
 
 export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
-  let res = {};
+ 
+	let res = {};
   
   try {
 		res = await api.get('/bitBucket/listing', { params });
-    if (!res) {
+  
+		if (!res) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull repositories' });
 			return;
 		}
+		
 		dispatch({ type: BIT_BUCKET_LISTING, result: res });
     dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {
