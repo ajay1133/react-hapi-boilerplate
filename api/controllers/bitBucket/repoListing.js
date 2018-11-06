@@ -36,8 +36,6 @@ module.exports = {
     let res = {};
     const url = `${config.bitBucket.basePath}/src${path}`;
     
-    console.log(' ====== url ---- ', url);
-    
     try {
       res = await superagent.get(url)
                             .set('Authorization', `Bearer ${token}`);

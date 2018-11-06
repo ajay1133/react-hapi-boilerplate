@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Button, List } from 'semantic-ui-react';
 import config from '../../config';
+import { getHashParams } from '../../utils/commonutils';
 import { bitBucketListing } from '../../redux/modules/bitBucketRepo';
 
 const { bitBucket } = config;
@@ -27,7 +28,7 @@ class Dashboard extends Component {
   
 	componentDidMount = () => {
 		const { dispatch, location } = this.props;
-		const params = this.getHashParams(location.hash);
+		const params = getHashParams(location.hash);
 		
 		if (params) {
 		  const token = params.access_token;
@@ -36,22 +37,6 @@ class Dashboard extends Component {
       dispatch(bitBucketListing(listData));
     }
 	};
-  
-  getHashParams = (hash) => {
-    let hashParams = {};
-    let e,
-      a = /\+/g,  // Regex for replacing addition symbol with a space
-      r = /([^&;=]+)=?([^&;]*)/g,
-      d = function (s) {
-        return decodeURIComponent(s.replace(a, " "));
-      },
-      q = hash.toString().substring(1);
-    
-    while ((e = r.exec(q)))
-      hashParams[d(e[1])] = d(e[2]);
-    
-    return hashParams;
-  };
   
   bitBucketConnect = () => {
     window.location =
@@ -176,8 +161,6 @@ You will like those projects!
               </List.Content>
               </List.Item>
             </List>
-            {/*{ this.getMd() }*/}
-            {/*{ this.getMdParse() }*/}
           </div>
         </div>
       </div>
