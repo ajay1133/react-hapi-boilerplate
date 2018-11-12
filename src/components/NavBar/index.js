@@ -53,7 +53,7 @@ class NavBar extends Component {
           <div className="ui right floated column">
             <Menu borderless>
               <Menu.Menu position='right'>
-                <Dropdown item text= { validUserNameFlag && (user.firstName + ' ' + user.lastName) || user.email }>
+                <Dropdown item text= { (validUserNameFlag && (user.firstName + ' ' + user.lastName)) || user.email }>
                   <Dropdown.Menu>
                     <Dropdown.Item onClick={this.logOut}>Logout</Dropdown.Item>
                   </Dropdown.Menu>

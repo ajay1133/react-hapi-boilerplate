@@ -2,10 +2,12 @@ import React, { Component } from 'react';
 import MarkDown from 'markdown-it';
 import Markup from 'react-html-markup';
 import { connect } from 'react-redux';
+import { Field, reduxForm } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
-import { Button, List, Loader, Modal, Icon } from 'semantic-ui-react';
+import { Button, List, Loader, Modal, Icon, Form } from 'semantic-ui-react';
 import config from '../../config';
 import { getHashParams } from '../../utils/commonutils';
+import TextArea from '../../components/Form/TextArea'
 import { bitBucketListing, bitBucketView } from '../../redux/modules/bitBucketRepo';
 
 const { bitBucket } = config;
@@ -16,17 +18,33 @@ const md = MarkDown({
   typographer: true
 });
 
-class Dashboard extends Component {
+@connect(state => ({
+  initialValues: Object.assign({}, { editMDFile: state.get('bitBucketRepo').get('bitBucketView') }),
+  user: state.get('auth').get('user'),
+  isLoad: state.get('bitBucketRepo').get('isLoad'),
+  loadErr: state.get('bitBucketRepo').get('loadErr'),
+  bitBucketList: state.get('bitBucketRepo').get('bitBucketList'),
+  bitBucketView: state.get('bitBucketRepo').get('bitBucketView')
+}))
+
+@reduxForm({
+  form: 'editRepo',
+  enableReinitialize: true
+})
+
+export default class Dashboard extends Component {
   state = {
     loading: false,
     hideRepoListingAreaFlag: false,
     modalOpenFlag: false,
+    openRepoFile: false,
 	  modalHeader: null,
     token: null
   };
   
   static propTypes = {
     dispatch: PropTypes.func,
+    handleSubmit: PropTypes.func,
     location: PropTypes.object,
     bitBucketList: PropTypes.array,
     bitBucketView: PropTypes.string
@@ -107,17 +125,27 @@ class Dashboard extends Component {
     }
   };
   
+  _editRepo = values => {
+    const editData = values.get('editMDFile');
+    console.log('formData ---- ', editData);
+  };
+  
+  isEditRepo = () => {
+    this.setState({ openRepoFile: true });
+  };
+  
   modalClose = () => {
     const { modalOpenFlag } = this.state;
     
     this.setState({
-      modalOpenFlag: !modalOpenFlag
+      modalOpenFlag: !modalOpenFlag,
+      openRepoFile: false
     });
   };
   
   render () {
-    const { user, isLoad, loadErr, bitBucketList, bitBucketView } = this.props;
-	  const { loading, hideRepoListingAreaFlag, modalHeader, modalOpenFlag, token } = this.state;
+    const { user, isLoad, loadErr, bitBucketList, bitBucketView, handleSubmit } = this.props;
+	  const { loading, hideRepoListingAreaFlag, modalHeader, modalOpenFlag, openRepoFile, token } = this.state;
     
     const loadingCompleteFlag = !isLoad && !loadErr;
     const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList);
@@ -184,7 +212,7 @@ class Dashboard extends Component {
 	            validBitBucketListFlag && !!bitBucketList.length && !hideRepoListingAreaFlag &&
               <div className="content">
                 <List>
-                  <List.Item>
+                  <List.Item as='a'>
                     { this.getLevelUp(bitBucketList[0]) }
                   </List.Item>
                   <List.Item>
@@ -238,48 +266,74 @@ class Dashboard extends Component {
             {
 	            !loadingCompleteFlag && !hideRepoListingAreaFlag &&
               <div className="content">
-                <Loader active inline='centered'>Loading</Loader>
+                <Loader active inline='centered'>Loading ...</Loader>
               </div>
             }
           </div>
         }
   
         {
-	        !loading && loadingCompleteFlag && modalOpenFlag &&
+	        !loading && loadingCompleteFlag &&
           <Modal
-            open={ true }
+            open={ modalOpenFlag }
             dimmer="blurring"
             closeOnEscape={ true }
-            closeOnDimmerClick={ true }
-            onClose={ () => this.modalClose() }
+            closeOnDimmerClick={ false }
+            onClose={this.modalClose}
             size="large"
+            closeIcon
           >
             <Modal.Header>
-              {
-                <span><Icon name='file' size='large' /><span style={{ marginLeft: '5px' }}>{ modalHeader }</span></span>
-              }
+                <Icon name='file' size='large' />
+                <span style={{ marginLeft: '5px' }}>{ modalHeader }</span>
             </Modal.Header>
             <Modal.Content>
+              <Modal.Description>
               {
-                bitBucketView &&
+                !openRepoFile && bitBucketView &&
                 <Markup htmlString= { this.getMd(bitBucketView) } />
               }
 	            {
-		            !bitBucketView &&
+		            !openRepoFile && !bitBucketView &&
                 <span style={{ color: 'red' }}>Error fetching content</span>
 	            }
+              {
+                openRepoFile &&
+                <Form>
+                  <Field
+                    name="editMDFile"
+                    component={TextArea}
+                    autoHeight
+                  />
+                </Form>
+              }
+              </Modal.Description>
             </Modal.Content>
+            <Modal.Actions>
+              {
+                openRepoFile
+                  ?  <Button
+                    positive
+                    onClick={handleSubmit(this._editRepo)}
+                  >
+                    <i aria-hidden='true' className='save icon' />Save
+                  </Button>
+                  : <Button
+                    primary
+                    onClick={this.isEditRepo}
+                  >
+                    <i aria-hidden='true' className='edit icon' />Edit
+                  </Button>
+              }
+              <Button
+                primary
+                content="Cancel"
+                onClick={this.modalClose}
+              />
+            </Modal.Actions>
           </Modal>
         }
       </div>
     );
   }
 }
-
-export default connect(state => ({
-  user: state.get('auth').get('user'),
-  isLoad: state.get('bitBucketRepo').get('isLoad'),
-  loadErr: state.get('bitBucketRepo').get('loadErr'),
-  bitBucketList: state.get('bitBucketRepo').get('bitBucketList'),
-  bitBucketView: state.get('bitBucketRepo').get('bitBucketView')
-}))(Dashboard);
