@@ -51,7 +51,7 @@ export default class Dashboard extends Component {
   };
   
   componentDidMount = () => {
-    const { dispatch, location } = this.props;
+    const { dispatch, location, history } = this.props;
     const params = getHashParams(location.hash);
     
     const validParamsFlag = params && Object.keys(params).length && params.access_token;
@@ -68,6 +68,7 @@ export default class Dashboard extends Component {
         .then(() => this.setState({ loading: false }))
         .catch(() => this.setState({ loading: false }));
     }
+    history.replace(`/dashboard`);
   };
   
   bitBucketConnect = () => {
