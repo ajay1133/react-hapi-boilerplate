@@ -37,11 +37,13 @@ module.exports = {
     const url = `${config.bitBucket.basePath}/src${path}`;
     
     try {
-      res = await superagent.get(url)
-                            .set('Authorization', `Bearer ${token}`);
+      res = await superagent
+        .get(url)
+        .set('Authorization', `Bearer ${token}`);
     } catch(err) {
       return boom.badRequest(err);
     }
+    
     return h.response(res.body.values);
   },
 };

@@ -21,3 +21,6 @@ export const getHashParams = (hash = '') => {
   
   return hashParams;
 };
+
+export const strictValidObject = obj => obj && obj === Object(obj) &&
+Object.prototype.toString.call(obj) !== '[object Array]';

@@ -10,5 +10,10 @@ module.exports = [
     path: `${prefix}/view`,
     method: 'GET',
     config: require('./repoView'),
-  }
+  },
+	{
+		path: `${prefix}/updateFile`,
+		method: 'POST',
+		config: require('./fileUpdate'),
+	}
 ];

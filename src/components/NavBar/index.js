@@ -14,8 +14,8 @@ class NavBar extends Component {
   };
   
   constructor(props) {
-    super(props)
-    this.logOut = this.logOut.bind(this)
+    super(props);
+    this.logOut = this.logOut.bind(this);
   };
   
   componentWillMount() {
@@ -24,12 +24,12 @@ class NavBar extends Component {
   };
   
   logOut = () => {
-    const { dispatch } =  this.props
+    const { dispatch } =  this.props;
     dispatch(logout());
   };
   
   loadAccounts = () => {
-    const { dispatch } =  this.props
+    const { dispatch } =  this.props;
     dispatch(push('/accounts'));
   };
   

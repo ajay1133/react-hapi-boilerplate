@@ -3,12 +3,13 @@ import MarkDown from 'markdown-it';
 import Markup from 'react-html-markup';
 import { connect } from 'react-redux';
 import { Field, reduxForm } from 'redux-form/immutable';
+import { push } from 'react-router-redux';
 import PropTypes from 'prop-types';
-import { Button, List, Loader, Modal, Icon, Form } from 'semantic-ui-react';
+import { Button, List, Loader, Modal, Icon, Form, Message } from 'semantic-ui-react';
 import config from '../../config';
 import { getHashParams } from '../../utils/commonutils';
 import TextArea from '../../components/Form/TextArea'
-import { bitBucketListing, bitBucketView } from '../../redux/modules/bitBucketRepo';
+import { bitBucketListing, bitBucketView, updateBitBucketFile } from '../../redux/modules/bitBucketRepo';
 
 const { bitBucket } = config;
 
@@ -19,8 +20,11 @@ const md = MarkDown({
 });
 
 @connect(state => ({
-  initialValues: Object.assign({}, { editMDFile: state.get('bitBucketRepo').get('bitBucketView') }),
+  initialValues: {
+    editMDFile: state.get('bitBucketRepo').get('bitBucketView')
+  },
   user: state.get('auth').get('user'),
+	message: state.get('bitBucketRepo').get('message'),
   isLoad: state.get('bitBucketRepo').get('isLoad'),
   loadErr: state.get('bitBucketRepo').get('loadErr'),
   bitBucketList: state.get('bitBucketRepo').get('bitBucketList'),
@@ -38,26 +42,39 @@ export default class Dashboard extends Component {
     hideRepoListingAreaFlag: false,
     modalOpenFlag: false,
     openRepoFile: false,
-	  modalHeader: null,
-    token: null
+	  editFileName: null,
+    token: null,
+    repoPath: null,
+	  showMessageFlag: true
   };
   
   static propTypes = {
     dispatch: PropTypes.func,
     handleSubmit: PropTypes.func,
+	  user: PropTypes.object,
+	  message: PropTypes.string,
+	  isLoad: PropTypes.bool,
+	  loadErr: PropTypes.string,
     location: PropTypes.object,
     bitBucketList: PropTypes.array,
     bitBucketView: PropTypes.string
   };
   
-  componentDidMount = () => {
-    const { dispatch, location } = this.props;
+  componentWillMount = () => {
+    const { dispatch, location, user, history } = this.props;
+    
+    if (!user) {
+	    dispatch(push('/'));
+    }
+    
     const params = getHashParams(location.hash);
     
     const validParamsFlag = params && Object.keys(params).length && params.access_token;
     
     if (validParamsFlag) {
       const token = params.access_token;
+	
+	    history.replace('/dashboard');
       
       this.setState({
         loading: true,
@@ -85,7 +102,7 @@ export default class Dashboard extends Component {
   
   getMd = (content) => md.render(content);
   
-  getBitBucketData = async (e, href, type, displayName) => {
+  getBitBucketData = async (e, href, type, displayName, repoPath) => {
     const { dispatch } = this.props;
     const { token } = this.state;
     
@@ -105,7 +122,8 @@ export default class Dashboard extends Component {
     this.setState({
       loading: false,
       modalOpenFlag: type !== 'commit_directory',
-      modalHeader: type !== 'commit_directory' ? displayName : null
+      editFileName: type !== 'commit_directory' ? displayName : null,
+      repoPath
     });
   };
   
@@ -120,14 +138,35 @@ export default class Dashboard extends Component {
         <List.Icon
           size='large'
           name='reply'
-          onClick={ (e) => this.getBitBucketData(e, (href_1+href_2), 'commit_directory') }
+          onClick={ (e) => this.getBitBucketData(e, (href_1 + href_2), 'commit_directory', repo.path) }
         />);
     }
   };
   
   _editRepo = values => {
-    const editData = values.get('editMDFile');
-    console.log('formData ---- ', editData);
+    const { dispatch } = this.props;
+    const { token, editFileName } = this.state;
+    
+    const fileContent = values.get('editMDFile');
+    
+    const dataObject = {
+	    token,
+	    fileName: editFileName,
+      fileContent
+    };
+    debugger;
+	  this.setState({ loading: true });
+    
+    dispatch(updateBitBucketFile(dataObject))
+	    .then(() => dispatch(bitBucketListing({ token })))
+      .then(() => {
+        this.setState({
+		      loading: false,
+		      modalOpenFlag: false,
+		      openRepoFile: false
+	      });
+      })
+      .catch(() => this.setState({ loading: false }))
   };
   
   isEditRepo = () => {
@@ -142,29 +181,36 @@ export default class Dashboard extends Component {
       openRepoFile: false
     });
   };
-  
+	
+	modalDismiss = () => this.setState({ showMessageFlag: false });
+	
   render () {
-    const { user, isLoad, loadErr, bitBucketList, bitBucketView, handleSubmit } = this.props;
-	  const { loading, hideRepoListingAreaFlag, modalHeader, modalOpenFlag, openRepoFile, token } = this.state;
+    const { isLoad, loadErr, bitBucketList = [], bitBucketView, handleSubmit, message } = this.props;
+	  
+    const {
+	    loading, hideRepoListingAreaFlag, editFileName, modalOpenFlag, openRepoFile, token, showMessageFlag
+	  } = this.state;
     
     const loadingCompleteFlag = !isLoad && !loadErr;
     const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList);
     
-    if (!user || (isLoad && loadErr)) {
+    if (isLoad && loadErr) {
       return (
         <div>
-          {
-            user && <span style={{ color: 'red' }}>An Error Occurred : { loadErr }</span>
-          }
-          {
-            !user && <span style={{ color: 'red' }}>Session Expired</span>
-          }
+          <span style={{ color: 'red' }}>An Error Occurred : { loadErr }</span>
         </div>
       );
     }
     
     return (
       <div>
+        {
+	        message && showMessageFlag &&
+          <Message onDismiss={this.modalDismiss}>
+            <span style={{ color: 'green' }}>{ message }</span>
+          </Message>
+        }
+        
         {
           !token &&
           <Button
@@ -232,7 +278,8 @@ export default class Dashboard extends Component {
                                   e,
                                   repo.links.self.href,
                                   repo.type,
-                                  repo.path.split('/').pop()
+                                  repo.path.split('/').pop(),
+                                  repo.path
                                 ) }
                               >
                                 <List.Icon
@@ -284,8 +331,8 @@ export default class Dashboard extends Component {
             closeIcon
           >
             <Modal.Header>
-                <Icon name='file' size='large' />
-                <span style={{ marginLeft: '5px' }}>{ modalHeader }</span>
+              <Icon name='file' size='large' />
+              <span style={{ marginLeft: '5px' }}>{ editFileName }</span>
             </Modal.Header>
             <Modal.Content>
               <Modal.Description>
@@ -310,20 +357,17 @@ export default class Dashboard extends Component {
               </Modal.Description>
             </Modal.Content>
             <Modal.Actions>
+	            {
+		            openRepoFile &&
+                <Button positive onClick={handleSubmit(this._editRepo)}>
+                  <i aria-hidden='true' className='save icon' />Save
+                </Button>
+	            }
               {
-                openRepoFile
-                  ?  <Button
-                    positive
-                    onClick={handleSubmit(this._editRepo)}
-                  >
-                    <i aria-hidden='true' className='save icon' />Save
-                  </Button>
-                  : <Button
-                    primary
-                    onClick={this.isEditRepo}
-                  >
-                    <i aria-hidden='true' className='edit icon' />Edit
-                  </Button>
+                !openRepoFile &&
+                <Button primary onClick={this.isEditRepo}>
+                  <i aria-hidden='true' className='edit icon' />Edit
+                </Button>
               }
               <Button
                 primary
