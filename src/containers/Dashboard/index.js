@@ -85,6 +85,7 @@ export default class Dashboard extends Component {
         .then(() => this.setState({ loading: false }))
         .catch(() => this.setState({ loading: false }));
     }
+    history.replace(`/dashboard`);
   };
   
   bitBucketConnect = () => {
