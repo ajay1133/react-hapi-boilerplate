@@ -17,7 +17,9 @@ const initialState = Immutable.fromJS({
 	isLoad: false,
 	loadErr: null,
 	repositories: [],
-	bitBucketView: null
+	setFileFormInitialValues: {
+		fileContent: null
+	}
 });
 
 export default function reducer(state = initialState, action) {
@@ -43,7 +45,9 @@ export default function reducer(state = initialState, action) {
 		
 		case BIT_BUCKET_VIEW:
 			return state
-				.set('bitBucketView', action.result);
+				.set('setFileFormInitialValues', {
+					fileContent: action.result
+				});
 		
 		case RESET_MESSAGE:
 			return state
