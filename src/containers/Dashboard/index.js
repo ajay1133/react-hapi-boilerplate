@@ -23,7 +23,7 @@ const md = MarkDown({
     editMDFile: state.get('bitBucketRepo').get('bitBucketView')
   },
   user: state.get('auth').get('user'),
-	message: state.get('bitBucketRepo').get('message'),
+  message: state.get('bitBucketRepo').get('message'),
   isLoad: state.get('bitBucketRepo').get('isLoad'),
   loadErr: state.get('bitBucketRepo').get('loadErr'),
   bitBucketList: state.get('bitBucketRepo').get('bitBucketList'),
@@ -41,19 +41,19 @@ export default class Dashboard extends Component {
     hideRepoListingAreaFlag: false,
     modalOpenFlag: false,
     openRepoFile: false,
-	  editFileName: null,
+    editFileName: null,
     token: null,
     repoPath: null,
-	  showMessageFlag: true
+    showMessageFlag: true
   };
   
   static propTypes = {
     dispatch: PropTypes.func,
     handleSubmit: PropTypes.func,
-	  user: PropTypes.object,
-	  message: PropTypes.string,
-	  isLoad: PropTypes.bool,
-	  loadErr: PropTypes.string,
+    user: PropTypes.object,
+    message: PropTypes.string,
+    isLoad: PropTypes.bool,
+    loadErr: PropTypes.string,
     location: PropTypes.object,
     bitBucketList: PropTypes.array,
     bitBucketView: PropTypes.string
@@ -61,21 +61,16 @@ export default class Dashboard extends Component {
   
   componentDidMount = () => {
     const { dispatch, location, history } = this.props;
-    
     const params = getHashParams(location.hash);
-    
     const validParamsFlag = params && Object.keys(params).length && params.access_token;
     
     if (validParamsFlag) {
       const token = params.access_token;
-      console.log('token ---> ', token);
-	    history.replace('/dashboard');
-      
+      history.replace('/dashboard');
       this.setState({
         loading: true,
         token
       });
-      
       dispatch(bitBucketListing({ token }))
         .then(() => this.setState({ loading: false }))
         .catch(() => this.setState({ loading: false }));
@@ -87,12 +82,12 @@ export default class Dashboard extends Component {
     window.location =
       `https://bitbucket.org/site/oauth2/authorize?client_id=${bitBucket.key}&response_type=token`;
   };
-	
-	hideRepoListingArea = () => {
-	  const { hideRepoListingAreaFlag } = this.state;
-	  
-	  this.setState({
-		  hideRepoListingAreaFlag: !hideRepoListingAreaFlag
+  
+  hideRepoListingArea = () => {
+    const { hideRepoListingAreaFlag } = this.state;
+    
+    this.setState({
+      hideRepoListingAreaFlag: !hideRepoListingAreaFlag
     })
   };
   
@@ -141,26 +136,22 @@ export default class Dashboard extends Component {
   
   _editRepo = values => {
     const { dispatch } = this.props;
-    const { token, editFileName } = this.state;
-    
+    const { token, repoPath } = this.state;
     const fileContent = values.get('editMDFile');
-    
     const dataObject = {
-	    token,
-	    fileName: editFileName,
+      token,
+      fileName: repoPath,
       fileContent
     };
-    
-	  this.setState({ loading: true });
-    
+    this.setState({ loading: true });
     dispatch(updateBitBucketFile(dataObject))
-	    .then(() => dispatch(bitBucketListing({ token })))
+      .then(() => dispatch(bitBucketListing({ token })))
       .then(() => {
         this.setState({
-		      loading: false,
-		      modalOpenFlag: false,
-		      openRepoFile: false
-	      });
+          loading: false,
+          modalOpenFlag: false,
+          openRepoFile: false
+        });
       })
       .catch(() => this.setState({ loading: false }))
   };
@@ -177,36 +168,36 @@ export default class Dashboard extends Component {
       openRepoFile: false
     });
   };
-	
-	modalDismiss = () => this.setState({ showMessageFlag: false });
-	
+  
+  modalDismiss = () => this.setState({ showMessageFlag: false });
+  
   render () {
     const { isLoad, loadErr, bitBucketList = [], bitBucketView, handleSubmit, user, message } = this.props;
-	  
+    
     const {
-	    loading, hideRepoListingAreaFlag, editFileName, modalOpenFlag, openRepoFile, token, showMessageFlag
-	  } = this.state;
+      loading, hideRepoListingAreaFlag, editFileName, modalOpenFlag, openRepoFile, token, showMessageFlag
+    } = this.state;
     
     const loadingCompleteFlag = !isLoad && !loadErr;
     const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList);
-	
-	  if (!user || (isLoad && loadErr)) {
-		  return (
+    
+    if (!user || (isLoad && loadErr)) {
+      return (
         <div>
-				  {
-					  user && <span style={{ color: 'red' }}>An Error Occurred : { loadErr }</span>
-				  }
-				  {
+          {
+            user && <span style={{ color: 'red' }}>An Error Occurred : { loadErr }</span>
+          }
+          {
             !user && <span style={{ color: 'red' }}>Session Expired</span>
-				  }
+          }
         </div>
-		  );
-	  }
+      );
+    }
     
     return (
       <div>
         {
-	        message && showMessageFlag &&
+          message && showMessageFlag &&
           <Message onDismiss={this.modalDismiss}>
             <span style={{ color: 'green' }}>{ message }</span>
           </Message>
@@ -245,7 +236,7 @@ export default class Dashboard extends Component {
                 </Button>
               </h4>
               {
-	              loadingCompleteFlag && !hideRepoListingAreaFlag &&
+                loadingCompleteFlag && !hideRepoListingAreaFlag &&
                 <span>
                   Click on the name/icon to view the contents. Click on the back icon to go back.
                 </span>
@@ -253,7 +244,7 @@ export default class Dashboard extends Component {
             </div>
             
             {
-	            validBitBucketListFlag && !!bitBucketList.length && !hideRepoListingAreaFlag &&
+              validBitBucketListFlag && !!bitBucketList.length && !hideRepoListingAreaFlag &&
               <div className="content">
                 <List>
                   <List.Item as='a'>
@@ -302,23 +293,23 @@ export default class Dashboard extends Component {
             }
             
             {
-	            loadingCompleteFlag && !bitBucketList.length && !hideRepoListingAreaFlag &&
+              loadingCompleteFlag && !bitBucketList.length && !hideRepoListingAreaFlag &&
               <div className="content">
                 No files found
               </div>
             }
             
             {
-	            !loadingCompleteFlag && !hideRepoListingAreaFlag &&
+              !loadingCompleteFlag && !hideRepoListingAreaFlag &&
               <div className="content">
                 <Loader active inline='centered'>Loading ...</Loader>
               </div>
             }
           </div>
         }
-  
+        
         {
-	        !loading && loadingCompleteFlag &&
+          !loading && loadingCompleteFlag &&
           <Modal
             open={ modalOpenFlag }
             dimmer="blurring"
@@ -334,33 +325,33 @@ export default class Dashboard extends Component {
             </Modal.Header>
             <Modal.Content>
               <Modal.Description>
-              {
-                !openRepoFile && bitBucketView &&
-                <Markup htmlString= { this.getMd(bitBucketView) } />
-              }
-	            {
-		            !openRepoFile && !bitBucketView &&
-                <span style={{ color: 'red' }}>Error fetching content</span>
-	            }
-              {
-                openRepoFile &&
-                <Form>
-                  <Field
-                    name="editMDFile"
-                    component={TextArea}
-                    autoHeight
-                  />
-                </Form>
-              }
+                {
+                  !openRepoFile && bitBucketView &&
+                  <Markup htmlString= { this.getMd(bitBucketView) } />
+                }
+                {
+                  !openRepoFile && !bitBucketView &&
+                  <span style={{ color: 'red' }}>Error fetching content</span>
+                }
+                {
+                  openRepoFile &&
+                  <Form>
+                    <Field
+                      name="editMDFile"
+                      component={TextArea}
+                      autoHeight
+                    />
+                  </Form>
+                }
               </Modal.Description>
             </Modal.Content>
             <Modal.Actions>
-	            {
-		            openRepoFile &&
+              {
+                openRepoFile &&
                 <Button positive onClick={handleSubmit(this._editRepo)}>
                   <i aria-hidden='true' className='save icon' />Save
                 </Button>
-	            }
+              }
               {
                 !openRepoFile &&
                 <Button primary onClick={this.isEditRepo}>
