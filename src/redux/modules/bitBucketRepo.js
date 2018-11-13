@@ -1,6 +1,6 @@
 import Immutable from 'immutable';
 import { strictValidObject } from '../../utils/commonutils';
-import { DEFAULT_SECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
+import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
 
 const LOAD = 'bitBucketRepo/LOAD';
 const LOAD_SUCCESS = 'bitBucketRepo/LOAD_SUCCESS';
@@ -116,7 +116,9 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 		}
 		
 		dispatch({ type: BIT_BUCKET_VIEW, result: data.fileContent || '' });
-		dispatch({ type: LOAD_SUCCESS, message: 'Successfully Updated To BitBucket' });
+		dispatch({ type: LOAD_SUCCESS, message: 'Successfully Updated To BitBucket. Loading updated files' });
+		
+		dispatch(resetMessage());
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 	}
@@ -129,7 +131,7 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
  * @param defaultTimeout
  * @return {function(*): number}
  */
-export function resetMessage (defaultTimeout = DEFAULT_SECONDS_TO_SHOW_MESSAGES) {
+export function resetMessage (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES) {
 	return dispatch => setTimeout(() => {
 		dispatch({ type: RESET_MESSAGE, message: null });
 	}, defaultTimeout);

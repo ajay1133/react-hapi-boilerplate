@@ -10,4 +10,4 @@ export const SCORE_INTERVAL_OPTIONS =[
 
 export const SCORE_ERROR_MESSAGE = 'There must be at least 10 options for fans to score by, please adjust the Min, Max, and Score Interval';
 
-export const DEFAULT_SECONDS_TO_SHOW_MESSAGES = 3;
+export const DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES = 3000;

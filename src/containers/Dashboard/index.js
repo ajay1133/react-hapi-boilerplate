@@ -154,7 +154,7 @@ export default class Dashboard extends Component {
 	    fileName: editFileName,
       fileContent
     };
-    debugger;
+    
 	  this.setState({ loading: true });
     
     dispatch(updateBitBucketFile(dataObject))
