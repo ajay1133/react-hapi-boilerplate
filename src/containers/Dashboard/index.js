@@ -60,7 +60,7 @@ export default class Dashboard extends Component {
     bitBucketView: PropTypes.string
   };
   
-  componentWillMount = () => {
+  componentDidMount = () => {
     const { dispatch, location, user, history } = this.props;
     
     if (!user) {
@@ -186,7 +186,7 @@ export default class Dashboard extends Component {
 	modalDismiss = () => this.setState({ showMessageFlag: false });
 	
   render () {
-    const { isLoad, loadErr, bitBucketList = [], bitBucketView, handleSubmit, message } = this.props;
+    const { isLoad, loadErr, bitBucketList = [], bitBucketView, handleSubmit, user, message, dispatch } = this.props;
 	  
     const {
 	    loading, hideRepoListingAreaFlag, editFileName, modalOpenFlag, openRepoFile, token, showMessageFlag
@@ -194,14 +194,20 @@ export default class Dashboard extends Component {
     
     const loadingCompleteFlag = !isLoad && !loadErr;
     const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList);
-    
-    if (isLoad && loadErr) {
-      return (
+	
+	  if (!user || (isLoad && loadErr)) {
+		  return (
         <div>
-          <span style={{ color: 'red' }}>An Error Occurred : { loadErr }</span>
+				  {
+					  user && <span style={{ color: 'red' }}>An Error Occurred : { loadErr }</span>
+				  }
+				  {
+					  !user &&
+					  dispatch(push('/'))
+				  }
         </div>
-      );
-    }
+		  );
+	  }
     
     return (
       <div>
