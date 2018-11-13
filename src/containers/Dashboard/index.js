@@ -3,7 +3,6 @@ import MarkDown from 'markdown-it';
 import Markup from 'react-html-markup';
 import { connect } from 'react-redux';
 import { Field, reduxForm } from 'redux-form/immutable';
-import { push } from 'react-router-redux';
 import PropTypes from 'prop-types';
 import { Button, List, Loader, Modal, Icon, Form, Message } from 'semantic-ui-react';
 import config from '../../config';
@@ -182,7 +181,7 @@ export default class Dashboard extends Component {
 	modalDismiss = () => this.setState({ showMessageFlag: false });
 	
   render () {
-    const { isLoad, loadErr, bitBucketList = [], bitBucketView, handleSubmit, user, message, dispatch } = this.props;
+    const { isLoad, loadErr, bitBucketList = [], bitBucketView, handleSubmit, user, message } = this.props;
 	  
     const {
 	    loading, hideRepoListingAreaFlag, editFileName, modalOpenFlag, openRepoFile, token, showMessageFlag
