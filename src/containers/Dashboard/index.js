@@ -61,11 +61,7 @@ export default class Dashboard extends Component {
   };
   
   componentDidMount = () => {
-    const { dispatch, location, user, history } = this.props;
-    
-    if (!user) {
-	    dispatch(push('/'));
-    }
+    const { dispatch, location, history } = this.props;
     
     const params = getHashParams(location.hash);
     
@@ -73,7 +69,7 @@ export default class Dashboard extends Component {
     
     if (validParamsFlag) {
       const token = params.access_token;
-	
+      console.log('token ---> ', token);
 	    history.replace('/dashboard');
       
       this.setState({
@@ -202,8 +198,7 @@ export default class Dashboard extends Component {
 					  user && <span style={{ color: 'red' }}>An Error Occurred : { loadErr }</span>
 				  }
 				  {
-					  !user &&
-					  dispatch(push('/'))
+            !user && <span style={{ color: 'red' }}>Session Expired</span>
 				  }
         </div>
 		  );
@@ -221,12 +216,10 @@ export default class Dashboard extends Component {
         {
           !token &&
           <Button
-            className='ui facebook button hand-pointer'
-            style={{ marginTop: '-10px' }}
-            role='button'
+            color='facebook'
             onClick={ () => this.bitBucketConnect() }
           >
-            <i aria-hidden='true' className='bitbucket icon' />Fetch Data From BitBucket
+            <Icon name='bitbucket' /> Fetch Data From BitBucket
           </Button>
         }
         
@@ -245,12 +238,11 @@ export default class Dashboard extends Component {
               <h4>
                 { loadingCompleteFlag ? 'Listing' : 'Loading' } Files From BitBucket Repository
                 <Button
-                  className='float-right button hand-pointer'
+                  primary
                   style={{ float: 'right' }}
-                  role='button'
                   onClick={ () => this.hideRepoListingArea() }
                 >
-		              { hideRepoListingAreaFlag ? 'Expand' : 'Collapse' }
+                  { hideRepoListingAreaFlag ? 'Expand' : 'Collapse' }
                 </Button>
               </h4>
               {
