@@ -4,7 +4,7 @@ orig_path=`pwd`
 source_dir=$(cd "$(dirname "$0")"; pwd)
 
 
-bucket="deploy.compass.com"
+bucket="deploy.compassrecoverynetwork.com"
 
 app_name=compass
 build_version=`date +"%Y-%m-%d-%H%M%S"`
