@@ -59,7 +59,6 @@ exports.createUser = async (userPayload) =>  {
 exports.getAllAccounts = () => new Promise( ( resolve, reject ) => {
 	User
     .findAndCountAll({
-      distinct: true,
       where: {
         role: 2
       },
