@@ -13,10 +13,6 @@ module.exports = {
     port: db.redis.port,
     prefix: 'com_'
   },
-  aws: {
-    accessKeyId: db.aws.key,
-    secretAccessKey: db.aws.secret,
-  },
   bitBucket: {
     accessKeyId: db.bitBucket.key,
     secretAccessKey: db.bitBucket.secret,
