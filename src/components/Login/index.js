@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Button, Form, Segment, Message, Header } from 'semantic-ui-react'
+import { Button, Form, Segment, Message } from 'semantic-ui-react'
 import { Redirect } from 'react-router';
 import PropTypes from 'prop-types'
 import { login, load } from '../../redux/modules/auth'
@@ -53,32 +53,25 @@ export default class Login extends Component {
       return <Redirect to= {'/dashboard'} />;
     }
     return (
-      <Segment className="mainLogin centered">
+      <Segment className=" centered loginOuter">
         <Form className="login-form" onSubmit={handleSubmit(this._login)}>
-          <Header as='h3' className="side">LOGIN</Header>
           <Input
             className="username"
             name="email"
-            icon="user"
-            iconPosition="left"
             placeholder="Username"
             type="text"
             size="large"
             validate={[required, email]}
-
           />
           <Input
             name="password"
-            icon="key"
-            iconPosition="left"
             placeholder="Password"
             type="password"
             size="large"
             validate={[required]}
           />
-          <Button className="ui large primary button front" type="submit"  primary loading={isLoading || loginBusy}>
+          <Button fluid primary type="submit" loading={isLoading || loginBusy}>
             Login
-            <i aria-hidden="true" className="chevron right icon"></i>
           </Button>
         </Form>
         {
@@ -86,6 +79,8 @@ export default class Login extends Component {
             <Message error content={loginError} />
           )
         }
+        <p className="pt-1 m-0 text-center"><a href="" >Forgot your password ?</a></p>
+        <p className="m-0 text-center">Not a member?<a href=""> create account</a></p>
       </Segment>
     );
   }
