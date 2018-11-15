@@ -20,7 +20,7 @@ module.exports = {
   bitBucket: {
     accessKeyId: db.bitBucket.key,
     secretAccessKey: db.bitBucket.secret,
-    basePath: 'https://api.bitbucket.org/2.0/repositories/pht_ajaysharma/hello_world_repo'
+    basePath: db.bitBucket.path
   },
   emailUrl:{
     host: ''
