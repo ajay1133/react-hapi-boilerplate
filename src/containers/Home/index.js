@@ -10,7 +10,7 @@ const Home = withRouter(({ location, user }) => {
   return (
     <div>
         <Container fluid>
-            <Grid centered  verticalAlign="middle">
+        <Grid centered verticalAlign="middle">
               <Grid.Row className="mainLogin p-0">
                 <Grid.Column mobile={16} tablet={8} computer={9} style={{ padding: 0}}>
                   <div className="blueBg">
@@ -21,7 +21,7 @@ const Home = withRouter(({ location, user }) => {
                 </Grid.Column>
                 <Grid.Column mobile={16} tablet={8} computer={7} style={{ padding: 0}}>
                   <div className="loginForm">
-                    <Login />
+            <Login />
                   </div>
                   <div className="footer">
   
@@ -38,9 +38,9 @@ const Home = withRouter(({ location, user }) => {
                       </List.Item>
                     </List>
                   </div>
-                </Grid.Column>
+          </Grid.Column>
               </Grid.Row>
-          </Grid>
+        </Grid>
       </Container>
     </div>
 
@@ -52,7 +52,7 @@ Home.propTypes = {
 };
 
 Home.defaultProps = {
-  user: null,
+  user: null
 };
 
 export default connect(state => ({
