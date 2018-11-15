@@ -1,5 +1,6 @@
 const db = require('./db');
 const path = require('path');
+
 module.exports = {
   api: {
     host: 'localhost',
@@ -10,11 +11,16 @@ module.exports = {
   redis: {
     host: db.redis.host,
     port: db.redis.port,
-    prefix: 'fan_'
+    prefix: 'com_'
   },
   aws: {
     accessKeyId: db.aws.key,
     secretAccessKey: db.aws.secret,
+  },
+  bitBucket: {
+    accessKeyId: db.bitBucket.key,
+    secretAccessKey: db.bitBucket.secret,
+    basePath: 'https://api.bitbucket.org/2.0/repositories/pht_ajaysharma/hello_world_repo'
   },
   emailUrl:{
     host: ''

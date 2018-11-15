@@ -16,7 +16,7 @@ module.exports = {
     strategy: 'default',
     scope: ['admin']
   },
-  tags: ['api', 'campaign'],
+  tags: ['api', 'account'],
   description: 'Create user',
 
   notes: 'Create user',

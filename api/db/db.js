@@ -19,6 +19,7 @@ const db = new Sequelize(settings.database, settings.username, settings.password
 
 db.models = {};
 db.models.User = require('./models/User')(db);
+
 // Associations
 const models = db.models;
 //Hooks
@@ -27,8 +28,6 @@ const models = db.models;
 models.User.addHook('afterCreate', 'sendInviteLink', (user, options) => {
   console.log("User Created");
 });
-
-
 
 // Export
 module.exports = db;
