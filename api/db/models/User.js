@@ -7,6 +7,7 @@ module.exports = (sequelize) => {
       id                    : { type: Sequelize.BIGINT, primaryKey: true, autoIncrement: true },
       firstName             : { type: Sequelize.STRING, allowNull: true },
       lastName              : { type: Sequelize.STRING, allowNull: true },
+      phone                 : { type: Sequelize.STRING, allowNull: true },
       email                 : { type: Sequelize.STRING, allowNull: true },
       hash                  : { type: Sequelize.TEXT },
       salt                  : { type: Sequelize.TEXT },

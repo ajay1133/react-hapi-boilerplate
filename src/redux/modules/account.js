@@ -60,17 +60,17 @@ export default function reducer(state = initialState, action) {
         return state
         .set('savingAccount', false)
         .set('saveAccountErr', null)
-        .set('items', action.users)  
+        .set('items', action.users)
       }
       return state
         .set('savingAccount', false)
         .set('saveAccountErr', null)
-    }    
+    }
 
     case SAVE_ACCOUNT_FAIL:
       return state
         .set('savingAccount', false)
-        .set('saveAccountErr', action.err );  
+        .set('saveAccountErr', action.err );
 
     case VERIFY_TOKEN:
       return state
@@ -85,7 +85,7 @@ export default function reducer(state = initialState, action) {
     case VERIFY_TOKEN_FAIL:
       return state
         .set('tokenValid', false)
-        .set('confirmationErr', action.error );  
+        .set('confirmationErr', action.error );
 
 
     case UPDATE_PASSWORD:
@@ -104,11 +104,11 @@ export default function reducer(state = initialState, action) {
       return state
         .set('updatingPassword', false)
         .set('passwordUpdated', false)
-        .set('confirmationErr', action.error );      
+        .set('confirmationErr', action.error );
         
-    case SELECT_USER: 
+    case SELECT_USER:
       return state
-        .set('selectedUser', action.user)    
+        .set('selectedUser', action.user)
 
     default:
       return state;
@@ -153,6 +153,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
         selectedUser.firstName = accountDetails.firstName;
         selectedUser.lastName =accountDetails.lastName;
         selectedUser.email = accountDetails.email;
+        selectedUser.phone = accountDetails.phone;
         users.splice(index, 1, selectedUser)
       }
       await api.put('/account', { data: accountDetails });
@@ -193,7 +194,7 @@ export const updatePassword = (accountDetails) => async (dispatch, getState, api
   }
 };
 
-export const sortAccounts = (sortDir, sortCol) => async (dispatch, getState, api) => {  
+export const sortAccounts = (sortDir, sortCol) => async (dispatch, getState, api) => {
   const items = getState().get('account').get('items');
   const sortedList = orderBy(items,[`${sortCol}`],[`${sortDir}`]);
   dispatch({ type: LOAD_SUCCESS, items: sortedList, count: sortedList.length });

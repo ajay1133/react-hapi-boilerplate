@@ -9,7 +9,7 @@ const User = db.models.User;
 const jwtHelper = require('../helpers/jwtHelper');
 const mailer = require('../mailer');
 
-const defaultUserAttributes = ['id', 'email', 'firstName', 'lastName', 'createdAt'];
+const defaultUserAttributes = ['id', 'email', 'firstName', 'lastName', 'phone','createdAt'];
 
 /**
  * Create a user

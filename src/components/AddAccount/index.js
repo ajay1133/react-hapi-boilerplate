@@ -76,8 +76,8 @@ class AddAccount extends Component {
                 validate={[required]}
               />
               <Input
-                name="phoneNumber"
-                placeholder="Phone Number"
+                name="phone"
+                placeholder="Phone"
                 type="text"
                 size="small"
                 validate={[required]}

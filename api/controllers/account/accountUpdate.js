@@ -13,7 +13,7 @@ module.exports = {
     payload: {
       firstName: joi.string().required(),
       lastName: joi.string().required(),
-      phoneNumber: joi.string().required(),
+      phone: joi.string().required(),
       id: joi.number().required(),
       isDeleted: joi.boolean().default(false),
       email: joi.string().required()
