@@ -9,15 +9,14 @@ import '../../style/css/style.css';
 const Home = withRouter(({ location, user }) => {
   return (
     <div>
-        <Container>
-            <Grid centered  verticalAlign="middle">
-                <Grid.Column   mobile={16} tablet={8} computer={8}>
-                    <Login />
-                </Grid.Column>
-          </Grid>
+      <Container>
+        <Grid centered verticalAlign="middle">
+          <Grid.Column mobile={16} tablet={8} computer={8}>
+            <Login />
+          </Grid.Column>
+        </Grid>
       </Container>
     </div>
-
   );
 });
 
@@ -26,7 +25,7 @@ Home.propTypes = {
 };
 
 Home.defaultProps = {
-  user: null,
+  user: null
 };
 
 export default connect(state => ({

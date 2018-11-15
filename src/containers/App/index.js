@@ -22,7 +22,7 @@ class App extends Component {
                       isShow &&
                       <Grid>
                         <Grid.Row>
-                          <Grid.Column width={16} className="pt-20 pb-30">
+                          <Grid.Column width={16} className="pt-10 pb-30">
                             <NavBar isShow={isShow}/>
                           </Grid.Column>
                         </Grid.Row>
