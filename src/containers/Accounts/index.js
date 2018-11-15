@@ -7,16 +7,15 @@ import AddAccount from '../../components/AddAccount'
 import Pagination from '../../components/Pagination';
 import { OFFSET } from '../../utils/constants';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
-import {Link} from  'react-router-dom'
+//import {Link} from  'react-router-dom'
 
 const TableRow = ({row, editAccount, deleteAccount}) => (
   <Table.Row>
-    <Table.Cell><Link to={ `/events?id=${row.id}` }>{ row.firstName } { row.lastName } </Link></Table.Cell>
+    <Table.Cell>{ row.firstName } { row.lastName }</Table.Cell>
     <Table.Cell>{ row.email } </Table.Cell>
-    <Table.Cell>{ row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '' }</Table.Cell>
-    <Table.Cell>{row.events.length > 0 && row.events[0].name} </Table.Cell>
+    <Table.Cell>{ row.phone }</Table.Cell>
     <Table.Cell>
-      <a onClick={ () => editAccount(row) } > Edit </a> | 
+      <a onClick={ () => editAccount(row) } > Edit </a> |
       <a onClick={() => deleteAccount(row)} > Delete </a>
     </Table.Cell>
   </Table.Row>
@@ -33,11 +32,11 @@ class Accounts extends Component {
     dispatch: null,
     isLoading: false
   };
-  state = { 
-    modalOpen: false, 
-    currentPage: 1, 
-    sortDir: 'asc',  
-    sortCol: 'firstName', 
+  state = {
+    modalOpen: false,
+    currentPage: 1,
+    sortDir: 'asc',
+    sortCol: 'firstName',
     selectedUser: null,
     openConfirmBox: false
   }
@@ -55,7 +54,7 @@ class Accounts extends Component {
     const { dispatch } = this.props;
     dispatch(selectUser(undefined));
     this.setState({ modalOpen: true })
-  }  
+  }
 
   handleClose = () => this.setState({ modalOpen: false, selectedUser: null })
 
@@ -67,7 +66,7 @@ class Accounts extends Component {
     let accountDetail = {
       firstName: selectedUser.firstName,
       lastName: selectedUser.lastName,
-      phoneNumber: selectedUser.phoneNumber,
+      phone: selectedUser.phone,
       email: selectedUser.email,
       id: selectedUser.id,
       isDeleted: true
@@ -95,7 +94,7 @@ class Accounts extends Component {
       firstName: details.firstName,
       lastName: details.lastName,
       email: details.email,
-      phoneNumber: details.phoneNumber
+      phone: details.phone
     }
     if (selectedUser) {
       accountDetail.id = selectedUser.id;
@@ -148,21 +147,21 @@ class Accounts extends Component {
             </div>
             <Grid.Row>
               <Grid.Column>
-                <Confirm 
+                <Confirm
                   content="Are you sure you want to delete this user?"
                   confirmButton="Confirm"
-                  open={this.state.openConfirmBox} 
-                  onCancel={this.closeConfirmBox} 
-                  onConfirm={this.handleConfirm} 
+                  open={this.state.openConfirmBox}
+                  onCancel={this.closeConfirmBox}
+                  onConfirm={this.handleConfirm}
                 />
                 <Modal className="innerModal" trigger={<Button icon='add' onClick={this.handleOpen} />}
                       open={this.state.modalOpen}
-                      onClose={this.handleClose} 
+                      onClose={this.handleClose}
                       closeIcon>
                   <Header content= {selectedUser ? 'Edit Account' : 'Add New Account'} />
                   <Modal.Content>
-                    <AddAccount 
-                      saveAccount = {this.saveAccount} 
+                    <AddAccount
+                      saveAccount = {this.saveAccount}
                       selectedUser = {selectedUser}
                     />
                   </Modal.Content>
@@ -176,26 +175,25 @@ class Accounts extends Component {
                     <Table.Row>
                       <Table.HeaderCell
                         className={`${sortCol === 'firstName' ? sortDirClass : 'sortAsc'}` }>
-                        <a onClick={() => this.handleSort('firstName') }>Account Name<i className="sort amount down icon ml-05"></i></a>
+                        <a onClick={() => this.handleSort('firstName') }>Name<i className="sort amount down icon ml-05"></i></a>
                       </Table.HeaderCell>
-                      <Table.HeaderCell 
+                      <Table.HeaderCell
                         className={`${sortCol === 'email' ? sortDirClass : 'sortAsc'}` }>
                         <a onClick={() => this.handleSort('email') }>Email<i className="sort amount down icon ml-05"></i></a>
                       </Table.HeaderCell>
-                      <Table.HeaderCell 
-                        className={`${sortCol==='createdAt' ? sortDirClass : 'sortAsc'}` }>
-                        <a onClick={() => this.handleSort('createdAt') }>Date<i className="sort amount down icon ml-05"></i></a>
+                      <Table.HeaderCell
+                        className={`${sortCol==='phone' ? sortDirClass : 'sortAsc'}` }>
+                        <a onClick={() => this.handleSort('phone') }>Phone<i className="sort amount down icon ml-05"></i></a>
                       </Table.HeaderCell>
-                    <Table.HeaderCell>Last Event<i className="sort amount down icon ml-05"></i></Table.HeaderCell>
                     <Table.HeaderCell>Action</Table.HeaderCell>
                     </Table.Row>
                   </Table.Header>
                   <Table.Body>
-                    { users.length > 0 && 
+                    { users.length > 0 &&
                       users.map(row => {
-                        return <TableRow 
-                          key = {row.id} 
-                          row={row} 
+                        return <TableRow
+                          key = {row.id}
+                          row={row}
                           editAccount={this.editAccount}
                           deleteAccount={this.deleteAccount}
                         />
@@ -217,7 +215,7 @@ class Accounts extends Component {
                 </Table>
               </Grid.Column>
             </Grid.Row>
-          </Grid> 
+          </Grid>
         </AuthenticatedUser>
       );
     } else {

@@ -28,7 +28,7 @@ module.exports = {
       password: joi.string(),
       firstName: joi.string(),
       lastName: joi.string(),
-      phoneNumber: joi.string()
+      phone: joi.string()
     },
     options: { abortEarly: false },
   },
