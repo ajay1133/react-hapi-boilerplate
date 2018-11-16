@@ -145,7 +145,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
   try {
     if (accountDetails.id) {
       let users = getState().get('account').get('items');
-      let index = users.findIndex((user) => user.id === accountDetails.id)
+      let index = users.findIndex((user) => user.id === accountDetails.id);
       if (accountDetails.isDeleted) {
         users.splice(index, 1);
       } else {
@@ -154,7 +154,9 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
         selectedUser.lastName =accountDetails.lastName;
         selectedUser.email = accountDetails.email;
         selectedUser.phone = accountDetails.phone;
-        users.splice(index, 1, selectedUser)
+        selectedUser.url = accountDetails.url;
+        selectedUser.description = accountDetails.description;
+        users.splice(index, 1, selectedUser);
       }
       await api.put('/account', { data: accountDetails });
       dispatch(loadAccounts());

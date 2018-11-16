@@ -1,13 +1,13 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { Table, Modal, Grid, Button, Header, Message, Confirm } from  'semantic-ui-react'
-import { loadAccounts, saveAccount, sortAccounts, selectUser } from '../../redux/modules/account'
-import AddAccount from '../../components/AddAccount'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { Table, Modal, Grid, Button, Header, Message, Confirm } from  'semantic-ui-react';
+import { loadAccounts, saveAccount, sortAccounts, selectUser } from '../../redux/modules/account';
+import AddAccount from '../../components/AddAccount';
 import Pagination from '../../components/Pagination';
 import { OFFSET } from '../../utils/constants';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
-//import {Link} from  'react-router-dom'
+//import {Link} from  'react-router-dom';
 
 const TableRow = ({row, editAccount, deleteAccount}) => (
   <Table.Row>
@@ -19,10 +19,14 @@ const TableRow = ({row, editAccount, deleteAccount}) => (
       <a onClick={() => deleteAccount(row)} > Delete </a>
     </Table.Cell>
   </Table.Row>
-  )
+  );
 
-
-class Accounts extends Component {
+@connect(state => ({
+  items: state.get('account').get('items'),
+  loadErr: state.get('account').get('loadErr'),
+  itemsCount: state.get('account').get('itemsCount')
+}))
+export default class Accounts extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     isLoading: PropTypes.bool,
@@ -32,6 +36,7 @@ class Accounts extends Component {
     dispatch: null,
     isLoading: false
   };
+  
   state = {
     modalOpen: false,
     currentPage: 1,
@@ -39,7 +44,8 @@ class Accounts extends Component {
     sortCol: 'firstName',
     selectedUser: null,
     openConfirmBox: false
-  }
+  };
+  
   constructor(props) {
     super(props);
     this.saveAccount = this.saveAccount.bind(this);
@@ -48,17 +54,17 @@ class Accounts extends Component {
     this.editAccount = this.editAccount.bind(this);
     this.deleteAccount = this.deleteAccount.bind(this);
     this.closeConfirmBox = this.closeConfirmBox.bind(this);
-  }
+  };
 
   handleOpen = () => {
     const { dispatch } = this.props;
     dispatch(selectUser(undefined));
     this.setState({ modalOpen: true })
-  }
+  };
 
-  handleClose = () => this.setState({ modalOpen: false, selectedUser: null })
+  handleClose = () => this.setState({ modalOpen: false, selectedUser: null });
 
-  closeConfirmBox = () => this.setState({ openConfirmBox: false, selectedUser: null })
+  closeConfirmBox = () => this.setState({ openConfirmBox: false, selectedUser: null });
 
   handleConfirm = () => {
     const { selectedUser } = this.state;
@@ -66,27 +72,29 @@ class Accounts extends Component {
     let accountDetail = {
       firstName: selectedUser.firstName,
       lastName: selectedUser.lastName,
-      phone: selectedUser.phone,
+      phone: selectedUser.phone.toString(),
+      url: selectedUser.url || '',
+      description: selectedUser.description || '',
       email: selectedUser.email,
       id: selectedUser.id,
       isDeleted: true
-    }
+    };
     dispatch(saveAccount(accountDetail)).then(response => {
       this.setState({openConfirmBox: false, selectedUser: null});
     });
-  }
+  };
 
-  editAccount = (row) => {
+  editAccount = row => {
     const { dispatch } = this.props;
     dispatch(selectUser(row));
     this.setState({ modalOpen: true, selectedUser: row })
-  }
+  };
 
-  deleteAccount = (row) => {
+  deleteAccount = row => {
     this.setState({ openConfirmBox: true, selectedUser: row })
-  }
+  };
 
-  saveAccount (details) {
+  saveAccount = details => {
     const { dispatch } = this.props;
     const { selectedUser } = this.state;
     const elem = this;
@@ -94,30 +102,31 @@ class Accounts extends Component {
       firstName: details.firstName,
       lastName: details.lastName,
       email: details.email,
-      phone: details.phone
-    }
+      phone: details.phone.toString(),
+      url: details.url || '',
+      description: details.description || ''
+    };
     if (selectedUser) {
       accountDetail.id = selectedUser.id;
       accountDetail.isDeleted =false;
     }
+    console.log('accountDetail Edit ----->> ', accountDetail);
     return new Promise((resolve, reject) => {
       dispatch(saveAccount(accountDetail)).then(response => {
+        elem.setState({modalOpen: false, selectedUser: null});
         if (response && response.id) {
-          elem.setState({modalOpen: false, selectedUser: null});
           resolve(response);
         } else {
-          elem.setState({modalOpen: false, selectedUser: null});
           reject(response)
         }
       });
     });
-
-  
-  }
+  };
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch(loadAccounts());
-  }
+  };
+  
   handleSort = clickedColumn => {
     const { dispatch } = this.props;
     const { sortDir } = this.state;
@@ -125,6 +134,7 @@ class Accounts extends Component {
     dispatch(sortAccounts(sortDir === 'asc' ? 'desc' : 'asc',clickedColumn));
     this.setState({ sortDir : sortDir === 'asc' ? 'desc' : 'asc', sortCol : clickedColumn });
   };
+  
   render() {
     const { items, loadErr, itemsCount } = this.props;
     const { sortCol, sortDir, selectedUser } = this.state;
@@ -223,9 +233,3 @@ class Accounts extends Component {
     }
   }
 }
-
-export default connect(state => ({
-  items: state.get('account').get('items'),
-  loadErr: state.get('account').get('loadErr'),
-  itemsCount: state.get('account').get('itemsCount')
-}))(Accounts);
