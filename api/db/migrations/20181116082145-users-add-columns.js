@@ -7,19 +7,22 @@ module.exports = {
         .addColumn('users', 'url', {
           type: Sequelize.STRING,
           allowNull: true,
-          defaultValue: false
+          defaultValue: null,
+          after: "phone",
         }),
       queryInterface
         .addColumn('users', 'description', {
           type: Sequelize.STRING,
           allowNull: true,
-          defaultValue: false
+          defaultValue: null,
+          after: "url",
         }),
       queryInterface
         .addColumn('users', 'image', {
           type: Sequelize.STRING,
           allowNull: true,
-          defaultValue: false
+          defaultValue: null,
+          after: "description",
         })
     ];
   },
