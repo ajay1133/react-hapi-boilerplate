@@ -16,6 +16,11 @@ module.exports = {
       id: joi.number()
              .description('PK of User')
              .required(),
+  
+      email: joi.string()
+                .email()
+                .description('Email of User')
+                .required(),
       
       firstName: joi.string()
                     .max(100)
@@ -41,15 +46,16 @@ module.exports = {
                       .allow('', null)
                       .description('Description of User'),
       
+      status: joi.number()
+                 .optional()
+                 .valid([1,2,3])
+                 .allow(null)
+                 .description('1=Active, 2=Pending, 3=Denied'),
+  
       isDeleted: joi.boolean()
                     .valid(true, false)
                     .default(false)
                     .description('0 = not deleted, 1 = deleted'),
-      
-      email: joi.string()
-                .email()
-                .description('Email of User')
-                .required(),
     },
     options: { abortEarly: false },
   },
