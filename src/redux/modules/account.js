@@ -156,6 +156,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
         selectedUser.phone = accountDetails.phone;
         selectedUser.url = accountDetails.url;
         selectedUser.description = accountDetails.description;
+        selectedUser.status = accountDetails.status;
         users.splice(index, 1, selectedUser);
       }
       await api.put('/account', { data: accountDetails });

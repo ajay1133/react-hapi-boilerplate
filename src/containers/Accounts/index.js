@@ -7,16 +7,23 @@ import AddAccount from '../../components/AddAccount';
 import Pagination from '../../components/Pagination';
 import { OFFSET } from '../../utils/constants';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
+import '../../style/css/style.css';
 //import {Link} from  'react-router-dom';
 
-const TableRow = ({row, editAccount, deleteAccount}) => (
-  <Table.Row>
+const rowBgColor = [];
+rowBgColor[1] = 'bg-success';
+rowBgColor[3] = 'bg-danger';
+
+const TableRow = ({row, editAccount, typeAction}) => (
+  <Table.Row className={(row.status) ? rowBgColor[row.status] : 'bg-warning'}>
     <Table.Cell>{ row.firstName } { row.lastName }</Table.Cell>
     <Table.Cell>{ row.email } </Table.Cell>
     <Table.Cell>{ row.phone }</Table.Cell>
     <Table.Cell>
       <a onClick={ () => editAccount(row) } > Edit </a> |
-      <a onClick={() => deleteAccount(row)} > Delete </a>
+      <a onClick={() => typeAction('delete', row)} > Delete </a> |
+      <a onClick={() => typeAction('active', row)} > Active </a> |
+      <a onClick={() => typeAction('denied', row)} > Denied </a>
     </Table.Cell>
   </Table.Row>
   );
@@ -43,7 +50,8 @@ export default class Accounts extends Component {
     sortDir: 'asc',
     sortCol: 'firstName',
     selectedUser: null,
-    openConfirmBox: false
+    openConfirmBox: false,
+    type: null
   };
   
   constructor(props) {
@@ -52,7 +60,7 @@ export default class Accounts extends Component {
     this.handleOpen = this.handleOpen.bind(this);
     this.handleClose = this.handleClose.bind(this);
     this.editAccount = this.editAccount.bind(this);
-    this.deleteAccount = this.deleteAccount.bind(this);
+    this.typeAction = this.typeAction.bind(this);
     this.closeConfirmBox = this.closeConfirmBox.bind(this);
   };
 
@@ -67,18 +75,26 @@ export default class Accounts extends Component {
   closeConfirmBox = () => this.setState({ openConfirmBox: false, selectedUser: null });
 
   handleConfirm = () => {
-    const { selectedUser } = this.state;
+    const { selectedUser, type } = this.state;
     const { dispatch } = this.props;
     let accountDetail = {
+      email: selectedUser.email,
       firstName: selectedUser.firstName,
       lastName: selectedUser.lastName,
       phone: selectedUser.phone.toString(),
       url: selectedUser.url || '',
       description: selectedUser.description || '',
-      email: selectedUser.email,
-      id: selectedUser.id,
-      isDeleted: true
+      id: selectedUser.id
     };
+    
+    if (type === 'delete') {
+      accountDetail.isDeleted = true;
+    } else if (type === 'active'){
+      accountDetail.status = 1;
+    } else if (type === 'denied') {
+      accountDetail.status = 3;
+    }
+    
     dispatch(saveAccount(accountDetail)).then(response => {
       this.setState({openConfirmBox: false, selectedUser: null});
     });
@@ -89,11 +105,11 @@ export default class Accounts extends Component {
     dispatch(selectUser(row));
     this.setState({ modalOpen: true, selectedUser: row })
   };
-
-  deleteAccount = row => {
-    this.setState({ openConfirmBox: true, selectedUser: row })
+  
+  typeAction = (type, row) => {
+    this.setState({ openConfirmBox: true, type, selectedUser: row })
   };
-
+  
   saveAccount = details => {
     const { dispatch } = this.props;
     const { selectedUser } = this.state;
@@ -110,7 +126,6 @@ export default class Accounts extends Component {
       accountDetail.id = selectedUser.id;
       accountDetail.isDeleted =false;
     }
-    console.log('accountDetail Edit ----->> ', accountDetail);
     return new Promise((resolve, reject) => {
       dispatch(saveAccount(accountDetail)).then(response => {
         elem.setState({modalOpen: false, selectedUser: null});
@@ -141,7 +156,6 @@ export default class Accounts extends Component {
     const sortDirClass = sortDir === 'asc' ? 'active sortAsc' : 'active sortDesc';
     let users = [];
     if (items && items.length > 0) {
-
         let begin = (this.state.currentPage - 1) * OFFSET;
         let end = OFFSET * this.state.currentPage;
         users = items.slice(begin, end)
@@ -158,7 +172,7 @@ export default class Accounts extends Component {
             <Grid.Row>
               <Grid.Column>
                 <Confirm
-                  content="Are you sure you want to delete this user?"
+                  content={`Are you sure you want to ${this.state.type} this user ?`}
                   confirmButton="Confirm"
                   open={this.state.openConfirmBox}
                   onCancel={this.closeConfirmBox}
@@ -202,10 +216,10 @@ export default class Accounts extends Component {
                     { users.length > 0 &&
                       users.map(row => {
                         return <TableRow
-                          key = {row.id}
+                          key={row.id}
                           row={row}
                           editAccount={this.editAccount}
-                          deleteAccount={this.deleteAccount}
+                          typeAction={this.typeAction}
                         />
                       })
                     }

@@ -21,6 +21,11 @@ module.exports = {
   notes: 'Create user',
   validate: {
     payload: {
+      email: joi.string()
+                .email()
+                .description('Email of User')
+                .required(),
+      
       password: joi.string(),
       
       firstName: joi.string()
@@ -46,11 +51,11 @@ module.exports = {
                       .optional()
                       .allow('', null)
                       .description('Description of User'),
-      
-      email: joi.string()
-                .email()
-                .description('Email of User')
-                .required(),
+  
+      status: joi.number()
+                 .valid([1,2,3])
+                 .allow(null)
+                 .description('1=Active, 2=Pending, 3=Denied'),
     },
     options: { abortEarly: false },
   },
