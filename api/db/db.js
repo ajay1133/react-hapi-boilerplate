@@ -3,7 +3,6 @@ const config = require('config')
 const settings = config.db
 const globalHooks = require('./globalHooks')
 
-
 const db = new Sequelize(settings.database, settings.username, settings.password, {
   host: settings.host,
   dialect: 'mysql',
