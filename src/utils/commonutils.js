@@ -1,11 +1,3 @@
-import config from '../config';
-import openSocket from 'socket.io-client';
-const socket = openSocket(`${config.apiHost}`);
-
-export function getSocket() {
-return socket;
-}
-
 export const getHashParams = (hash = '') => {
   let hashParams = {};
   let e,

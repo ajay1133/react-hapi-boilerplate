@@ -1,14 +1,21 @@
 import React, { Component } from 'react'
 import { Button, Form, Header, Grid } from 'semantic-ui-react'
 import PropTypes from 'prop-types'
-import { reduxForm } from 'redux-form/immutable'
+import { Field, reduxForm } from 'redux-form/immutable'
 import Input from '../Form/Input'
+import TextArea from '../Form/TextArea'
 import { required, email } from '../../utils/validations'
 import { connect } from 'react-redux';
 import { SubmissionError } from 'redux-form/immutable'
 
-class AddAccount extends Component {
-
+@connect(state => ({
+  initialValues: state.get('account').get('selectedUser')
+}))
+@reduxForm({
+  form: 'accountForm',
+//  enableReinitialize: true
+})
+export default class AddAccount extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     handleSubmit: PropTypes.func,
@@ -31,7 +38,9 @@ class AddAccount extends Component {
     const { saveAccount } = this.props;
     const account = formData.toJS();
     return saveAccount(account).then(data => {
-      console.log('Account Saved!');
+      if (data) {
+        console.log('Account Saved!');
+      }
     }).catch(err => {
       console.log(err);
       if (err.statusCode === 400) {
@@ -39,8 +48,7 @@ class AddAccount extends Component {
       }
   });
   }
-
-
+  
   render() {
     const { handleSubmit, submitting } = this.props;
     return (
@@ -56,7 +64,6 @@ class AddAccount extends Component {
               type="text"
               size="small"
               validate={[required]}
-
             />
             <Input
                 name="email"
@@ -64,7 +71,6 @@ class AddAccount extends Component {
                 type="text"
                 size="small"
                 validate={[required, email]}
-  
               />
             </Grid.Column>
             <Grid.Column>
@@ -76,17 +82,36 @@ class AddAccount extends Component {
                 validate={[required]}
               />
               <Input
-                name="phoneNumber"
-                placeholder="Phone Number"
+                name="phone"
+                placeholder="Phone"
                 type="text"
                 size="small"
                 validate={[required]}
               />
-              </Grid.Column>
+            </Grid.Column>
+            <Grid.Column>
+              <Input
+                name="url"
+                placeholder="Website Url"
+                type="text"
+                size="small"
+              />
+              <Field
+                name="description"
+                placeholder="Description"
+                component={TextArea}
+                autoHeight
+              />
+            </Grid.Column>
           </Grid.Row>
           <Grid.Row>
             <Grid.Column>
-              <Button className="ui large fluid button front" type="submit"  primary disabled={submitting} loading={submitting}>
+              <Button
+                className="ui large fluid button front"
+                type="submit"
+                primary
+                disabled={submitting}
+                loading={submitting}>
                 Save
               </Button>
             </Grid.Column>
@@ -96,10 +121,3 @@ class AddAccount extends Component {
     );
   }
 }
-
-export default connect(
-  state => ({
-    initialValues: state.get('account').get('selectedUser')
-  }))(reduxForm({
-  form: 'accountForm'
-})(AddAccount));

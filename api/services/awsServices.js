@@ -3,10 +3,6 @@ const aws = require('aws-sdk');
 const config = require('config');
 const fs = require('fs');
 const internals = {};
-const s3Options = {
-  accessKeyId: config.aws.accessKeyId,
-  secretAccessKey: config.aws.secretAccessKey
-};
 
 const async = require("async");
 
@@ -19,12 +15,6 @@ exports.createAwsObject = (req, options) => new Promise((resolve, reject) => {
     throw new Error('S3_BUCKET is required.');
   }
 
-  if (options.region) {
-    s3Options.region = options.region;
-  }
-  if (options.signatureVersion) {
-    s3Options.signatureVersion = options.signatureVersion;
-  }
   if (options.uniquePrefix === undefined) {
     options.uniquePrefix = true;
   }
@@ -33,7 +23,6 @@ exports.createAwsObject = (req, options) => new Promise((resolve, reject) => {
   const mediaId = uuid.v4();
   const mimeType = req.query.contentType;
   const fileKey = mediaId + '/' + filename +'.'+ ext ;
-  const s3 = new aws.S3(s3Options);
   const params = {
     Bucket: S3_BUCKET,
     Key: fileKey,
@@ -63,7 +52,6 @@ exports.getObject = (key, options) => new Promise((resolve, reject) => {
     Bucket: options.bucket,
     Key: key
   };
-  const s3 = new aws.S3(s3Options);
   s3.getSignedUrl('getObject', params, (err, url) => {
     if (err) {
       reject(err);
@@ -77,7 +65,7 @@ exports.deleteFile = (key, options) => new Promise((resolve, reject) => {
     Bucket: options.bucket,
     Key: key
   };
-  const s3 = new aws.S3(s3Options);
+
   s3.deleteObject(params, (err, data) => {
     if (err) {
       return reject(err);
@@ -87,8 +75,6 @@ exports.deleteFile = (key, options) => new Promise((resolve, reject) => {
 });
 
 exports.copyAWSObjects = (images, options) => new Promise((resolve, reject) => {
-
-    const s3 = new aws.S3(s3Options);
 
     async.eachLimit(images, 1, function(image, callback) {
       var params = {

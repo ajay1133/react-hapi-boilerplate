@@ -38,7 +38,7 @@ export default function reducer(state = initialState, action) {
 		case LOAD_FAIL:
 			return state
 				.set('isLoad', false)
-				.set('loadErr', action.error);
+				.set('loadErr', JSON.stringify(action.error));
 		
 		case BIT_BUCKET_LISTING:
 			return state

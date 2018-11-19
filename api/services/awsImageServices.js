@@ -3,10 +3,7 @@ const aws = require('aws-sdk');
 const config = require('config');
 const fs = require('fs');
 const internals = {};
-const s3Options = {
-  accessKeyId: config.aws.accessKeyId,
-  secretAccessKey: config.aws.secretAccessKey
-};
+const s3 = require('../helpers/awsHelper').s3;
 
 exports.createAwsObject = (req, campaignId, options) => new Promise((resolve, reject) => {
   let S3_BUCKET = options.bucket,
@@ -14,13 +11,6 @@ exports.createAwsObject = (req, campaignId, options) => new Promise((resolve, re
 
   if (!S3_BUCKET) {
     throw new Error('S3_BUCKET is required.');
-  }
-
-  if (options.region) {
-    s3Options.region = options.region;
-  }
-  if (options.signatureVersion) {
-    s3Options.signatureVersion = options.signatureVersion;
   }
   if (options.uniquePrefix === undefined) {
     options.uniquePrefix = true;
@@ -61,12 +51,6 @@ exports.createAwsObjectBody = (req, folder ,campaignID, options) => new Promise(
     throw new Error('S3_BUCKET is required.');
   }
 
-  if (options.region) {
-    s3Options.region = options.region;
-  }
-  if (options.signatureVersion) {
-    s3Options.signatureVersion = options.signatureVersion;
-  }
   if (options.uniquePrefix === undefined) {
     options.uniquePrefix = true;
   }
@@ -103,7 +87,7 @@ exports.getObject = (key, options) => new Promise((resolve, reject) => {
     Bucket: options.bucket,
     Key: key
   };
-  const s3 = new aws.S3(s3Options);
+
   s3.getSignedUrl('getObject', params, (err, url) => {
     if (err) {
       reject(err);
@@ -117,7 +101,7 @@ exports.deleteFile = (key, options) => new Promise((resolve, reject) => {
     Bucket: options.bucket,
     Key: key
   };
-  const s3 = new aws.S3(s3Options);
+  
   s3.deleteObject(params, (err, data) => {
     if (err) {
       return reject(err);

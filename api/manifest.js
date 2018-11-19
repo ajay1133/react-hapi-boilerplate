@@ -6,7 +6,7 @@ var corsHeaders = {
   headers: ["Access-Control-Allow-Origin","Access-Control-Allow-Headers","Access-Control-Request-Method", "Accept", "Content-Type", "If-None-Match", "Access-Control-Request-Headers","Connection, Host, Origin, X-Requested-With, Content-Type", "Authorization", "RefreshToken"],
   credentials: true
 };
-console.log(config.api);
+
 module.exports = {
   server: {
     host: config.api.host,
@@ -62,13 +62,13 @@ module.exports = {
           plugin: require('./plugins/common'),
           options: {},
         },
-        {
-          plugin: require('./plugins/notification'),
-          options: {
-            host: config.redis.host,
-            port: config.redis.port
-          },
-        },
+        // {
+        //   plugin: require('./plugins/notification'),
+        //   options: {
+        //     host: config.redis.host,
+        //     port: config.redis.port
+        //   },
+        // },
         {
           plugin: require('hapi-router'),
           options: {
@@ -104,131 +104,3 @@ module.exports = {
       }
   }
 };
-
-// module.exports = {
-//   connections: [
-//     {
-//       labels: ['api'],
-//       host: config.api.host,
-//       port: config.api.port,
-//       routes: {
-//         cors: true
-//       }
-//     },
-//   ],
-
-//   registrations: [
-
-//     { plugin: { register: 'inert' } }, // required by hapi-swagger
-
-//     { plugin: { register: 'vision' } }, // required by hapi-swagger
-
-//     {
-//       plugin: {
-//         register: 'hapi-swagger',
-//         options: {
-//           info: {
-//             title: `${rootPackage.name} Documentation`,
-//             version: rootPackage.version,
-//             contact: {
-//               name: 'Ankit Patial',
-//               email: 'ankit@simsaw.com',
-//             },
-//           },
-//         },
-//       },
-//     },
-//     {
-//       plugin: {
-//         register: 'yar',
-//         options: {
-//           storeBlank: false,
-//           cookieOptions: {
-//             password: config.api.secret,
-//             isSecure: false,
-//             isHttpOnly: true,
-//           },
-//         },
-//       },
-//     },
-
-//     {
-//       plugin: {
-//         register: './plugins/auth',
-//         options: {
-//           secret: config.api.secret,
-//           isSecure: false
-//         },
-//       },
-//     },
-//     {
-//       plugin: {
-//         register: './plugins/cognito',
-//         options: {
-//           userPoolId: config.cognito.userPoolId,
-//           clientId: config.cognito.clientId
-//         },
-//       },
-//     },
-//     {
-//       plugin: {
-//         register: './plugins/common',
-//         options: {},
-//       },
-//     },
-
-//     {
-//       plugin: {
-//         register: './plugins/notification',
-//         options: {
-//           host: config.redis.host,
-//           port: config.redis.port
-//         },
-//       },
-//     },
-
-//     {
-//       plugin: {
-//         register: 'hapi-authorization',
-//         options: {
-//           roles: constants.ROLES_LIST,
-//         },
-//       },
-//     },
-
-//     {
-//       plugin: {
-//         register: 'hapi-router',
-//         options: {
-//           cwd: __dirname,
-//           routes: 'controllers/**/*Controller.js',
-//         },
-//       },
-//     },
-
-//     {
-//       plugin: {
-//         register: 'good',
-//         options: {
-//           reporters: {
-//             console: [
-//               {
-//                 module: 'good-squeeze',
-//                 name: 'Squeeze',
-//                 args: [{
-//                   response: '*',
-//                   error: '*',
-//                   log: '*',
-//                 }],
-//               },
-//               {
-//                 module: 'good-console',
-//               },
-//               'stdout',
-//             ],
-//           },
-//         },
-//       },
-//     }
-//   ]
-// };

@@ -7,13 +7,10 @@ import TextArea from '../../components/Form/TextArea';
 
 class EditFile extends Component {
 	static propTypes = {
-		fileContent: PropTypes.string,
 		dispatch: PropTypes.func
 	};
 	
 	render() {
-		const { fileContent } = this.props;
-		
 		return (
 			<Form>
 				<Field

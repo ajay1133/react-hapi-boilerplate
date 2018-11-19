@@ -9,7 +9,16 @@ const User = db.models.User;
 const jwtHelper = require('../helpers/jwtHelper');
 const mailer = require('../mailer');
 
-const defaultUserAttributes = ['id', 'email', 'firstName', 'lastName', 'createdAt'];
+const defaultUserAttributes = [
+  'id',
+  'email',
+  'firstName',
+  'lastName',
+  'phone',
+  'url',
+  'description',
+  'status'
+];
 
 /**
  * Create a user
@@ -59,7 +68,6 @@ exports.createUser = async (userPayload) =>  {
 exports.getAllAccounts = () => new Promise( ( resolve, reject ) => {
 	User
     .findAndCountAll({
-      distinct: true,
       where: {
         role: 2
       },
@@ -96,7 +104,6 @@ exports.getUser = async (userId) => {
  */
  exports.updateUser = (userPayload) => new Promise((resolve, reject) => {
    assert(userPayload, i18n('services.accountService.missingUserPayload'));
-   
    const userData = Object.assign({}, userPayload);
    
    if (userPayload.password) {
@@ -117,20 +124,18 @@ exports.getUser = async (userId) => {
    else {
      User.findOne({ where: { id: userPayload.id }})
       .then((existingUser) => {
-        User.update(userData, {where:{id:userPayload.id}})
+        User.update(userData, { where: { id: userPayload.id } })
           .then((data) => {
-            if (existingUser.dataValues.email !== userData.email) {
-              let name = userPayload.firstName + ' ' + userPayload.lastName;
-              
-              let response = mailer.userRegistration({
-                email: userPayload.email,
-                inviteToken: existingUser.dataValues.inviteToken,
-                name: name
-              });
-              
-              console.log("Mail Response", response);
-            }
-            
+//            if (existingUser.dataValues.email !== userData.email) {
+//              let name = userPayload.firstName + ' ' + userPayload.lastName;
+//
+//              let response = mailer.userRegistration({
+//                email: userPayload.email,
+//                inviteToken: existingUser.dataValues.inviteToken,
+//                name: name
+//              });
+//              console.log("Mail Response", response);
+//            }
             resolve(data);
           })
           .catch('error');

@@ -13,14 +13,10 @@ module.exports = {
     port: db.redis.port,
     prefix: 'com_'
   },
-  aws: {
-    accessKeyId: db.aws.key,
-    secretAccessKey: db.aws.secret,
-  },
   bitBucket: {
     accessKeyId: db.bitBucket.key,
     secretAccessKey: db.bitBucket.secret,
-    basePath: 'https://api.bitbucket.org/2.0/repositories/simsaw/compass-hugo'
+    basePath: db.bitBucket.path
   },
   emailUrl:{
     host: ''

@@ -18,17 +18,44 @@ module.exports = {
   },
   tags: ['api', 'account'],
   description: 'Create user',
-
   notes: 'Create user',
-
-
   validate: {
     payload: {
-      email: joi.any(),
+      email: joi.string()
+                .email()
+                .description('Email of User')
+                .required(),
+      
       password: joi.string(),
-      firstName: joi.string(),
-      lastName: joi.string(),
-      phoneNumber: joi.string()
+      
+      firstName: joi.string()
+                    .max(100)
+                    .description('First Name of User')
+                    .required(),
+  
+      lastName: joi.string()
+                   .max(100)
+                   .description('Last Name of User')
+                   .required(),
+  
+      phone: joi.string()
+                .description('Phone of User')
+                .required(),
+  
+      url: joi.string()
+              .optional()
+              .allow('', null)
+              .description('Url of User'),
+  
+      description: joi.string()
+                      .optional()
+                      .allow('', null)
+                      .description('Description of User'),
+  
+      status: joi.number()
+                 .valid([1,2,3])
+                 .allow(null)
+                 .description('1=Active, 2=Pending, 3=Denied'),
     },
     options: { abortEarly: false },
   },

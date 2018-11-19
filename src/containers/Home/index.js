@@ -24,7 +24,6 @@ const Home = withRouter(({ location, user }) => {
                 <Login />
               </div>
               <div className="footer">
-  
                 <List horizontal>
                   <List.Item>
                     <List.Content>

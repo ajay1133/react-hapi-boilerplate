@@ -28,8 +28,8 @@ module.exports = {
       dialect: 'mysql'
     },
     aws: {
-      key: process.env.AWS_KEY || 'AKIAIQHJ4IHVFTQUHIPQ',
-      secret: process.env.AWS_SECRET || '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'
+      key: process.env.AWS_KEY,
+      secret: process.env.AWS_SECRET
     },
     redis: {
       host: process.env.REDIS_HOST || '127.0.0.1',
