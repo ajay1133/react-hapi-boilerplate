@@ -6,7 +6,6 @@ import { Field, reduxForm, SubmissionError } from 'redux-form/immutable';
 import { Button, Form, Header, Grid } from 'semantic-ui-react';
 import Input from '../Form/Input';
 import TextArea from '../Form/TextArea';
-import RichEditor from '../Form/RichEditor';
 import { required, email } from '../../utils/validations';
 
 @connect(state => ({
@@ -101,7 +100,6 @@ export default class AddAccount extends Component {
                 type="text"
                 size="small"
               />
-              <RichEditor />
               <Field
                 name="description"
                 placeholder="Description"
