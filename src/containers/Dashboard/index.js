@@ -103,7 +103,8 @@ export default class Dashboard extends Component {
     const { dispatch } = this.props;
     const { token } = this.state;
     
-    console.log('href:', href);
+    console.log(e, href, type, displayName, repoPath);
+    
     const listData = Object.assign({}, {
       token,
       path: href.split('/src')[1]
@@ -166,16 +167,7 @@ export default class Dashboard extends Component {
     this.setState({ loading: true });
     
     dispatch(updateBitBucketFile(dataObject))
-      .then(() => this.getBitBucketData('', href, 'commit_directory', repoPath))
-      .then(() => {
-        this.setState({
-          loading: false,
-          modalOpenFlag: false,
-          openRepoFile: false,
-	        fileName: null,
-	        fileContent: null
-        });
-      })
+      .then((r) => this.getBitBucketData(r, href, 'commit_directory', repoPath))
       .catch(() => this.setState({ loading: false }))
   };
   
@@ -187,14 +179,12 @@ export default class Dashboard extends Component {
     let htmlStr = validMetaDataKeys.length ? '<hr/><p>' : '';
 	
 	  validMetaDataKeys.forEach(k => {
-      htmlStr += ` ${k}:${dataObj[k]} `;
+      htmlStr += `&nbsp;${k}:${dataObj[k]}<br/>`;
     });
 	
 	  htmlStr += validMetaDataKeys.length ? '</p><hr/>' : '';
 	  
 	  htmlStr += (dataObj && dataObj.content) || '';
-	  
-	  console.log(dataObj, validMetaDataKeys.length, 'htmlStr:', htmlStr);
 	  
 	  return htmlStr;
   };
