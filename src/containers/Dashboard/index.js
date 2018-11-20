@@ -7,10 +7,10 @@ import { reduxForm } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
 import { Button, List, Loader, Modal, Icon, Message } from 'semantic-ui-react';
 import config from '../../config';
-import { getHashParams } from '../../utils/commonutils';
 import AddFile from '../../components/File/AddFile';
 import EditFile from '../../components/File/EditFile';
 import { bitBucketListing, bitBucketView, updateBitBucketFile } from '../../redux/modules/bitBucketRepo';
+import { getHashParams, strictValidObjectWithKeys } from '../../utils/commonutils';
 
 const { bitBucket } = config;
 
@@ -26,6 +26,7 @@ const md = MarkDown({
   message: state.get('bitBucketRepo').get('message'),
   isLoad: state.get('bitBucketRepo').get('isLoad'),
   loadErr: state.get('bitBucketRepo').get('loadErr'),
+	accessToken: state.get('bitBucketRepo').get('accessToken'),
   bitBucketList: state.get('bitBucketRepo').get('bitBucketList')
 }))
 
@@ -36,13 +37,12 @@ const md = MarkDown({
 
 export default class Dashboard extends Component {
   state = {
-    loading: false,
+    loading: true,
     hideRepoListingAreaFlag: false,
     modalOpenFlag: false,
     openRepoFile: false,
     fileName: null,
     fileContent: null,
-    token: null,
     href: null,
     repoPath: null,
     showMessageFlag: true
@@ -56,26 +56,26 @@ export default class Dashboard extends Component {
     isLoad: PropTypes.bool,
     loadErr: PropTypes.string,
     location: PropTypes.object,
+	  accessToken: PropTypes.string,
     bitBucketList: PropTypes.array
   };
-  
+	
+	constructor(props) {
+		super(props);
+		
+		this.saveAccount = this.getBitBucketData.bind(this);
+	};
+	
   componentDidMount = () => {
     const { dispatch, location, history } = this.props;
     const params = getHashParams(location.hash);
-    
-    const validParamsFlag = params && Object.keys(params).length && params.access_token;
+	
+	  const validParamsFlag = strictValidObjectWithKeys(params) && params.access_token;
     
     if (validParamsFlag) {
-      const token = params.access_token;
-      
       history.replace('/dashboard');
       
-      this.setState({
-        loading: true,
-        token
-      });
-      
-      dispatch(bitBucketListing({ token }))
+      dispatch(bitBucketListing({ accessToken: params.access_token }))
         .then(() => this.setState({ loading: false }))
         .catch(() => this.setState({ loading: false }));
     }
@@ -100,13 +100,12 @@ export default class Dashboard extends Component {
   };
   
   getBitBucketData = async (e, href, type, displayName, repoPath) => {
-    const { dispatch } = this.props;
-    const { token } = this.state;
+    const { dispatch, accessToken } = this.props;
     
-    console.log(e, href, type, displayName, repoPath);
+    console.log(href, type, displayName, repoPath);
     
-    const listData = Object.assign({}, {
-      token,
+    const params = Object.assign({}, {
+      accessToken,
       path: href.split('/src')[1]
     });
     
@@ -116,9 +115,9 @@ export default class Dashboard extends Component {
     const isLoadingDirectoryFlag = type === 'commit_directory';
     
     if (isLoadingDirectoryFlag) {
-      res = await dispatch(bitBucketListing(listData));
+      res = await dispatch(bitBucketListing(params));
     } else {
-	    res = await dispatch(bitBucketView(listData));
+	    res = await dispatch(bitBucketView(params));
     }
     
     this.setState({
@@ -149,8 +148,8 @@ export default class Dashboard extends Component {
   };
   
   setFile = values => {
-    const { dispatch } = this.props;
-    const { token, href, repoPath } = this.state;
+    const { dispatch, accessToken } = this.props;
+    const { href, fileName, repoPath } = this.state;
     
     const turnDown = new TurnDown();
     
@@ -159,7 +158,7 @@ export default class Dashboard extends Component {
     const { name = '' } = formValues;
     
     const dataObject = {
-      token,
+      token: accessToken,
       path: name && repoPath ? repoPath + '/' + name : (name && !repoPath ? name : repoPath),
       content: turnDown.turndown(this.compileFileContentToHTML(formValues))
     };
@@ -167,7 +166,28 @@ export default class Dashboard extends Component {
     this.setState({ loading: true });
     
     dispatch(updateBitBucketFile(dataObject))
-      .then((r) => this.getBitBucketData(r, href, 'commit_directory', repoPath))
+      .then(async (resp) => {
+	      const params = Object.assign({}, {
+		      accessToken,
+		      path: href.split('/src')[1]
+	      });
+	
+	      const isLoadingDirectoryFlag = !!name;
+	      let res = null;
+	      
+	      if (isLoadingDirectoryFlag) {
+		      res = await dispatch(bitBucketListing(params));
+	      } else {
+		      res = await dispatch(bitBucketView(params));
+	      }
+	      
+	      this.setState({
+		      loading: false,
+		      modalOpenFlag: !isLoadingDirectoryFlag,
+		      fileName: !isLoadingDirectoryFlag ? fileName : null,
+		      fileContent: !isLoadingDirectoryFlag && res.data ? res.data : null
+	      });
+      })
       .catch(() => this.setState({ loading: false }))
   };
   
@@ -213,17 +233,17 @@ export default class Dashboard extends Component {
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
   render () {
-    const { isLoad, loadErr, bitBucketList = [], handleSubmit, user, message } = this.props;
+    const { isLoad, loadErr, accessToken, bitBucketList = [], handleSubmit, user, message } = this.props;
     
     const {
-      loading, hideRepoListingAreaFlag, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, token,
-      showMessageFlag
+      loading, hideRepoListingAreaFlag, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag
     } = this.state;
     
     const errorOccurredFlag = !loading && (!user || (!isLoad && loadErr));
     const loadingCompleteFlag = !isLoad && !loadErr;
     const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList) &&
       bitBucketList.length;
+    
     const isFileLoadedSuccessFlag = fileName;
     
     if (errorOccurredFlag) {
@@ -251,7 +271,7 @@ export default class Dashboard extends Component {
         }
         
         {
-          !token &&
+          !accessToken &&
           <Button
             color='facebook'
             onClick={ () => this.bitBucketConnect() }
@@ -261,7 +281,7 @@ export default class Dashboard extends Component {
         }
         
         {
-          !token &&
+          !accessToken &&
           <div className="row" style={{ marginTop: '20px' }}>
             Click on the "Fetch Data From BitBucket" button above to get access from BitBucket where you will
             need to login to grant access to "your" BitBucket repository
@@ -269,7 +289,7 @@ export default class Dashboard extends Component {
         }
         
         {
-          token &&
+	        accessToken &&
           <div className="ui card fluid cardShadow">
             <div className="content pageMainTitle">
               <h4>
