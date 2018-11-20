@@ -49,9 +49,11 @@ export default class Login extends Component {
 
   render() {
     const { handleSubmit, isLoading, loginBusy, loginError, me } = this.props;
+    
     if (me && me.id) {
       return <Redirect to= {'/dashboard'} />;
     }
+    
     return (
       <Segment className=" centered loginOuter">
         <Form className="login-form" onSubmit={handleSubmit(this._login)}>
@@ -75,9 +77,8 @@ export default class Login extends Component {
           </Button>
         </Form>
         {
-          loginError && (
-            <Message error content={loginError} />
-          )
+          loginError &&
+          <Message error content={loginError} />
         }
         <p className="pt-1 m-0 text-center"><a href="" >Forgot your password ?</a></p>
         <p className="m-0 text-center">Not a member?<a href=""> create account</a></p>

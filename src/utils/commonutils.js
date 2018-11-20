@@ -1,5 +1,3 @@
-import config from '../config';
-
 export const getHashParams = (hash = '') => {
   let hashParams = {};
   let e,
@@ -18,3 +16,5 @@ export const getHashParams = (hash = '') => {
 
 export const strictValidObject = obj => obj && obj === Object(obj) &&
 Object.prototype.toString.call(obj) !== '[object Array]';
+
+export const strictValidObjectWithKeys = obj => strictValidObject(obj) && Object.keys(obj).length;

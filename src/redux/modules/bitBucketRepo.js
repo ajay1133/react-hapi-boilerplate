@@ -1,6 +1,7 @@
 import Immutable from 'immutable';
-import { strictValidObject } from '../../utils/commonutils';
+import { strictValidObjectWithKeys } from '../../utils/commonutils';
 import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
+import markdownObject from 'markdown';
 
 const LOAD = 'bitBucketRepo/LOAD';
 const LOAD_SUCCESS = 'bitBucketRepo/LOAD_SUCCESS';
@@ -17,10 +18,10 @@ const initialState = Immutable.fromJS({
 	isLoad: false,
 	loadErr: null,
 	repositories: [],
-	setFileFormInitialValues: {
-		fileContent: null
-	}
+	setFileFormInitialValues: {}
 });
+
+const internals = {};
 
 export default function reducer(state = initialState, action) {
 	switch (action.type) {
@@ -37,7 +38,7 @@ export default function reducer(state = initialState, action) {
 		case LOAD_FAIL:
 			return state
 				.set('isLoad', false)
-				.set('loadErr', action.error);
+				.set('loadErr', JSON.stringify(action.error));
 		
 		case BIT_BUCKET_LISTING:
 			return state
@@ -45,9 +46,7 @@ export default function reducer(state = initialState, action) {
 		
 		case BIT_BUCKET_VIEW:
 			return state
-				.set('setFileFormInitialValues', {
-					fileContent: action.result
-				});
+				.set('setFileFormInitialValues', action.result);
 		
 		case RESET_MESSAGE:
 			return state
@@ -92,14 +91,17 @@ export const bitBucketView = (params) => async (dispatch, getState, api) => {
   try {
 		res = await api.get('/bitBucket/view', { params });
 		
-    if (!res) {
+    if (!(strictValidObjectWithKeys(res) && res.data)) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull file' });
 			return;
 		}
-		
-		dispatch({ type: BIT_BUCKET_VIEW, result: res.data });
+	 
+		const result = await dispatch(convertMd2Json(res.data));
+    
+    dispatch({ type: BIT_BUCKET_VIEW, result });
     dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {
+	  dispatch({ type: BIT_BUCKET_VIEW, result: {} });
 		dispatch({ type: LOAD_FAIL, error });
 	}
  
@@ -114,15 +116,14 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 	try {
 		res = await api.post('/bitBucket/updateFile', { data });
 		
-		if (res && strictValidObject(res) && Object.keys(res).length) {
+		if (strictValidObjectWithKeys(res)) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to update file' });
 			return;
 		}
 		
-		dispatch({ type: BIT_BUCKET_VIEW, result: data.fileContent || '' });
 		dispatch({ type: LOAD_SUCCESS, message: 'Successfully Updated To BitBucket. Loading updated files' });
 		
-		dispatch(resetMessage());
+		dispatch(internals.resetMessage());
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 	}
@@ -131,12 +132,102 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 };
 
 /**
- * resetMessage
- * @param defaultTimeout
- * @return {function(*): number}
+ * convertMd2Json
+ * @param content
  */
-export function resetMessage (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES) {
+export const convertMd2Json = (fileContent) => async (dispatch, getState, api) => {
+	dispatch({ type: LOAD });
+	
+	let res = {};
+	
+	try {
+		const md = markdownObject.markdown;
+		
+		res = await md.parse(fileContent);
+		
+		if (!Array.isArray(res) || !res.length) {
+			dispatch({ type: LOAD_FAIL, error: 'Unable to parse file' });
+			return {};
+		}
+		
+		console.log(res);
+		
+		let details = {};
+		let content = {};
+		let indexOfContent = -1;
+		let lastParsedIndex = -1;
+		
+		res.forEach((item, index) => {
+			const result = internals.parseDetails(res, index);
+			
+			if (strictValidObjectWithKeys(result)) {
+				lastParsedIndex = index;
+				details = Object.assign({}, details, result);
+			}
+		});
+		
+		for (let i = lastParsedIndex + 1; i < res.length - 1; i++) {
+			if (Array.isArray(res[i]) && res[i].length > 1) {
+				indexOfContent = i;
+				break;
+			}
+		}
+		
+		console.log(indexOfContent);
+		
+		content = indexOfContent > -1
+			? md.renderJsonML(md.toHTMLTree(res.slice(indexOfContent - 1))) : md.renderJsonML(md.toHTMLTree(res));
+		
+		res = Object.assign({}, details, { content });
+	} catch (error) {
+		console.log('Error parsing file: ', error);
+		dispatch({ type: LOAD_FAIL, error: JSON.stringify(error) });
+		return {};
+	}
+	
+	return res;
+};
+
+internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES) => {
 	return dispatch => setTimeout(() => {
 		dispatch({ type: RESET_MESSAGE, message: null });
 	}, defaultTimeout);
-}
+};
+
+internals.parseDetails = (fileContent, atIndex) => {
+	let details = {};
+	
+	const isValidDetailFlag = fileContent[atIndex] && Array.isArray(fileContent[atIndex]);
+	
+	if (isValidDetailFlag) {
+		details = internals.parseFieldsBetweenDetails(fileContent[atIndex]);
+	}
+	
+	return details;
+};
+
+internals.parseFieldsBetweenDetails = (detailsTree) => {
+	const fields = {};
+	
+	detailsTree.forEach(detailItem => {
+		const isParsableStringFlag = typeof detailItem === 'string' && detailItem.split(':').length > 1;
+		const isParsableArrayFlag = Array.isArray(detailItem) && Object.keys(fields).length &&
+			!fields[Object.keys(fields)[Object.keys(fields).length - 1]];
+		
+		if (isParsableStringFlag) {
+			detailItem.split('\r\n').forEach(v => {
+				if (v) {
+					const val = v.split(':').map((item, key) => key && typeof item === 'string' ? item.trim() : item);
+					fields[val[0]] = val.length > 1 ? val.slice(1).join(':') : '';
+				}
+			});
+		}
+		
+		if (isParsableArrayFlag) {
+			fields[Object.keys(fields)[Object.keys(fields).length - 1]] = detailItem.length && detailItem[1].ref &&
+				typeof detailItem[1].ref === 'string' ? detailItem[1].ref : '';
+		}
+	});
+	
+	return fields;
+};
