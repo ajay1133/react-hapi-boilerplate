@@ -1,12 +1,13 @@
-import React, { Component } from 'react'
-import { Button, Form, Header, Grid } from 'semantic-ui-react'
-import PropTypes from 'prop-types'
-import { Field, reduxForm } from 'redux-form/immutable'
-import Input from '../Form/Input'
-import TextArea from '../Form/TextArea'
-import { required, email } from '../../utils/validations'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { SubmissionError } from 'redux-form/immutable'
+import { Field, reduxForm, SubmissionError } from 'redux-form/immutable';
+//import { stateToHTML } from 'draft-js-export-html';
+import { Button, Form, Header, Grid } from 'semantic-ui-react';
+import Input from '../Form/Input';
+import TextArea from '../Form/TextArea';
+import RichEditor from '../Form/RichEditor';
+import { required, email } from '../../utils/validations';
 
 @connect(state => ({
   initialValues: state.get('account').get('selectedUser')
@@ -33,10 +34,14 @@ export default class AddAccount extends Component {
     super(props);
     this.addAccount = this.addAccount.bind(this);
   }
-
+  
   addAccount(formData) {
     const { saveAccount } = this.props;
     const account = formData.toJS();
+//    const editorState = this.state.editorState;
+//    const contentState = editorState.getCurrentContent();
+//    const html = stateToHTML(contentState);
+    
     return saveAccount(account).then(data => {
       if (data) {
         console.log('Account Saved!');
@@ -96,6 +101,7 @@ export default class AddAccount extends Component {
                 type="text"
                 size="small"
               />
+              <RichEditor />
               <Field
                 name="description"
                 placeholder="Description"
