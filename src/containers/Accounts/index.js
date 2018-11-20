@@ -37,18 +37,21 @@ const TableRow = ({row, editAccount, typeAction}) => (
 @connect(state => ({
   items: state.get('account').get('items'),
   loadErr: state.get('account').get('loadErr'),
-  itemsCount: state.get('account').get('itemsCount')
+  itemsCount: state.get('account').get('itemsCount'),
+  accessToken: state.get('bitBucketRepo').get('accessToken'),
+  message: state.get('bitBucketRepo').get('message'),
+  isLoad: state.get('bitBucketRepo').get('isLoad')
 }))
 
 export default class Accounts extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
-    isLoading: PropTypes.bool,
+    message: PropTypes.string,
+    isLoad: PropTypes.bool,
   };
 
   static defaultProps = {
-    dispatch: null,
-    isLoading: false
+    dispatch: null
   };
   
   state = {
@@ -58,7 +61,8 @@ export default class Accounts extends Component {
     sortCol: 'firstName',
     selectedUser: null,
     openConfirmBox: false,
-    type: null
+    type: null,
+    showMessageFlag: true
   };
   
   constructor(props) {
@@ -168,9 +172,11 @@ export default class Accounts extends Component {
     this.setState({ sortDir : sortDir === 'asc' ? 'desc' : 'asc', sortCol : clickedColumn });
   };
   
+  messageDismiss = () => this.setState({ showMessageFlag: false });
+  
   render() {
-    const { items, loadErr, itemsCount } = this.props;
-    const { sortCol, sortDir, selectedUser } = this.state;
+    const { items, loadErr, itemsCount, message } = this.props;
+    const { sortCol, sortDir, selectedUser, showMessageFlag } = this.state;
     const sortDirClass = sortDir === 'asc' ? 'active sortAsc' : 'active sortDesc';
     
     let users = [];
@@ -191,6 +197,18 @@ export default class Accounts extends Component {
           <Grid>
             <div className="ui left floated column innerAdjust">
               <h3 className="mainHeading"> Accounts</h3>
+              {
+                message && showMessageFlag &&
+                <Message onDismiss={this.messageDismiss}>
+                  <span style={{ color: 'green' }}>{ message }</span>
+                </Message>
+              }
+              {
+                loadErr &&
+                <Message onDismiss={this.messageDismiss}>
+                  <span style={{ color: 'red' }}>{ loadErr }</span>
+                </Message>
+              }
             </div>
             <Grid.Row>
               <Grid.Column>

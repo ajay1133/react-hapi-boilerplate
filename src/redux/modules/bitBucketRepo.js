@@ -20,7 +20,7 @@ const initialState = Immutable.fromJS({
 	loadErr: null,
 	accessToken: null,
 	repositories: [],
-	setFileFormInitialValues: {}
+  dashboardFormInitialValues: {}
 });
 
 const internals = {};
@@ -48,7 +48,7 @@ export default function reducer(state = initialState, action) {
 		
 		case BIT_BUCKET_VIEW:
 			return state
-				.set('setFileFormInitialValues', action.result);
+				.set('dashboardFormInitialValues', action.result);
 		
 		case ADD_ACCESS_TOKEN:
 			return state
@@ -70,71 +70,61 @@ export default function reducer(state = initialState, action) {
 export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
 	dispatch({ type: ADD_ACCESS_TOKEN, result: params.accessToken || '' });
-	
 	let res = {};
-  
   try {
 		res = await api.get('/bitBucket/listing', { params });
-  
 		if (!res) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull repositories' });
 			return;
 		}
-		
 		dispatch({ type: BIT_BUCKET_LISTING, result: res });
     dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 	}
- 
 	return res;
 };
 
 export const bitBucketView = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
- 
 	let res = {};
-  
   try {
 		res = await api.get('/bitBucket/view', { params });
-		
     if (!(strictValidObjectWithKeys(res) && res.data)) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull file' });
 			return;
 		}
-	 
 		const result = await dispatch(convertMd2Json(res.data));
-    
     dispatch({ type: BIT_BUCKET_VIEW, result });
     dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {
 	  dispatch({ type: BIT_BUCKET_VIEW, result: {} });
 		dispatch({ type: LOAD_FAIL, error });
 	}
- 
 	return res;
 };
 
-export const updateBitBucketFile = (data) => async (dispatch, getState, api) => {
+export const updateBitBucketFile = (data, type = 2) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
-	
 	let res = {};
-	
+	const errorMsg = [], successMsg = [];
+	errorMsg[1] = 'Unable to add file';
+	errorMsg[2] = 'Unable to update file';
+  
+  successMsg[1] = 'Successfully Added To BitBucket. Loading added file';
+  successMsg[2] = 'Successfully Updated To BitBucket. Loading updated file';
+  
 	try {
 		res = await api.post('/bitBucket/updateFile', { data });
-		
 		if (strictValidObjectWithKeys(res)) {
-			dispatch({ type: LOAD_FAIL, error: 'Unable to update file' });
+			dispatch({ type: LOAD_FAIL, error: errorMsg[type] });
 			return;
 		}
-		
-		dispatch({ type: LOAD_SUCCESS, message: 'Successfully Updated To BitBucket. Loading updated file' });
-		
+		dispatch({ type: LOAD_SUCCESS, message: successMsg[type] });
 		dispatch(internals.resetMessage());
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 	}
-	
 	return res;
 };
 
@@ -144,44 +134,31 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
  */
 export const convertMd2Json = (fileContent) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
-	
 	let res = {};
-	
 	try {
 		const md = markdownObject.markdown;
-		
 		res = await md.parse(fileContent);
-		
 		if (!Array.isArray(res) || !res.length) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to parse file' });
 			return {};
 		}
-		
-		console.log(res);
-		
 		let details = {};
 		let content = {};
 		let indexOfContent = -1;
 		let lastParsedIndex = -1;
-		
 		res.forEach((item, index) => {
 			const result = internals.parseDetails(res, index);
-			
 			if (strictValidObjectWithKeys(result)) {
 				lastParsedIndex = index;
 				details = Object.assign({}, details, result);
 			}
 		});
-		
 		for (let i = lastParsedIndex + 1; i < res.length - 1; i++) {
 			if (Array.isArray(res[i]) && res[i].length > 1) {
 				indexOfContent = i;
 				break;
 			}
 		}
-		
-		console.log(indexOfContent);
-		
 		content = indexOfContent > -1
 			? md.renderJsonML(md.toHTMLTree(res.slice(indexOfContent - 1))) : md.renderJsonML(md.toHTMLTree(res));
 		
@@ -191,7 +168,6 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 		dispatch({ type: LOAD_FAIL, error: JSON.stringify(error) });
 		return {};
 	}
-	
 	return res;
 };
 
@@ -203,13 +179,10 @@ internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES
 
 internals.parseDetails = (fileContent, atIndex) => {
 	let details = {};
-	
 	const isValidDetailFlag = fileContent[atIndex] && Array.isArray(fileContent[atIndex]);
-	
 	if (isValidDetailFlag) {
 		details = internals.parseFieldsBetweenDetails(fileContent[atIndex]);
 	}
-	
 	return details;
 };
 

@@ -21,7 +21,7 @@ const md = MarkDown({
 });
 
 @connect(state => ({
-	initialValues: state.get('bitBucketRepo').get('setFileFormInitialValues'),
+	initialValues: state.get('bitBucketRepo').get('dashboardFormInitialValues'),
 	user: state.get('auth').get('user'),
   message: state.get('bitBucketRepo').get('message'),
   isLoad: state.get('bitBucketRepo').get('isLoad'),
@@ -31,7 +31,7 @@ const md = MarkDown({
 }))
 
 @reduxForm({
-  form: 'setFileForm',
+  form: 'dashboardForm',
   enableReinitialize: true
 })
 
@@ -239,20 +239,20 @@ export default class Dashboard extends Component {
       loading, hideRepoListingAreaFlag, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag
     } = this.state;
     
-    const errorOccurredFlag = !loading && (!user || (!isLoad && loadErr));
+//    const errorOccurredFlag = !loading && (!user || (!isLoad && loadErr));
     const loadingCompleteFlag = !isLoad && !loadErr;
     const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList) &&
       bitBucketList.length;
     
     const isFileLoadedSuccessFlag = fileName;
     
-    if (errorOccurredFlag) {
-      return (
-        <div>
-          <span style={{ color: 'red' }}>{ !user ? 'Session Expired' : loadErr }</span>
-        </div>
-      );
-    }
+//    if (errorOccurredFlag) {
+//      return (
+//        <div>
+//          <span style={{ color: 'red' }}>{ !user ? 'Session Expired' : loadErr }</span>
+//        </div>
+//      );
+//    }
     
     return (
       <div>

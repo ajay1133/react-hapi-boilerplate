@@ -1,5 +1,6 @@
 import Immutable from 'immutable';
 import orderBy from 'lodash/orderBy';
+import { updateBitBucketFile } from './bitBucketRepo';
 
 const LOAD = 'account/LOAD';
 const LOAD_SUCCESS = 'account/LOAD_SUCCESS';
@@ -115,7 +116,6 @@ export default function reducer(state = initialState, action) {
   }
 }
 
-
 export const loadAccounts = () => async (dispatch, getState, api) => {
   dispatch({ type: LOAD });
   try {
@@ -163,9 +163,32 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
       dispatch(loadAccounts());
       dispatch({ type: SAVE_ACCOUNT_SUCCESS, users });
     } else {
-      await api.post('/account', { data: accountDetails });
-      dispatch(loadAccounts());
-      dispatch({ type: SAVE_ACCOUNT_SUCCESS });
+      
+      // Adding file to BitBucket
+      const token = getState().get('bitBucketRepo').get('accessToken');
+      const addFileData = {
+        token,
+        path: `/content/profile/file${Math.floor(Math.random() * 11)}.md`,
+        content: `
+      --- title: "Lorem Ipsum is simply."
+        featured_image: ''
+        image: images/property1.png
+        contact: ${accountDetails.phone}
+        address: "Franklin, IN, USA"
+        draft: false
+      ---
+      ${accountDetails.description}`
+      };
+      
+      console.log('data --- ', addFileData);
+      if (token) {
+        await dispatch(updateBitBucketFile(addFileData, 1));
+        await api.post('/account', { data: accountDetails });
+        dispatch(loadAccounts());
+        dispatch({ type: SAVE_ACCOUNT_SUCCESS });
+      } else {
+        dispatch({ type: SAVE_ACCOUNT_FAIL, error: 'access token is missing' });
+      }
     }
    return accountDetails;
   } catch (err) {
