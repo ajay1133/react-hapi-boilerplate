@@ -12,7 +12,7 @@ import '../../style/css/style.css';
 class App extends Component {
     render () {
 		    const { history, isShow = true } = this.props;
-		
+		    
         return (
           <div className="full-height">
             <Sidebar.Pushable as={Segment}>

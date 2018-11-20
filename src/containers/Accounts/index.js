@@ -9,8 +9,8 @@ import AddAccount from '../../components/AddAccount';
 import Pagination from '../../components/Pagination';
 import { OFFSET } from '../../utils/constants';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
+import { strictValidObjectWithKeys } from '../../utils/commonutils';
 import '../../style/css/style.css';
-//import {Link} from  'react-router-dom';
 
 const rowBgColor = [];
 rowBgColor[1] = 'bg-success';
@@ -32,13 +32,14 @@ const TableRow = ({row, editAccount, typeAction}) => (
       <a onClick={() => typeAction('denied', row)} > Denied </a>
     </Table.Cell>
   </Table.Row>
-  );
+);
 
 @connect(state => ({
   items: state.get('account').get('items'),
   loadErr: state.get('account').get('loadErr'),
   itemsCount: state.get('account').get('itemsCount')
 }))
+
 export default class Accounts extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
@@ -62,6 +63,7 @@ export default class Accounts extends Component {
   
   constructor(props) {
     super(props);
+    
     this.saveAccount = this.saveAccount.bind(this);
     this.handleOpen = this.handleOpen.bind(this);
     this.handleClose = this.handleClose.bind(this);
@@ -83,6 +85,7 @@ export default class Accounts extends Component {
   handleConfirm = () => {
     const { selectedUser, type } = this.state;
     const { dispatch } = this.props;
+    
     let accountDetail = {
       email: selectedUser.email,
       firstName: selectedUser.firstName,
@@ -120,6 +123,7 @@ export default class Accounts extends Component {
     const { dispatch } = this.props;
     const { selectedUser } = this.state;
     const elem = this;
+    
     let accountDetail = {
       firstName: details.firstName,
       lastName: details.lastName,
@@ -128,24 +132,32 @@ export default class Accounts extends Component {
       url: details.url || '',
       description: details.description || ''
     };
+    
     if (selectedUser) {
       accountDetail.id = selectedUser.id;
       accountDetail.isDeleted =false;
     }
+    
     return new Promise((resolve, reject) => {
       dispatch(saveAccount(accountDetail)).then(response => {
         elem.setState({modalOpen: false, selectedUser: null});
         if (response && response.id) {
           resolve(response);
         } else {
-          reject(response)
+          reject(response);
         }
       });
     });
   };
+  
   componentDidMount() {
-    const { dispatch } = this.props;
-    dispatch(loadAccounts());
+    const { dispatch, location, history, user } = this.props;
+	  
+    if (strictValidObjectWithKeys(user) && user.role !== 1) {
+		  dispatch.push('/dashboard');
+	  }
+	
+	  dispatch(loadAccounts());
   };
   
   handleSort = clickedColumn => {
@@ -160,14 +172,19 @@ export default class Accounts extends Component {
     const { items, loadErr, itemsCount } = this.props;
     const { sortCol, sortDir, selectedUser } = this.state;
     const sortDirClass = sortDir === 'asc' ? 'active sortAsc' : 'active sortDesc';
+    
     let users = [];
+    
     if (items && items.length > 0) {
         let begin = (this.state.currentPage - 1) * OFFSET;
         let end = OFFSET * this.state.currentPage;
         users = items.slice(begin, end)
     }
+    
     if (loadErr) {
-      return <Message negative> <Message.Header> {loadErr} </Message.Header> </Message>
+      return (
+        <Message negative> <Message.Header> {loadErr} </Message.Header> </Message>
+      );
     } else if (items) {
       return (
         <AuthenticatedUser>

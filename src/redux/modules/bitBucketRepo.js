@@ -7,6 +7,7 @@ const LOAD = 'bitBucketRepo/LOAD';
 const LOAD_SUCCESS = 'bitBucketRepo/LOAD_SUCCESS';
 const LOAD_FAIL = 'bitBucketRepo/LOAD_FAIL';
 
+const ADD_ACCESS_TOKEN = 'bitBucketRepo/ADD_ACCESS_TOKEN';
 const BIT_BUCKET_LISTING = 'bitBucketRepo/BIT_BUCKET_LISTING';
 const BIT_BUCKET_VIEW = 'bitBucketRepo/BIT_BUCKET_VIEW';
 
@@ -17,6 +18,7 @@ const initialState = Immutable.fromJS({
 	message: null,
 	isLoad: false,
 	loadErr: null,
+	accessToken: null,
 	repositories: [],
 	setFileFormInitialValues: {}
 });
@@ -48,6 +50,10 @@ export default function reducer(state = initialState, action) {
 			return state
 				.set('setFileFormInitialValues', action.result);
 		
+		case ADD_ACCESS_TOKEN:
+			return state
+				.set('accessToken', action.result);
+			
 		case RESET_MESSAGE:
 			return state
 				.set('message', action.message);
@@ -63,7 +69,8 @@ export default function reducer(state = initialState, action) {
 
 export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
- 
+	dispatch({ type: ADD_ACCESS_TOKEN, result: params.accessToken || '' });
+	
 	let res = {};
   
   try {
@@ -121,7 +128,7 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 			return;
 		}
 		
-		dispatch({ type: LOAD_SUCCESS, message: 'Successfully Updated To BitBucket. Loading updated files' });
+		dispatch({ type: LOAD_SUCCESS, message: 'Successfully Updated To BitBucket. Loading updated file' });
 		
 		dispatch(internals.resetMessage());
 	} catch (error) {
