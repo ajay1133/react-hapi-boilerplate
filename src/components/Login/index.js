@@ -50,7 +50,7 @@ export default class Login extends Component {
   render() {
     const { handleSubmit, isLoading, loginBusy, loginError, me } = this.props;
     if (me && me.id) {
-      return <Redirect to= {'/dashboard'} />;
+      return <Redirect to= {'/accounts'} />;
     }
     return (
       <Segment className=" centered loginOuter">

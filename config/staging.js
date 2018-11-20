@@ -12,6 +12,11 @@ module.exports = {
     port: process.env.REDIS_PORT,
     prefix: 'compass_'
   },
+  bitBucket: {
+    accessKeyId: db.bitBucket.key,
+    secretAccessKey: db.bitBucket.secret,
+    basePath: db.bitBucket.path
+  },
   aws: {
     s3: {
       bucketWrite: 'compass-development-original',
