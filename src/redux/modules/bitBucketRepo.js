@@ -120,7 +120,6 @@ export const bitBucketView = (params) => async (dispatch, getState, api) => {
 		dispatch({ type: LOAD_FAIL, error });
 	  dispatch(internals.resetMessage());
 	}
- 
 	return res;
 };
 
@@ -128,18 +127,27 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 	dispatch({ type: LOAD });
 	
 	let res = {};
+	const errorMsg = [], successMsg = [];
 	
+	errorMsg[1] = 'Unable to add file';
+	errorMsg[2] = 'Unable to update file';
+  
+  successMsg[1] = 'Successfully Added To BitBucket. Loading added file';
+  successMsg[2] = 'Successfully Updated To BitBucket. Loading updated file';
+  
+  const type = (strictValidObjectWithKeys(data) && data.type) || 1;
+  
+  delete data.type;
+  
 	try {
 		res = await api.post('/bitBucket/updateFile', { data });
 		
 		if (strictValidObjectWithKeys(res)) {
-			dispatch({ type: LOAD_FAIL, error: 'Unable to update file' });
+			dispatch({ type: LOAD_FAIL, error: errorMsg[type] });
 			dispatch(internals.resetMessage());
 			return;
 		}
-		
-		dispatch({ type: LOAD_SUCCESS, message: 'Successfully Updated To BitBucket. Loading updated file' });
-		
+		dispatch({ type: LOAD_SUCCESS, message: successMsg[type] });
 		dispatch(internals.resetMessage());
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
@@ -164,7 +172,6 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 		const delimiterToDiffDetailsWithContent = '---';
 		const delimiterToDiffDetails = '\n';
 		const delimiterToDiffEachDetail = ':';
-		
 		res = (strictValidSplittableStringWithMinLength(fileContent, delimiterToDiffDetailsWithContent, 2) &&
 			fileContent.split(delimiterToDiffDetailsWithContent)) || [];
 		

@@ -12,42 +12,51 @@ module.exports = {
   description: 'Update user\'s account',
   notes: 'Update user\'s account',
   validate: {
-    payload: {
+    params: {
       id: joi.number()
              .description('PK of User')
-             .required(),
-  
+    },
+    payload: {
       email: joi.string()
                 .email()
-                .description('Email of User')
-                .required(),
+                .allow('')
+                .description('Email of User'),
       
       firstName: joi.string()
+                    .allow('')
                     .max(100)
-                    .description('First Name of User')
-                    .required(),
+                    .description('First Name of User'),
       
       lastName: joi.string()
+                   .allow('')
                    .max(100)
-                   .description('Last Name of User')
-                   .required(),
+                   .description('Last Name of User'),
+  
+      title: joi.string()
+                .allow('')
+                .description('Title of User'),
+  
+      address: joi.string()
+                  .allow('')
+                  .description('Address of User'),
       
       phone: joi.string()
-                .description('Phone of User')
-                .required(),
+                .allow('')
+                .description('Phone of User'),
       
       url: joi.string()
-              .optional()
-              .allow('', null)
+              .allow('')
               .description('Url of User'),
       
       description: joi.string()
-                      .optional()
-                      .allow('', null)
+                      .allow('')
                       .description('Description of User'),
+  
+      image: joi.string()
+                .allow('')
+                .description('Image of User'),
       
       status: joi.number()
-                 .optional()
                  .valid([1,2,3])
                  .allow(null)
                  .description('1=Active, 2=Pending, 3=Denied'),
@@ -60,8 +69,8 @@ module.exports = {
     options: { abortEarly: false },
   },
   handler: async (request, h) => {
-    const payload = request.payload;
-    return accountService.updateUser(payload)
+    const { params, payload } = request;
+    return accountService.updateUser(params.id, payload)
                          .then((data) => genericReply.put(h, data))
                          .catch(err => genericReply.onError(h, 'There was an error. Please Try Again', err));
   }
