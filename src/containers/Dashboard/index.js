@@ -264,7 +264,7 @@ export default class Dashboard extends Component {
         }
         
         {
-	        loadErr &&
+	        loadErr && showMessageFlag &&
           <Message onDismiss={this.messageDismiss}>
             <span style={{ color: 'red' }}>{ loadErr }</span>
           </Message>

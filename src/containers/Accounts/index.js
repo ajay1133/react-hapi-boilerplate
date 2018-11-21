@@ -38,6 +38,7 @@ const TableRow = ({row, editAccount, typeAction}) => (
   items: state.get('account').get('items'),
   loadErr: state.get('account').get('loadErr'),
   itemsCount: state.get('account').get('itemsCount'),
+  saveAccountErr: state.get('account').get('saveAccountErr'),
   accessToken: state.get('bitBucketRepo').get('accessToken'),
   message: state.get('bitBucketRepo').get('message'),
   isLoad: state.get('bitBucketRepo').get('isLoad')
@@ -91,12 +92,6 @@ export default class Accounts extends Component {
     const { dispatch } = this.props;
     
     let accountDetail = {
-      email: selectedUser.email,
-      firstName: selectedUser.firstName,
-      lastName: selectedUser.lastName,
-      phone: selectedUser.phone.toString(),
-      url: selectedUser.url || '',
-      description: selectedUser.description || '',
       id: selectedUser.id
     };
     
@@ -108,7 +103,7 @@ export default class Accounts extends Component {
       accountDetail.status = 3;
     }
     
-    dispatch(saveAccount(accountDetail)).then(response => {
+    dispatch(saveAccount(accountDetail, false)).then(response => {
       this.setState({openConfirmBox: false, selectedUser: null});
     });
   };
@@ -125,26 +120,11 @@ export default class Accounts extends Component {
   
   saveAccount = details => {
     const { dispatch } = this.props;
-    const { selectedUser } = this.state;
-    const elem = this;
-    
-    let accountDetail = {
-      firstName: details.firstName,
-      lastName: details.lastName,
-      email: details.email,
-      phone: details.phone.toString(),
-      url: details.url || '',
-      description: details.description || ''
-    };
-    
-    if (selectedUser) {
-      accountDetail.id = selectedUser.id;
-      accountDetail.isDeleted =false;
-    }
-    
+    delete details.events;
+    Object.keys(details).forEach((key) => (!details[key]) && delete details[key]);
     return new Promise((resolve, reject) => {
-      dispatch(saveAccount(accountDetail)).then(response => {
-        elem.setState({modalOpen: false, selectedUser: null});
+      dispatch(saveAccount(details, true)).then(response => {
+        this.setState({modalOpen: false, selectedUser: null});
         if (response && response.id) {
           resolve(response);
         } else {
@@ -175,7 +155,7 @@ export default class Accounts extends Component {
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
   render() {
-    const { items, loadErr, itemsCount, message } = this.props;
+    const { items, loadErr, saveAccountErr, itemsCount, message } = this.props;
     const { sortCol, sortDir, selectedUser, showMessageFlag } = this.state;
     const sortDirClass = sortDir === 'asc' ? 'active sortAsc' : 'active sortDesc';
     
@@ -194,21 +174,21 @@ export default class Accounts extends Component {
     } else if (items) {
       return (
         <AuthenticatedUser>
+          {
+            message && showMessageFlag &&
+            <Message onDismiss={this.messageDismiss}>
+              <span style={{ color: 'green' }}>{ message }</span>
+            </Message>
+          }
+          {
+            (loadErr || saveAccountErr) && showMessageFlag &&
+            <Message onDismiss={this.messageDismiss}>
+              <span style={{ color: 'red' }}>{ loadErr || saveAccountErr }</span>
+            </Message>
+          }
           <Grid>
             <div className="ui left floated column innerAdjust">
               <h3 className="mainHeading"> Accounts</h3>
-              {
-                message && showMessageFlag &&
-                <Message onDismiss={this.messageDismiss}>
-                  <span style={{ color: 'green' }}>{ message }</span>
-                </Message>
-              }
-              {
-                loadErr &&
-                <Message onDismiss={this.messageDismiss}>
-                  <span style={{ color: 'red' }}>{ loadErr }</span>
-                </Message>
-              }
             </div>
             <Grid.Row>
               <Grid.Column>

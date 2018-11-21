@@ -14,9 +14,12 @@ const defaultUserAttributes = [
   'email',
   'firstName',
   'lastName',
+  'title',
+  'address',
   'phone',
   'url',
   'description',
+  'image',
   'status'
 ];
 
@@ -102,10 +105,9 @@ exports.getUser = async (userId) => {
  * Update User
  * @param userPayload { email, password, firstName, lastName } etc
  */
- exports.updateUser = (userPayload) => new Promise((resolve, reject) => {
-   assert(userPayload, i18n('services.accountService.missingUserPayload'));
+ exports.updateUser = (id, userPayload) => new Promise((resolve, reject) => {
+   // assert(userPayload, i18n('services.accountService.missingUserPayload'));
    const userData = Object.assign({}, userPayload);
-   
    if (userPayload.password) {
      delete userData.password;
      delete userData.id;
@@ -122,10 +124,8 @@ exports.getUser = async (userId) => {
        });
    }
    else {
-     User.findOne({ where: { id: userPayload.id }})
-      .then((existingUser) => {
-        User.update(userData, { where: { id: userPayload.id } })
-          .then((data) => {
+     User.update(userData, { where: { id } })
+         .then((data) => {
 //            if (existingUser.dataValues.email !== userData.email) {
 //              let name = userPayload.firstName + ' ' + userPayload.lastName;
 //
@@ -136,10 +136,9 @@ exports.getUser = async (userId) => {
 //              });
 //              console.log("Mail Response", response);
 //            }
-            resolve(data);
-          })
-          .catch('error');
-      });
+           resolve(data);
+         })
+         .catch('error');
    }
  });
 
