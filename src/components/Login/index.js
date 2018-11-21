@@ -7,9 +7,10 @@ import { connect } from 'react-redux'
 import { reduxForm } from 'redux-form/immutable'
 import Input from '../../components/Form/Input'
 import { required, email } from '../../utils/validations';
+import { strictValidObjectWithKeys } from '../../utils/commonutils';
 
 @connect(state => ({
-  me: state.get('auth').get('user'),
+  user: state.get('auth').get('user'),
   isLoading: state.get('auth').get('isLoad'),
   loginBusy: state.get('auth').get('isLogin'),
   loginError: state.get('auth').get('loginErr'),
@@ -45,13 +46,16 @@ export default class Login extends Component {
     const { dispatch } = this.props;
     const user = formData.toJS();
     dispatch(login(user.email, user.password));
-  }
+  };
 
   render() {
-    const { handleSubmit, isLoading, loginBusy, loginError, me } = this.props;
-    if (me && me.id) {
-      return <Redirect to= {'/dashboard'} />;
+    const { handleSubmit, isLoading, loginBusy, loginError, user } = this.props;
+    
+    if (strictValidObjectWithKeys(user) && user.id) {
+      const homePage = user.role === 1 ? '/accounts' : '/dashboard';
+	    return <Redirect to= {homePage} />;
     }
+    
     return (
       <Segment className=" centered loginOuter">
         <Form className="login-form" onSubmit={handleSubmit(this._login)}>
@@ -75,9 +79,8 @@ export default class Login extends Component {
           </Button>
         </Form>
         {
-          loginError && (
-            <Message error content={loginError} />
-          )
+          loginError &&
+          <Message error content={loginError} />
         }
         <p className="pt-1 m-0 text-center"><a href="" >Forgot your password ?</a></p>
         <p className="m-0 text-center">Not a member?<a href=""> create account</a></p>

@@ -20,14 +20,14 @@ module.exports = {
   
   validate: {
     payload: {
-      token: joi.string()
+      accessToken: joi.string()
                 .required(),
 	
-	    fileName: joi.string()
-	                    .allow('', null)
-	                    .required(),
+	    path: joi.string()
+               .allow('', null)
+               .required(),
       
-	    fileContent: joi.string()
+	    content: joi.string()
                   .allow('', null)
                   .required()
     },
@@ -36,7 +36,7 @@ module.exports = {
   
   handler: async (request, h) => {
     const { payload } = request;
-    const { token, fileName, fileContent } = payload;
+    const { accessToken, path, content } = payload;
     
     let res = {};
     const url = `${config.bitBucket.basePath}/src`;
@@ -44,12 +44,12 @@ module.exports = {
     try {
       const postObj = {};
       
-      postObj[fileName] = fileContent;
+      postObj[path] = content;
       
       res = await superagent
         .post(url)
         .set('Content-Type', 'application/x-www-form-urlencoded')
-        .set('Authorization', `Bearer ${token}`)
+        .set('Authorization', `Bearer ${accessToken}`)
         .send(postObj);
     } catch(err) {
       return boom.badRequest(err);

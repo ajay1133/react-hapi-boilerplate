@@ -4,6 +4,7 @@ import { Menu, Dropdown } from 'semantic-ui-react';
 import { logout, load } from '../../redux/modules/auth';
 import { connect } from 'react-redux';
 import { push } from 'connected-react-router';
+import { strictValidObjectWithKeys } from '../../utils/commonutils';
 
 class NavBar extends Component {
   state = { activeItem: 'dashboard' };
@@ -28,17 +29,18 @@ class NavBar extends Component {
     dispatch(logout());
   };
   
-  loadAccounts = () => {
-    const { dispatch } =  this.props;
-    dispatch(push('/accounts'));
-  };
-  
-  render() {
-    const { user, isShow } = this.props;
+  loadRoute = (route) => {
+		const { dispatch } =  this.props;
+		dispatch(push(route));
+	};
 	
-	  const validUserNameFlag = user && user.firstName && user.lastName;
+  render() {
+    const { user, isShow, location } = this.props;
+    
+	  const validUserNameFlag = strictValidObjectWithKeys(user) && user.firstName && user.lastName;
+	  const currentLocation = location && strictValidObjectWithKeys(location.toJSON()) && location.toJSON().pathname;
 	  
-    if (user && user.id && isShow) {
+    if (strictValidObjectWithKeys(user) && user.id && isShow) {
       return (
         <div className="row">
           <div className="col-2">&nbsp;</div>
@@ -54,6 +56,15 @@ class NavBar extends Component {
             </div>
             <div className="ui right floated column">
               <Menu borderless>
+                {
+                  user.role === 1 &&
+                  <Menu.Item active={ currentLocation === '/accounts' } onClick={ () => this.loadRoute('/accounts') }>
+                    Accounts
+                  </Menu.Item>
+                }
+                <Menu.Item active={ currentLocation === '/dashboard' } onClick={ () => this.loadRoute('/dashboard') }>
+                  Dashboard
+                </Menu.Item>
                 <Menu.Menu position='right'>
                   <Dropdown item text= { (validUserNameFlag && (user.firstName + ' ' + user.lastName)) || user.email }>
                     <Dropdown.Menu>
@@ -76,7 +87,8 @@ class NavBar extends Component {
 
 function mapStateToProps(state) {
   return {
-    user: state.get('auth').get('user')
+    user: state.get('auth').get('user'),
+	  location: state.get('router').get('location')
   };
 }
 

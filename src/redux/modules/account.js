@@ -201,8 +201,8 @@ export const sortAccounts = (sortDir, sortCol) => async (dispatch, getState, api
   const items = getState().get('account').get('items');
   const sortedList = orderBy(items,[`${sortCol}`],[`${sortDir}`]);
   dispatch({ type: LOAD_SUCCESS, items: sortedList, count: sortedList.length });
-}
+};
 
 export const selectUser = (user) => async (dispatch) => {
   dispatch( { type: SELECT_USER, user });
-}
+};

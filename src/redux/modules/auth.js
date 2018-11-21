@@ -125,6 +125,7 @@ export const load = (forced) => async (dispatch, getState, api) => {
 
 export const login = (email, password) => async (dispatch, getState, api) => {
   dispatch({ type: LOGIN });
+  
   try {
     const res = await api.post('/sessions?jwt=1', { data: { email: email, password:  password} });
     

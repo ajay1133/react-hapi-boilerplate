@@ -104,13 +104,13 @@ body {
 	text-align: center;
 }
 .bg-success{
-	background-color: #0ea432;
+	color: #0ea432;
 }
 .bg-warning{
-	background-color: #9c6f04;
+	color: #9c6f04;
 }
 .bg-danger{
-	background-color: #912d2b;
+	color: #912d2b;
 }
 @media only screen and (max-width: 767px) {
 	.blueBg {
