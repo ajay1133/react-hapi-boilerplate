@@ -1,5 +1,6 @@
 import Immutable from 'immutable';
 import orderBy from 'lodash/orderBy';
+import { updateBitBucketFile } from './bitBucketRepo';
 
 const LOAD = 'account/LOAD';
 const LOAD_SUCCESS = 'account/LOAD_SUCCESS';
@@ -29,6 +30,8 @@ const initialState = Immutable.fromJS({
   sort: {by: '', dir: 'asc'},
   selectedUser: undefined
 });
+
+const internals = {};
 
 export default function reducer(state = initialState, action) {
   switch (action.type) {
@@ -70,7 +73,7 @@ export default function reducer(state = initialState, action) {
     case SAVE_ACCOUNT_FAIL:
       return state
         .set('savingAccount', false)
-        .set('saveAccountErr', action.err );
+        .set('saveAccountErr', action.error );
 
     case VERIFY_TOKEN:
       return state
@@ -108,13 +111,12 @@ export default function reducer(state = initialState, action) {
         
     case SELECT_USER:
       return state
-        .set('selectedUser', action.user)
+        .set('selectedUser', action.user);
 
     default:
       return state;
   }
 }
-
 
 export const loadAccounts = () => async (dispatch, getState, api) => {
   dispatch({ type: LOAD });
@@ -140,29 +142,53 @@ export const loadAccounts = () => async (dispatch, getState, api) => {
   }
 };
 
-export const saveAccount = (accountDetails) => async (dispatch, getState, api) => {
+export const saveAccount = (accountDetails, isAllow) => async (dispatch, getState, api) => {
   dispatch({ type: SAVE_ACCOUNT });
+  let users = getState().get('account').get('items');
+  const token = getState().get('bitBucketRepo').get('accessToken');
+  if (!token) {
+    dispatch({ type: SAVE_ACCOUNT_FAIL, error: 'Access token is missing' });
+    return;
+  }
+  
   try {
+    // Update Account
     if (accountDetails.id) {
-      let users = getState().get('account').get('items');
-      let index = users.findIndex((user) => user.id === accountDetails.id);
+      const { id } = accountDetails;
+      delete accountDetails.id;
       if (accountDetails.isDeleted) {
-        users.splice(index, 1);
+        users.filter((user) => {
+          return user.id !== id;
+        });
       } else {
-        let selectedUser = users[index];
-        selectedUser.firstName = accountDetails.firstName;
-        selectedUser.lastName =accountDetails.lastName;
-        selectedUser.email = accountDetails.email;
-        selectedUser.phone = accountDetails.phone;
-        selectedUser.url = accountDetails.url;
-        selectedUser.description = accountDetails.description;
-        selectedUser.status = accountDetails.status;
-        users.splice(index, 1, selectedUser);
+        users.map((user) => {
+          if (user.id === id) {
+            Object.assign(user, accountDetails);
+              user.title = accountDetails.title;
+              user.firstName = accountDetails.firstName;
+              user.lastName = accountDetails.lastName;
+              user.address = accountDetails.address;
+              user.email = accountDetails.email;
+              user.phone = accountDetails.phone;
+              user.url = accountDetails.url;
+              user.description = accountDetails.description;
+              user.image = accountDetails.image;
+              user.status = accountDetails.status;
+          }
+          return user;
+        });
       }
-      await api.put('/account', { data: accountDetails });
+      if (isAllow) {
+        const updateFileData = internals.getFileContent(token, accountDetails);
+        await dispatch(updateBitBucketFile(updateFileData, 1));
+      }
+      await api.put(`/account/${id}`, { data: accountDetails });
       dispatch(loadAccounts());
       dispatch({ type: SAVE_ACCOUNT_SUCCESS, users });
     } else {
+      // Adding file to BitBucket
+      const addFileData = internals.getFileContent(token, accountDetails);
+      await dispatch(updateBitBucketFile(addFileData, 1));
       await api.post('/account', { data: accountDetails });
       dispatch(loadAccounts());
       dispatch({ type: SAVE_ACCOUNT_SUCCESS });
@@ -170,7 +196,6 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
    return accountDetails;
   } catch (err) {
     dispatch({ type: SAVE_ACCOUNT_FAIL, error: err.message });
-    return err;
   }
 };
 
@@ -201,8 +226,27 @@ export const sortAccounts = (sortDir, sortCol) => async (dispatch, getState, api
   const items = getState().get('account').get('items');
   const sortedList = orderBy(items,[`${sortCol}`],[`${sortDir}`]);
   dispatch({ type: LOAD_SUCCESS, items: sortedList, count: sortedList.length });
-}
+};
 
 export const selectUser = (user) => async (dispatch) => {
   dispatch( { type: SELECT_USER, user });
-}
+};
+
+internals.getFileContent = (token, accountDetails) => {
+  const { firstName, lastName, title, phone, address, description } = accountDetails;
+  const path = `/content/profile/${firstName+lastName}.md`;
+  
+  let content = `---
+title: "${title}"
+featured_image: ''
+image: images/property1.png
+contact: ${phone}
+address: "${address}"
+draft: false
+---
+
+
+`;
+  content += description;
+  return { token, path, content } ;
+};

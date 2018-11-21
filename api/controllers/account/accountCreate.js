@@ -23,8 +23,8 @@ module.exports = {
     payload: {
       email: joi.string()
                 .email()
-                .description('Email of User')
-                .required(),
+                .allow('')
+                .description('Email of User'),
       
       password: joi.string(),
       
@@ -38,20 +38,30 @@ module.exports = {
                    .description('Last Name of User')
                    .required(),
   
-      phone: joi.string()
-                .description('Phone of User')
+      title: joi.string()
+                .description('Title of User')
                 .required(),
+      
+      address: joi.string()
+                  .allow('')
+                  .description('Address of User'),
+      
+      phone: joi.string()
+                .allow('')
+                .description('Phone of User'),
   
       url: joi.string()
-              .optional()
-              .allow('', null)
+              .allow('')
               .description('Url of User'),
   
       description: joi.string()
-                      .optional()
-                      .allow('', null)
+                      .allow('')
                       .description('Description of User'),
-  
+      
+      image: joi.string()
+                .allow('')
+                .description('Image of User'),
+      
       status: joi.number()
                  .valid([1,2,3])
                  .allow(null)

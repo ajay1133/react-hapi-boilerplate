@@ -20,7 +20,7 @@ module.exports = {
   
   validate: {
     query: {
-      token: joi.string()
+	    accessToken: joi.string()
                 .required(),
       
       path: joi.string()
@@ -31,14 +31,14 @@ module.exports = {
   
   handler: async (request, h) => {
     const { query } = request;
-    const { token, path = '' } = query;
+    const { accessToken, path = '' } = query;
     
     const url = `${config.bitBucket.basePath}/src${path}`;
     
     try {
       const res = await superagent
         .get(url)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Authorization', `Bearer ${accessToken}`);
       
 	    return h.response({ data: res.text });
     } catch(err) {

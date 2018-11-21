@@ -16,6 +16,7 @@ class Confirmation extends Component {
     dispatch: null,
     isLoading: false
   };
+  
   constructor(props) {
     super(props);
     
@@ -24,11 +25,13 @@ class Confirmation extends Component {
 
   savePassword (details) {
     const { dispatch } = this.props;
+    
     const accountDetail = {
       password: details.password,
       confirmPassword : details.confirmPassword,
       inviteToken: this.props.match.params.inviteToken
-    }
+    };
+    
     dispatch(updatePassword(accountDetail)).then(response => {
       setTimeout(function() {
         dispatch(push('/'));
@@ -49,8 +52,20 @@ class Confirmation extends Component {
     <Container>
       <Grid centered  verticalAlign="middle">
         <Grid.Column   mobile={16} tablet={8} computer={8}>
-          { passUpdated ? <Message negative> <Message.Header>Your password updated. Please login using new password.</Message.Header> </Message> : null }
-          { tokenValid ? <ChangePassword savePassword = {this.savePassword} /> : <Message negative> <Message.Header> { confirmationErr } </Message.Header> </Message> }
+          {
+            passUpdated &&
+            <Message negative>
+              <Message.Header>Your password updated. Please login using new password.</Message.Header>
+            </Message>
+          }
+          {
+            tokenValid &&
+            <ChangePassword savePassword = {this.savePassword} />
+          }
+          {
+            !tokenValid &&
+            <Message negative> <Message.Header> { confirmationErr } </Message.Header> </Message>
+          }
         </Grid.Column>
       </Grid>
     </Container>
