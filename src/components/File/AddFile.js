@@ -27,7 +27,7 @@ class AddFile extends Component {
 					</div>
 				</div>
 				<Field
-					name="name"
+					name="fileName"
 					label="File Name"
 					component={TextBox}
 					placeholder="Enter File Name"

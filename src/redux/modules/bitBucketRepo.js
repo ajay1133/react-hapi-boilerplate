@@ -1,5 +1,9 @@
 import Immutable from 'immutable';
-import { strictValidObjectWithKeys } from '../../utils/commonutils';
+import {
+	strictValidObjectWithKeys,
+	strictValidString,
+	strictValidSplittableStringWithMinLength
+} from '../../utils/commonutils';
 import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
 import markdownObject from 'markdown';
 
@@ -40,7 +44,7 @@ export default function reducer(state = initialState, action) {
 		case LOAD_FAIL:
 			return state
 				.set('isLoad', false)
-				.set('loadErr', JSON.stringify(action.error));
+				.set('loadErr', (strictValidString(action.error) && action.error) || JSON.stringify(action.error));
 		
 		case BIT_BUCKET_LISTING:
 			return state
@@ -56,7 +60,8 @@ export default function reducer(state = initialState, action) {
 			
 		case RESET_MESSAGE:
 			return state
-				.set('message', action.message);
+				.set('message', action.message)
+				.set('loadErr', action.error);
 			
 		case FLUSH: {
 			return initialState;
@@ -72,12 +77,13 @@ export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: ADD_ACCESS_TOKEN, result: params.accessToken || '' });
 	
 	let res = {};
-  
+	
   try {
 		res = await api.get('/bitBucket/listing', { params });
   
 		if (!res) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull repositories' });
+			dispatch(internals.resetMessage());
 			return;
 		}
 		
@@ -85,6 +91,7 @@ export const bitBucketListing = (params) => async (dispatch, getState, api) => {
     dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
+	  dispatch(internals.resetMessage());
 	}
  
 	return res;
@@ -100,6 +107,7 @@ export const bitBucketView = (params) => async (dispatch, getState, api) => {
 		
     if (!(strictValidObjectWithKeys(res) && res.data)) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull file' });
+	    dispatch(internals.resetMessage());
 			return;
 		}
 	 
@@ -110,6 +118,7 @@ export const bitBucketView = (params) => async (dispatch, getState, api) => {
 	} catch (error) {
 	  dispatch({ type: BIT_BUCKET_VIEW, result: {} });
 		dispatch({ type: LOAD_FAIL, error });
+	  dispatch(internals.resetMessage());
 	}
  
 	return res;
@@ -125,6 +134,7 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 		
 		if (strictValidObjectWithKeys(res)) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to update file' });
+			dispatch(internals.resetMessage());
 			return;
 		}
 		
@@ -133,6 +143,7 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 		dispatch(internals.resetMessage());
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
+		dispatch(internals.resetMessage());
 	}
 	
 	return res;
@@ -150,45 +161,52 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 	try {
 		const md = markdownObject.markdown;
 		
-		res = await md.parse(fileContent);
+		const delimiterToDiffDetailsWithContent = '---';
+		const delimiterToDiffDetails = '\n';
+		const delimiterToDiffEachDetail = ':';
+		const regExpToMatchInvalidCharacters = /"/g;
+		const replaceWithString = `\"`;
 		
-		if (!Array.isArray(res) || !res.length) {
-			dispatch({ type: LOAD_FAIL, error: 'Unable to parse file' });
+		res = (strictValidSplittableStringWithMinLength(fileContent, delimiterToDiffDetailsWithContent, 2) &&
+			fileContent.split(delimiterToDiffDetailsWithContent)) || [];
+		
+		if (!res.length) {
+			dispatch({
+				type: LOAD_FAIL,
+				error: `Invalid file. The '---' are not wrapping the meta-data fields. You can only view the file.
+				 If opened in edit mode the data won't be fetched.`
+			});
+			dispatch(internals.resetMessage());
 			return {};
 		}
 		
-		console.log(res);
-		
 		let details = {};
-		let content = {};
-		let indexOfContent = -1;
-		let lastParsedIndex = -1;
 		
-		res.forEach((item, index) => {
-			const result = internals.parseDetails(res, index);
-			
-			if (strictValidObjectWithKeys(result)) {
-				lastParsedIndex = index;
-				details = Object.assign({}, details, result);
-			}
-		});
-		
-		for (let i = lastParsedIndex + 1; i < res.length - 1; i++) {
-			if (Array.isArray(res[i]) && res[i].length > 1) {
-				indexOfContent = i;
-				break;
-			}
+		if (strictValidSplittableStringWithMinLength(res[1], delimiterToDiffDetails, 1)) {
+			res[1]
+				.split(delimiterToDiffDetails)
+				.filter(v => strictValidSplittableStringWithMinLength(v, delimiterToDiffEachDetail, 2))
+				.forEach(v => {
+					const termList = v.split(delimiterToDiffEachDetail);
+					const detailKey = termList[0].trim();
+					const detailValue = termList
+						.slice(1)
+						.join(delimiterToDiffEachDetail)
+						.trim();
+					
+					details[detailKey] = detailValue;
+				});
 		}
 		
-		console.log(indexOfContent);
-		
-		content = indexOfContent > -1
-			? md.renderJsonML(md.toHTMLTree(res.slice(indexOfContent - 1))) : md.renderJsonML(md.toHTMLTree(res));
+		const content = await md.renderJsonML(md.toHTMLTree(md.parse(
+			res.slice(2).join(delimiterToDiffDetailsWithContent)
+		)));
 		
 		res = Object.assign({}, details, { content });
 	} catch (error) {
 		console.log('Error parsing file: ', error);
-		dispatch({ type: LOAD_FAIL, error: JSON.stringify(error) });
+		dispatch({ type: LOAD_FAIL, error: error });
+		dispatch(internals.resetMessage());
 		return {};
 	}
 	
@@ -197,44 +215,10 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 
 internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES) => {
 	return dispatch => setTimeout(() => {
-		dispatch({ type: RESET_MESSAGE, message: null });
-	}, defaultTimeout);
-};
-
-internals.parseDetails = (fileContent, atIndex) => {
-	let details = {};
-	
-	const isValidDetailFlag = fileContent[atIndex] && Array.isArray(fileContent[atIndex]);
-	
-	if (isValidDetailFlag) {
-		details = internals.parseFieldsBetweenDetails(fileContent[atIndex]);
-	}
-	
-	return details;
-};
-
-internals.parseFieldsBetweenDetails = (detailsTree) => {
-	const fields = {};
-	
-	detailsTree.forEach(detailItem => {
-		const isParsableStringFlag = typeof detailItem === 'string' && detailItem.split(':').length > 1;
-		const isParsableArrayFlag = Array.isArray(detailItem) && Object.keys(fields).length &&
-			!fields[Object.keys(fields)[Object.keys(fields).length - 1]];
-		
-		if (isParsableStringFlag) {
-			detailItem.split('\r\n').forEach(v => {
-				if (v) {
-					const val = v.split(':').map((item, key) => key && typeof item === 'string' ? item.trim() : item);
-					fields[val[0]] = val.length > 1 ? val.slice(1).join(':') : '';
-				}
-			});
-		}
-		
-		if (isParsableArrayFlag) {
-			fields[Object.keys(fields)[Object.keys(fields).length - 1]] = detailItem.length && detailItem[1].ref &&
-				typeof detailItem[1].ref === 'string' ? detailItem[1].ref : '';
-		}
-	});
-	
-	return fields;
+		dispatch({
+			type: RESET_MESSAGE,
+			message: null,
+			error: null
+		});
+	}, defaultTimeout || DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
 };
