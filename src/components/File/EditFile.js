@@ -30,7 +30,7 @@ class EditFile extends Component {
 	
 	render() {
 		const { initialValues } = this.props;
-		console.log('initialValues', initialValues);
+		
 		const valueKeys = (strictValidObjectWithKeys(initialValues) && Object.keys(initialValues)) || [];
 		
 		if (!valueKeys.length) {

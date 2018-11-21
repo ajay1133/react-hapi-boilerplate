@@ -5,7 +5,7 @@ import Markup from 'react-html-markup';
 import { connect } from 'react-redux';
 import { reduxForm } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
-import { Button, List, Loader, Modal, Icon, Message } from 'semantic-ui-react';
+import { Button, List, Loader, Modal, Icon, Message, Grid } from 'semantic-ui-react';
 import config from '../../config';
 import AddFile from '../../components/File/AddFile';
 import EditFile from '../../components/File/EditFile';
@@ -36,14 +36,14 @@ const md = MarkDown({
 export default class Dashboard extends Component {
   state = {
     loading: true,
-    hideRepoListingAreaFlag: false,
     modalOpenFlag: false,
     openRepoFile: false,
     fileName: null,
     fileContent: null,
     href: null,
     repoPath: null,
-    showMessageFlag: true
+    showMessageFlag: true,
+	  accessModalOpenFlag: true
   };
   
   static propTypes = {
@@ -65,7 +65,7 @@ export default class Dashboard extends Component {
 	};
 	
   componentDidMount = () => {
-    const { dispatch, location, history } = this.props;
+    const { location, history } = this.props;
     const params = getHashParams(location.hash);
 	
 	  const validParamsFlag = strictValidObjectWithKeys(params) && params.access_token;
@@ -73,6 +73,8 @@ export default class Dashboard extends Component {
     if (validParamsFlag) {
       history.replace('/dashboard');
 	
+      this.setState({ accessModalOpenFlag: false });
+      
 	    this.fetchRootDirectoryDataFromBitBucket(params.access_token)
         .then(() => this.setState({ loading: false }))
         .catch(() => this.setState({ loading: false }));
@@ -83,9 +85,26 @@ export default class Dashboard extends Component {
   	const { dispatch } = this.props;
   	
     return dispatch(bitBucketListing({ accessToken }))
-	    .then((res) => this.fetchDirectory(accessToken, res, 1))
-	    .then((res) => this.fetchDirectory(accessToken, res, 0))
+	    .then((directory) => this.fetchDirectory(accessToken, directory,
+		    this.getPathIndexOfDirInDir(directory, 'content')))
+	    .then((directory) => this.fetchDirectory(accessToken, directory,
+		    this.getPathIndexOfDirInDir(directory, 'content/blog')));
   };
+  
+  getPathIndexOfDirInDir = (directory = {}, item = '') => {
+  	let dirPathIndex = -1;
+  	
+	  if (directory && Array.isArray(directory) && directory.length > 1)
+	  {
+		  directory.forEach((row, i) => {
+			  if (row && strictValidObjectWithKeys(row) && row.path === item) {
+				  dirPathIndex = i;
+			  }
+		  })
+	  }
+	  
+	  return dirPathIndex;
+	};
   
   bitBucketConnect = () => {
     window.location =
@@ -101,15 +120,10 @@ export default class Dashboard extends Component {
 		  dirToFetch.links.self && dirToFetch.links.self.href &&
 		  dirToFetch.links.self.href.split('/src')) || [];
 	
-	  return dispatch(bitBucketListing({ accessToken, path: pathArr[1] }));
-  };
-  
-  hideRepoListingArea = () => {
-    const { hideRepoListingAreaFlag } = this.state;
-    
-    this.setState({
-      hideRepoListingAreaFlag: !hideRepoListingAreaFlag
-    })
+	  const path = (pathArr.length > 1 && pathArr[1]) || '';
+	  const params = Object.assign({}, { accessToken }, (path && { path }) || {});
+	  console.log(directory, dirPathIndex, pathArr.length > 1, pathArr, path);
+	  return dispatch(bitBucketListing(params));
   };
   
   getMd = (content) => md.render(content);
@@ -163,8 +177,6 @@ export default class Dashboard extends Component {
   setFile = values => {
     const { dispatch, accessToken } = this.props;
     const { href, repoPath } = this.state;
-    
-    const turnDown = new TurnDown();
     
     const formValues = values.toJSON();
     
@@ -249,6 +261,12 @@ export default class Dashboard extends Component {
 	    fileContent: null
     });
   };
+	
+	accessModalClose = () => {
+		const { accessModalOpenFlag } = this.state;
+		
+		this.setState({ accessModalOpenFlag: !accessModalOpenFlag });
+	};
   
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
@@ -256,13 +274,12 @@ export default class Dashboard extends Component {
     const { isLoad, loadErr, accessToken, bitBucketList = [], handleSubmit, user, message, initialValues } = this.props;
     
     const {
-      loading, hideRepoListingAreaFlag, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag
+      loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag, accessModalOpenFlag
     } = this.state;
     
     const errorOccurredFlag = !loading && !isLoad && !user;
     const loadingCompleteFlag = !isLoad;
-    const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList) &&
-      bitBucketList.length;
+    const validBitBucketListFlag = loadingCompleteFlag && Array.isArray(bitBucketList) && bitBucketList.length;
     
     const isFileLoadedSuccessFlag = fileName;
     
@@ -291,115 +308,147 @@ export default class Dashboard extends Component {
         }
         
         {
-          !accessToken &&
-          <Button
-            color='facebook'
-            onClick={ () => this.bitBucketConnect() }
+          !accessToken && accessModalOpenFlag &&
+          <Modal
+	          open={ true }
+	          dimmer="blurring"
+	          closeOnEscape={ true }
+	          closeOnDimmerClick={ false }
+	          onClose={this.accessModalClose}
+	          size="small"
+	          closeIcon
           >
-            <Icon name='bitbucket' /> Fetch Data From BitBucket
-          </Button>
+	          <Modal.Content>
+		          {
+			          loadErr && showMessageFlag &&
+			          <Message onDismiss={this.messageDismiss}>
+				          <span style={{ color: 'red' }}>{ loadErr }</span>
+			          </Message>
+		          }
+		          <Modal.Description>
+			          <div className="row">
+				          <div className="col-12" style={{ textAlign: 'center' }}>
+					          <Button
+						          color='facebook'
+						          onClick={ () => this.bitBucketConnect() }
+					          >
+						          Grant Access To <Icon name='bitbucket' style={{ marginLeft: '5px' }} /> BitBucket Repository
+					          </Button>
+					          <p style={{ marginTop: '10px' }}>
+						          To proceed further authentication is required.
+					          </p>
+				          </div>
+			          </div>
+		          </Modal.Description>
+	          </Modal.Content>
+          </Modal>
         }
-        
-        {
-          !accessToken &&
-          <div className="row" style={{ marginTop: '20px' }}>
-            Click on the "Fetch Data From BitBucket" button above to get access from BitBucket where you will
-            need to login to grant access to "your" BitBucket repository
-          </div>
-        }
-        
-        {
-	        accessToken &&
-          <div className="ui card fluid cardShadow">
-            <div className="content pageMainTitle">
-              <h4>
-                { loadingCompleteFlag ? 'Listing' : 'Loading' } Files From BitBucket Repository
-                <Button
-                  primary
-                  style={{ float: 'right' }}
-                  onClick={ () => this.hideRepoListingArea() }
-                >
-                  { hideRepoListingAreaFlag ? 'Expand' : 'Collapse' }
-                </Button>
-              </h4>
-              {
-                loadingCompleteFlag && !hideRepoListingAreaFlag &&
-                <span>
-                  Click on the name/icon to view the contents. Click on the back icon to go back.
-                </span>
-              }
-            </div>
-            
-            {
-              validBitBucketListFlag && !hideRepoListingAreaFlag &&
-              <div className="content">
-                <List>
-                  <List.Item>
-                    { <List.Icon size='large' name='folder open'/> }
-                    <List.Content>
-                      <List.Header>
-                        <span style={{ textAlign: 'center' }}>
-                          { bitBucketList[0].path.split('/').slice(-2, -1)[0] || 'src' }
-                        </span>
-                        <Button
-                          primary
-                          style={{ float: 'right', marginTop: '-10px' }}
-                          onClick={ () => this.modalOpen(true) }
-                        >
-                          Add File
-                        </Button>
-                      </List.Header>
-                      <List.List>
-                        {
-                          bitBucketList.map((repo, idx) => {
-                            return (
-                              <List.Item
-                                as='a'
-                                key={idx}
-                                onClick={ (e) => this.getBitBucketData(
-                                  e,
-                                  repo.links.self.href,
-                                  repo.type,
-                                  repo.path.split('/').pop(),
-                                  repo.path
-                                ) }
-                              >
-                                <List.Icon
-                                  size='large'
-                                  verticalAlign='middle'
-                                  name={ repo.type === 'commit_directory' ? 'folder' : 'file' }
-                                />
-                                <List.Content>
-                                  <List.Header>
-                                    { repo.path.split('/').pop() }
-                                  </List.Header>
-                                </List.Content>
-                              </List.Item>
-                            );
-                          })
-                        }
-                      </List.List>
-                    </List.Content>
-                  </List.Item>
-                </List>
-              </div>
-            }
-            
-            {
-              loadingCompleteFlag && !validBitBucketListFlag && !hideRepoListingAreaFlag &&
-              <div className="content">
-                <span style={{ color: 'red' }}>{ 'Error loading directory' }</span>
-              </div>
-            }
-            
-            {
-              !loadingCompleteFlag && !hideRepoListingAreaFlag &&
-              <div className="content">
-                <Loader active inline='centered'>Loading ...</Loader>
-              </div>
-            }
-          </div>
-        }
+	
+	      {
+	      	!accessModalOpenFlag &&
+		      <div className="ui card fluid cardShadow">
+			      <div className="content pageMainTitle">
+				      <Grid>
+					      <div className="ui left floated column innerAdjust">
+						      <h3 className="mainHeading"> Dashboard</h3>
+					      </div>
+					      <Grid.Row>
+						      {
+							      !accessToken &&
+							      <Grid.Column style={{ textAlign: 'center' }}>
+								      <Button
+									      color='facebook'
+									      onClick={ () => this.bitBucketConnect() }
+								      >
+									      <Icon name='bitbucket' /> Fetch Data From BitBucket
+								      </Button>
+								      <p style={{ marginTop: '20px' }}>
+									      Click to login to BitBucket where we will ask access to "your" BitBucket repository
+								      </p>
+							      </Grid.Column>
+						      }
+						      {
+						      	accessToken &&
+							      <Grid.Column>
+								      <h4>
+									      { loadingCompleteFlag ? 'Listing' : 'Loading' } Files From BitBucket Repository
+									      <Button
+										      primary
+										      style={{ float: 'right', marginTop: '0px' }}
+										      onClick={ () => this.modalOpen(true) }
+									      >
+										      Add File
+									      </Button>
+								      </h4>
+								
+								      {
+									      validBitBucketListFlag &&
+									      <div className="content">
+										      <List>
+											      <List.Item>
+												      { <List.Icon size='large' name='folder open'/> }
+												      <List.Content>
+													      <List.Header>
+					                        <span style={{ textAlign: 'center' }}>
+					                          { bitBucketList[0].path.split('/').slice(-2, -1)[0] || 'src' }
+					                        </span>
+													      </List.Header>
+													      <List.List>
+														      {
+															      bitBucketList.map((repo, idx) => {
+																      return (
+																	      <List.Item
+																		      as='a'
+																		      key={idx}
+																		      onClick={ (e) => this.getBitBucketData(
+																			      e,
+																			      repo.links.self.href,
+																			      repo.type,
+																			      repo.path.split('/').pop(),
+																			      repo.path
+																		      ) }
+																	      >
+																		      <List.Icon
+																			      size='large'
+																			      verticalAlign='middle'
+																			      name={ repo.type === 'commit_directory' ? 'folder' : 'file' }
+																		      />
+																		      <List.Content>
+																			      <List.Header>
+																				      { repo.path.split('/').pop() }
+																			      </List.Header>
+																		      </List.Content>
+																	      </List.Item>
+																      );
+															      })
+														      }
+													      </List.List>
+												      </List.Content>
+											      </List.Item>
+										      </List>
+									      </div>
+								      }
+								
+								      {
+									      loadingCompleteFlag && !validBitBucketListFlag &&
+									      <div className="content">
+										      <span style={{ color: 'red' }}>{ 'Error loading directory' }</span>
+									      </div>
+								      }
+								
+								      {
+									      !loadingCompleteFlag &&
+									      <div className="content">
+										      <Loader active inline='centered'>Loading ...</Loader>
+									      </div>
+								      }
+							      </Grid.Column>
+						      }
+					      </Grid.Row>
+				      </Grid>
+			      </div>
+		      </div>
+	      }
         
         {
           !loading && loadingCompleteFlag &&
