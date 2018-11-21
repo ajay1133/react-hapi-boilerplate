@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+//import TurndownService from 'turndown';
+//import { gfm } from 'turndown-plugin-gfm';
 import { Table, Modal, Grid, Button, Header, Message, Confirm } from  'semantic-ui-react';
 import { loadAccounts, saveAccount, sortAccounts, selectUser } from '../../redux/modules/account';
 import AddAccount from '../../components/AddAccount';
@@ -13,6 +15,10 @@ import '../../style/css/style.css';
 const rowBgColor = [];
 rowBgColor[1] = 'bg-success';
 rowBgColor[3] = 'bg-danger';
+
+// TurnDown
+//const turndownService = new TurndownService();
+//turndownService.use(gfm);
 
 const TableRow = ({row, editAccount, typeAction}) => (
   <Table.Row className={(row.status) ? rowBgColor[row.status] : 'bg-warning'}>
@@ -31,18 +37,22 @@ const TableRow = ({row, editAccount, typeAction}) => (
 @connect(state => ({
   items: state.get('account').get('items'),
   loadErr: state.get('account').get('loadErr'),
-  itemsCount: state.get('account').get('itemsCount')
+  itemsCount: state.get('account').get('itemsCount'),
+  saveAccountErr: state.get('account').get('saveAccountErr'),
+  accessToken: state.get('bitBucketRepo').get('accessToken'),
+  message: state.get('bitBucketRepo').get('message'),
+  isLoad: state.get('bitBucketRepo').get('isLoad')
 }))
 
 export default class Accounts extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
-    isLoading: PropTypes.bool,
+    message: PropTypes.string,
+    isLoad: PropTypes.bool,
   };
 
   static defaultProps = {
-    dispatch: null,
-    isLoading: false
+    dispatch: null
   };
   
   state = {
@@ -52,7 +62,8 @@ export default class Accounts extends Component {
     sortCol: 'firstName',
     selectedUser: null,
     openConfirmBox: false,
-    type: null
+    type: null,
+    showMessageFlag: true
   };
   
   constructor(props) {
@@ -81,12 +92,6 @@ export default class Accounts extends Component {
     const { dispatch } = this.props;
     
     let accountDetail = {
-      email: selectedUser.email,
-      firstName: selectedUser.firstName,
-      lastName: selectedUser.lastName,
-      phone: selectedUser.phone.toString(),
-      url: selectedUser.url || '',
-      description: selectedUser.description || '',
       id: selectedUser.id
     };
     
@@ -98,7 +103,7 @@ export default class Accounts extends Component {
       accountDetail.status = 3;
     }
     
-    dispatch(saveAccount(accountDetail)).then(response => {
+    dispatch(saveAccount(accountDetail, false)).then(response => {
       this.setState({openConfirmBox: false, selectedUser: null});
     });
   };
@@ -115,26 +120,11 @@ export default class Accounts extends Component {
   
   saveAccount = details => {
     const { dispatch } = this.props;
-    const { selectedUser } = this.state;
-    const elem = this;
-    
-    let accountDetail = {
-      firstName: details.firstName,
-      lastName: details.lastName,
-      email: details.email,
-      phone: details.phone.toString(),
-      url: details.url || '',
-      description: details.description || ''
-    };
-    
-    if (selectedUser) {
-      accountDetail.id = selectedUser.id;
-      accountDetail.isDeleted =false;
-    }
-    
+    delete details.events;
+    Object.keys(details).forEach((key) => (!details[key]) && delete details[key]);
     return new Promise((resolve, reject) => {
-      dispatch(saveAccount(accountDetail)).then(response => {
-        elem.setState({modalOpen: false, selectedUser: null});
+      dispatch(saveAccount(details, true)).then(response => {
+        this.setState({modalOpen: false, selectedUser: null});
         if (response && response.id) {
           resolve(response);
         } else {
@@ -162,9 +152,11 @@ export default class Accounts extends Component {
     this.setState({ sortDir : sortDir === 'asc' ? 'desc' : 'asc', sortCol : clickedColumn });
   };
   
+  messageDismiss = () => this.setState({ showMessageFlag: false });
+  
   render() {
-    const { items, loadErr, itemsCount } = this.props;
-    const { sortCol, sortDir, selectedUser } = this.state;
+    const { items, loadErr, saveAccountErr, itemsCount, message } = this.props;
+    const { sortCol, sortDir, selectedUser, showMessageFlag } = this.state;
     const sortDirClass = sortDir === 'asc' ? 'active sortAsc' : 'active sortDesc';
     
     let users = [];
@@ -182,6 +174,18 @@ export default class Accounts extends Component {
     } else if (items) {
       return (
         <AuthenticatedUser>
+          {
+            message && showMessageFlag &&
+            <Message onDismiss={this.messageDismiss}>
+              <span style={{ color: 'green' }}>{ message }</span>
+            </Message>
+          }
+          {
+            (loadErr || saveAccountErr) && showMessageFlag &&
+            <Message onDismiss={this.messageDismiss}>
+              <span style={{ color: 'red' }}>{ loadErr || saveAccountErr }</span>
+            </Message>
+          }
           <Grid>
             <div className="ui left floated column innerAdjust">
               <h3 className="mainHeading"> Accounts</h3>
