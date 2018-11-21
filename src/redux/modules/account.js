@@ -179,16 +179,16 @@ export const saveAccount = (accountDetails, isAllow) => async (dispatch, getStat
         });
       }
       if (isAllow) {
-        const updateFileData = internals.getFileContent(token, accountDetails);
-        await dispatch(updateBitBucketFile(updateFileData, 1));
+        const updateFileData = Object.assign({}, internals.getFileContent(token, accountDetails), { errType: 1 });
+        await dispatch(updateBitBucketFile(updateFileData));
       }
       await api.put(`/account/${id}`, { data: accountDetails });
       dispatch(loadAccounts());
       dispatch({ type: SAVE_ACCOUNT_SUCCESS, users });
     } else {
       // Adding file to BitBucket
-      const addFileData = internals.getFileContent(token, accountDetails);
-      await dispatch(updateBitBucketFile(addFileData, 1));
+      const addFileData = Object.assign({}, internals.getFileContent(token, accountDetails), { errType: 1 });
+      await dispatch(updateBitBucketFile(addFileData));
       await api.post('/account', { data: accountDetails });
       dispatch(loadAccounts());
       dispatch({ type: SAVE_ACCOUNT_SUCCESS });
