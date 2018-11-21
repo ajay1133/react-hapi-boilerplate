@@ -21,7 +21,7 @@ const md = MarkDown({
 });
 
 @connect(state => ({
-	initialValues: state.get('bitBucketRepo').get('dashboardFormInitialValues'),
+	initialValues: state.get('bitBucketRepo').get('setFileFormInitialValues'),
 	user: state.get('auth').get('user'),
   message: state.get('bitBucketRepo').get('message'),
   isLoad: state.get('bitBucketRepo').get('isLoad'),
@@ -29,12 +29,10 @@ const md = MarkDown({
 	accessToken: state.get('bitBucketRepo').get('accessToken'),
   bitBucketList: state.get('bitBucketRepo').get('bitBucketList')
 }))
-
 @reduxForm({
-  form: 'dashboardForm',
+  form: 'setFileForm',
   enableReinitialize: true
 })
-
 export default class Dashboard extends Component {
   state = {
     loading: true,
@@ -74,16 +72,36 @@ export default class Dashboard extends Component {
     
     if (validParamsFlag) {
       history.replace('/dashboard');
-      
-      dispatch(bitBucketListing({ accessToken: params.access_token }))
+	
+	    this.fetchRootDirectoryDataFromBitBucket(params.access_token)
         .then(() => this.setState({ loading: false }))
         .catch(() => this.setState({ loading: false }));
     }
   };
   
+  fetchRootDirectoryDataFromBitBucket = (accessToken) => {
+  	const { dispatch } = this.props;
+  	
+    return dispatch(bitBucketListing({ accessToken }))
+	    .then((res) => this.fetchDirectory(accessToken, res, 1))
+	    .then((res) => this.fetchDirectory(accessToken, res, 0))
+  };
+  
   bitBucketConnect = () => {
     window.location =
       `https://bitbucket.org/site/oauth2/authorize?client_id=${bitBucket.key}&response_type=token`;
+  };
+  
+  fetchDirectory = (accessToken, directory, dirPathIndex) => {
+  	const { dispatch } = this.props;
+  	
+	  const dirToFetch = (directory && Array.isArray(directory) && directory.length > 1 && directory[dirPathIndex]) || {};
+	
+	  const pathArr = (dirToFetch && dirToFetch.links &&
+		  dirToFetch.links.self && dirToFetch.links.self.href &&
+		  dirToFetch.links.self.href.split('/src')) || [];
+	
+	  return dispatch(bitBucketListing({ accessToken, path: pathArr[1] }));
   };
   
   hideRepoListingArea = () => {
@@ -94,15 +112,10 @@ export default class Dashboard extends Component {
     })
   };
   
-  getMd = (content) => {
-    console.log('original content:', content);
-    return md.render(content);
-  };
+  getMd = (content) => md.render(content);
   
   getBitBucketData = async (e, href, type, displayName, repoPath) => {
     const { dispatch, accessToken } = this.props;
-    
-    console.log(href, type, displayName, repoPath);
     
     const params = Object.assign({}, {
       accessToken,
@@ -149,64 +162,71 @@ export default class Dashboard extends Component {
   
   setFile = values => {
     const { dispatch, accessToken } = this.props;
-    const { href, fileName, repoPath } = this.state;
+    const { href, repoPath } = this.state;
     
     const turnDown = new TurnDown();
     
     const formValues = values.toJSON();
     
-    const { name = '' } = formValues;
+    const { fileName = '' } = formValues;
     
     const dataObject = {
-      token: accessToken,
-      path: name && repoPath ? repoPath + '/' + name : (name && !repoPath ? name : repoPath),
-      content: turnDown.turndown(this.compileFileContentToHTML(formValues))
+      accessToken,
+      path: fileName && repoPath ? repoPath + '/' + fileName : (fileName && !repoPath ? fileName : repoPath),
+      content: this.compileFormFieldsToMarkDown(formValues)
     };
     
     this.setState({ loading: true });
     
     dispatch(updateBitBucketFile(dataObject))
+	    .then(() => this.fetchRootDirectoryDataFromBitBucket(accessToken))
       .then(async (resp) => {
 	      const params = Object.assign({}, {
 		      accessToken,
 		      path: href.split('/src')[1]
 	      });
 	
-	      const isLoadingDirectoryFlag = !!name;
+	      const isLoadingDirectoryFlag = !!fileName;
 	      let res = null;
 	      
-	      if (isLoadingDirectoryFlag) {
-		      res = await dispatch(bitBucketListing(params));
-	      } else {
+	      if (!isLoadingDirectoryFlag) {
 		      res = await dispatch(bitBucketView(params));
 	      }
 	      
 	      this.setState({
 		      loading: false,
 		      modalOpenFlag: !isLoadingDirectoryFlag,
-		      fileName: !isLoadingDirectoryFlag ? fileName : null,
+		      fileName: !isLoadingDirectoryFlag ? this.state.fileName : null,
 		      fileContent: !isLoadingDirectoryFlag && res.data ? res.data : null
 	      });
       })
       .catch(() => this.setState({ loading: false }))
   };
-  
-  compileFileContentToHTML = (dataObj) => {
-    const metaDataVariablesList = ['title', 'date', 'type', 'image', 'tags', 'draft'];
-    
+	
+	compileFormFieldsToMarkDown = (dataObj) => {
+	  const metaDataVariablesList = ['title', 'image', 'description', 'draft'];
+	
+	  const turnDown = new TurnDown();
+	  
+	  const extraMetaDataKeys = Object.keys(dataObj)
+                                    .filter(k => k !== 'content' && metaDataVariablesList.indexOf(k) <= -1);
     const validMetaDataKeys = Object.keys(dataObj).filter(k => metaDataVariablesList.indexOf(k) > -1);
     
-    let htmlStr = validMetaDataKeys.length ? '<hr/><p>' : '';
+    let mdStr = '---\n';
 	
 	  validMetaDataKeys.forEach(k => {
-      htmlStr += `&nbsp;${k}:${dataObj[k]}<br/>`;
+      mdStr += `${k} : ${dataObj[k].toString()}\n`;
     });
+	  
+	  extraMetaDataKeys.forEach(k => {
+		  mdStr += `${k} : ${dataObj[k]}\n`;
+	  });
 	
-	  htmlStr += validMetaDataKeys.length ? '</p><hr/>' : '';
+	  mdStr += '---\n';
+   
+	  mdStr += turnDown.turndown(dataObj && dataObj.content) || '';
 	  
-	  htmlStr += (dataObj && dataObj.content) || '';
-	  
-	  return htmlStr;
+	  return mdStr;
   };
   
 	modalOpen = (addNewFileFlag = false) => {
@@ -233,26 +253,26 @@ export default class Dashboard extends Component {
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
   render () {
-    const { isLoad, loadErr, accessToken, bitBucketList = [], handleSubmit, user, message } = this.props;
+    const { isLoad, loadErr, accessToken, bitBucketList = [], handleSubmit, user, message, initialValues } = this.props;
     
     const {
       loading, hideRepoListingAreaFlag, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag
     } = this.state;
     
-//    const errorOccurredFlag = !loading && (!user || (!isLoad && loadErr));
-    const loadingCompleteFlag = !isLoad && !loadErr;
+    const errorOccurredFlag = !loading && !isLoad && !user;
+    const loadingCompleteFlag = !isLoad;
     const validBitBucketListFlag = loadingCompleteFlag && bitBucketList && Array.isArray(bitBucketList) &&
       bitBucketList.length;
     
     const isFileLoadedSuccessFlag = fileName;
     
-//    if (errorOccurredFlag) {
-//      return (
-//        <div>
-//          <span style={{ color: 'red' }}>{ !user ? 'Session Expired' : loadErr }</span>
-//        </div>
-//      );
-//    }
+    if (errorOccurredFlag) {
+      return (
+        <div>
+          <span style={{ color: 'red' }}>Session Expired</span>
+        </div>
+      );
+    }
     
     return (
       <div>
@@ -264,7 +284,7 @@ export default class Dashboard extends Component {
         }
         
         {
-	        loadErr && showMessageFlag &&
+	        loadErr && showMessageFlag && !modalOpenFlag &&
           <Message onDismiss={this.messageDismiss}>
             <span style={{ color: 'red' }}>{ loadErr }</span>
           </Message>
@@ -314,9 +334,6 @@ export default class Dashboard extends Component {
               validBitBucketListFlag && !hideRepoListingAreaFlag &&
               <div className="content">
                 <List>
-                  <List.Item as='a'>
-                    { this.getParentDir(bitBucketList[0]) }
-                  </List.Item>
                   <List.Item>
                     { <List.Icon size='large' name='folder open'/> }
                     <List.Content>
@@ -400,6 +417,12 @@ export default class Dashboard extends Component {
               <span style={{ marginLeft: '5px' }}>{ fileName || 'Add File' }</span>
             </Modal.Header>
             <Modal.Content>
+	            {
+		            loadErr && showMessageFlag &&
+		            <Message onDismiss={this.messageDismiss}>
+			            <span style={{ color: 'red' }}>{ loadErr }</span>
+		            </Message>
+	            }
               <Modal.Description>
                 {
                   !openRepoFile && isFileLoadedSuccessFlag &&
@@ -411,7 +434,7 @@ export default class Dashboard extends Component {
                 }
                 {
                   openRepoFile && isFileLoadedSuccessFlag &&
-                  <EditFile />
+                  <EditFile initialValues={initialValues.toJSON() || []} />
                 }
                 {
 	                openRepoFile && !isFileLoadedSuccessFlag &&
