@@ -145,8 +145,8 @@ export const loadAccounts = () => async (dispatch, getState, api) => {
 export const saveAccount = (accountDetails, isAllow) => async (dispatch, getState, api) => {
   dispatch({ type: SAVE_ACCOUNT });
   let users = getState().get('account').get('items');
-  const token = getState().get('bitBucketRepo').get('accessToken');
-  if (!token) {
+  const accessToken = getState().get('bitBucketRepo').get('accessToken');
+  if (!accessToken) {
     dispatch({ type: SAVE_ACCOUNT_FAIL, error: 'Access token is missing' });
     return;
   }
@@ -179,7 +179,7 @@ export const saveAccount = (accountDetails, isAllow) => async (dispatch, getStat
         });
       }
       if (isAllow) {
-        const updateFileData = Object.assign({}, internals.getFileContent(token, accountDetails), { errType: 1 });
+        const updateFileData = Object.assign({}, internals.getFileContent(accessToken, accountDetails), { type: 2 });
         await dispatch(updateBitBucketFile(updateFileData));
       }
       await api.put(`/account/${id}`, { data: accountDetails });
@@ -187,7 +187,7 @@ export const saveAccount = (accountDetails, isAllow) => async (dispatch, getStat
       dispatch({ type: SAVE_ACCOUNT_SUCCESS, users });
     } else {
       // Adding file to BitBucket
-      const addFileData = Object.assign({}, internals.getFileContent(token, accountDetails), { errType: 1 });
+      const addFileData = Object.assign({}, internals.getFileContent(accessToken, accountDetails), { type: 1 });
       await dispatch(updateBitBucketFile(addFileData));
       await api.post('/account', { data: accountDetails });
       dispatch(loadAccounts());
@@ -232,14 +232,14 @@ export const selectUser = (user) => async (dispatch) => {
   dispatch( { type: SELECT_USER, user });
 };
 
-internals.getFileContent = (token, accountDetails) => {
-  const { firstName, lastName, title, phone, address, description } = accountDetails;
+internals.getFileContent = (accessToken, accountDetails) => {
+  const { firstName, lastName, title, image, phone, address, description } = accountDetails;
   const path = `/content/profile/${firstName+lastName}.md`;
   
   let content = `---
 title: "${title}"
 featured_image: ''
-image: images/property1.png
+image: ${image}
 contact: ${phone}
 address: "${address}"
 draft: false
@@ -248,5 +248,5 @@ draft: false
 
 `;
   content += description;
-  return { token, path, content } ;
+  return { accessToken, path, content } ;
 };

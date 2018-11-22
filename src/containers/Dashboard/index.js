@@ -187,7 +187,8 @@ export default class Dashboard extends Component {
     const dataObject = {
       accessToken,
       path: fileName && repoPath ? repoPath + '/' + fileName : (fileName && !repoPath ? fileName : repoPath),
-      content: this.compileFormFieldsToMarkDown(formValues)
+      content: this.compileFormFieldsToMarkDown(formValues),
+      type: 2
     };
     
     this.setState({ loading: true });

@@ -15,7 +15,7 @@ import { required, email } from '../../utils/validations';
   form: 'accountForm',
 //  enableReinitialize: true
 })
-export default class AddAccount extends Component {
+export default class AccountModal extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     handleSubmit: PropTypes.func,
@@ -31,10 +31,10 @@ export default class AddAccount extends Component {
 
   constructor(props) {
     super(props);
-    this.addAccount = this.addAccount.bind(this);
+    this.account = this.account.bind(this);
   }
   
-  addAccount(formData) {
+  account(formData) {
     const { saveAccount } = this.props;
     const account = formData.toJS();
 //    const editorState = this.state.editorState;
@@ -43,7 +43,7 @@ export default class AddAccount extends Component {
     
     return saveAccount(account).then(data => {
       if (data) {
-        console.log('Account Saved!');
+        console.log('Account Saved/Updated!');
       }
     }).catch(err => {
       console.log(err);
@@ -54,9 +54,10 @@ export default class AddAccount extends Component {
   }
   
   render() {
-    const { handleSubmit, submitting } = this.props;
+    const { handleSubmit, submitting, selectedUser } = this.props;
+    console.log('selectedUser ---- ', selectedUser);
     return (
-      <Form className="login-form" onSubmit={handleSubmit(this.addAccount)}>
+      <Form className="login-form" onSubmit={handleSubmit(this.account)}>
         <Header as='h3' className="side">Account Details</Header>
         <Form.Group widths="equal">
           <Field
@@ -65,18 +66,26 @@ export default class AddAccount extends Component {
             component={TextBox}
             validate={required}
           />
-          <Field
-            name="firstName"
-            placeholder="First Name"
-            component={TextBox}
-            validate={required}
-          />
-          <Field
-            name="lastName"
-            placeholder="Last Name"
-            component={TextBox}
-            validate={required}
-          />
+          {
+            !selectedUser
+            &&
+            <Field
+              name="firstName"
+              placeholder="First Name"
+              component={TextBox}
+              validate={required}
+            />
+          }
+          {
+            !selectedUser
+            &&
+            <Field
+              name="lastName"
+              placeholder="Last Name"
+              component={TextBox}
+              validate={required}
+            />
+          }
         </Form.Group>
         <Form.Group widths="equal">
           <Field

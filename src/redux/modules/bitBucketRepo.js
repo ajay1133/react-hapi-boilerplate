@@ -135,8 +135,7 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
   successMsg[1] = 'Successfully Added To BitBucket. Loading added file';
   successMsg[2] = 'Successfully Updated To BitBucket. Loading updated file';
   
-  const type = (strictValidObjectWithKeys(data) && data.type) || 1;
-  
+  const type = data.type;
   delete data.type;
   
 	try {

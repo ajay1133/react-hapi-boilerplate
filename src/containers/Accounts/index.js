@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 //import { gfm } from 'turndown-plugin-gfm';
 import { Table, Modal, Grid, Button, Header, Message, Confirm } from  'semantic-ui-react';
 import { loadAccounts, saveAccount, sortAccounts, selectUser } from '../../redux/modules/account';
-import AddAccount from '../../components/AddAccount';
+import AccountModal  from '../../components/AccountModal';
 import Pagination from '../../components/Pagination';
 import { OFFSET } from '../../utils/constants';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
@@ -122,6 +122,7 @@ export default class Accounts extends Component {
     const { dispatch } = this.props;
     delete details.events;
     Object.keys(details).forEach((key) => (!details[key]) && delete details[key]);
+    console.log('details ----->>> ', details);
     return new Promise((resolve, reject) => {
       dispatch(saveAccount(details, true)).then(response => {
         this.setState({modalOpen: false, selectedUser: null});
@@ -205,7 +206,7 @@ export default class Accounts extends Component {
                       closeIcon>
                   <Header content= {selectedUser ? 'Edit Account' : 'Add New Account'} />
                   <Modal.Content>
-                    <AddAccount
+                    <AccountModal
                       saveAccount = {this.saveAccount}
                       selectedUser = {selectedUser}
                     />
