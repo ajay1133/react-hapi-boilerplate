@@ -24,7 +24,7 @@ const initialState = Immutable.fromJS({
 	loadErr: null,
 	accessToken: null,
 	repositories: [],
-  setFileFormInitialValues: {}
+	setFileFormInitialValues: {}
 });
 
 const internals = {};
@@ -75,35 +75,44 @@ export default function reducer(state = initialState, action) {
 export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
 	dispatch({ type: ADD_ACCESS_TOKEN, result: params.accessToken || '' });
+	
 	let res = {};
 	
   try {
 		res = await api.get('/bitBucket/listing', { params });
+  
 		if (!res) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull repositories' });
 			dispatch(internals.resetMessage());
 			return;
 		}
+		
 		dispatch({ type: BIT_BUCKET_LISTING, result: res });
     dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 	  dispatch(internals.resetMessage());
 	}
+ 
 	return res;
 };
 
 export const bitBucketView = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
+ 
 	let res = {};
+  
   try {
 		res = await api.get('/bitBucket/view', { params });
+		
     if (!(strictValidObjectWithKeys(res) && res.data)) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull file' });
 	    dispatch(internals.resetMessage());
 			return;
 		}
+	 
 		const result = await dispatch(convertMd2Json(res.data));
+    
     dispatch({ type: BIT_BUCKET_VIEW, result });
     dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {
@@ -114,18 +123,25 @@ export const bitBucketView = (params) => async (dispatch, getState, api) => {
 	return res;
 };
 
-export const updateBitBucketFile = (data, type = 2) => async (dispatch, getState, api) => {
+export const updateBitBucketFile = (data) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
+	
 	let res = {};
 	const errorMsg = [], successMsg = [];
+	
 	errorMsg[1] = 'Unable to add file';
 	errorMsg[2] = 'Unable to update file';
   
   successMsg[1] = 'Successfully Added To BitBucket. Loading added file';
   successMsg[2] = 'Successfully Updated To BitBucket. Loading updated file';
   
+  const type = (strictValidObjectWithKeys(data) && data.type) || 1;
+  
+  delete data.type;
+  
 	try {
 		res = await api.post('/bitBucket/updateFile', { data });
+		
 		if (strictValidObjectWithKeys(res)) {
 			dispatch({ type: LOAD_FAIL, error: errorMsg[type] });
 			dispatch(internals.resetMessage());
@@ -137,6 +153,7 @@ export const updateBitBucketFile = (data, type = 2) => async (dispatch, getState
 		dispatch({ type: LOAD_FAIL, error });
 		dispatch(internals.resetMessage());
 	}
+	
 	return res;
 };
 
@@ -146,14 +163,15 @@ export const updateBitBucketFile = (data, type = 2) => async (dispatch, getState
  */
 export const convertMd2Json = (fileContent) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
+	
 	let res = {};
+	
 	try {
 		const md = markdownObject.markdown;
+		
 		const delimiterToDiffDetailsWithContent = '---';
 		const delimiterToDiffDetails = '\n';
 		const delimiterToDiffEachDetail = ':';
-//		const regExpToMatchInvalidCharacters = /"/g;
-//		const replaceWithString = `\"`;
 		res = (strictValidSplittableStringWithMinLength(fileContent, delimiterToDiffDetailsWithContent, 2) &&
 			fileContent.split(delimiterToDiffDetailsWithContent)) || [];
 		
@@ -166,7 +184,9 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 			dispatch(internals.resetMessage());
 			return {};
 		}
+		
 		let details = {};
+		
 		if (strictValidSplittableStringWithMinLength(res[1], delimiterToDiffDetails, 1)) {
 			res[1]
 				.split(delimiterToDiffDetails)
@@ -182,6 +202,7 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 					details[detailKey] = detailValue;
 				});
 		}
+		
 		const content = await md.renderJsonML(md.toHTMLTree(md.parse(
 			res.slice(2).join(delimiterToDiffDetailsWithContent)
 		)));
@@ -193,6 +214,7 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 		dispatch(internals.resetMessage());
 		return {};
 	}
+	
 	return res;
 };
 
