@@ -135,7 +135,7 @@ export default class Accounts extends Component {
   };
   
   componentDidMount() {
-    const { dispatch, location, history, user } = this.props;
+    const { dispatch, user } = this.props;
 	  
     if (strictValidObjectWithKeys(user) && user.role !== 1) {
 		  dispatch.push('/dashboard');

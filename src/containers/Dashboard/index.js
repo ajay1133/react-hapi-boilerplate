@@ -65,7 +65,7 @@ export default class Dashboard extends Component {
 	};
 	
   componentDidMount = () => {
-    const { dispatch, location, history } = this.props;
+    const { location, history } = this.props;
     const params = getHashParams(location.hash);
 	
 	  const validParamsFlag = strictValidObjectWithKeys(params) && params.access_token;
@@ -164,7 +164,7 @@ export default class Dashboard extends Component {
     const { dispatch, accessToken } = this.props;
     const { href, repoPath } = this.state;
     
-    const turnDown = new TurnDown();
+//    const turnDown = new TurnDown();
     
     const formValues = values.toJSON();
     

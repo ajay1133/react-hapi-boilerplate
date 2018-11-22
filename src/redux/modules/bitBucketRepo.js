@@ -152,8 +152,8 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 		const delimiterToDiffDetailsWithContent = '---';
 		const delimiterToDiffDetails = '\n';
 		const delimiterToDiffEachDetail = ':';
-		const regExpToMatchInvalidCharacters = /"/g;
-		const replaceWithString = `\"`;
+//		const regExpToMatchInvalidCharacters = /"/g;
+//		const replaceWithString = `\"`;
 		res = (strictValidSplittableStringWithMinLength(fileContent, delimiterToDiffDetailsWithContent, 2) &&
 			fileContent.split(delimiterToDiffDetailsWithContent)) || [];
 		
