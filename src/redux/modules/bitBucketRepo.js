@@ -135,8 +135,7 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
   successMsg[1] = 'Successfully Added To BitBucket. Loading added file';
   successMsg[2] = 'Successfully Updated To BitBucket. Loading updated file';
   
-  const type = (strictValidObjectWithKeys(data) && data.type) || 1;
-  
+  const type = data.type;
   delete data.type;
   
 	try {
@@ -154,6 +153,30 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 		dispatch(internals.resetMessage());
 	}
 	
+	return res;
+};
+
+/**
+ * deleteBitBucketFile: used to delete file on Bitbucket
+ * @param data
+ */
+export const deleteBitBucketFile = (data) => async (dispatch, getState, api) => {
+	dispatch({ type: LOAD });
+	let res = {};
+	
+	try {
+		res = await api.post('/bitBucket/deleteFile', { data });
+		if (strictValidObjectWithKeys(res)) {
+			dispatch({ type: LOAD_FAIL, error: 'Unable to delete file' });
+			dispatch(internals.resetMessage());
+			return;
+		}
+		dispatch({ type: LOAD_SUCCESS, message: 'Successfully Deleted To BitBucket. Loading file' });
+		dispatch(internals.resetMessage());
+	} catch (error) {
+		dispatch({ type: LOAD_FAIL, error });
+		dispatch(internals.resetMessage());
+	}
 	return res;
 };
 
