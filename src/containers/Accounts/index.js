@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 //import TurndownService from 'turndown';
 //import { gfm } from 'turndown-plugin-gfm';
 import { Table, Modal, Grid, Button, Header, Message, Confirm } from  'semantic-ui-react';
-import { loadAccounts, saveAccount, sortAccounts, selectUser } from '../../redux/modules/account';
+import { loadAccounts, saveAccount, updateAccount, sortAccounts, selectUser } from '../../redux/modules/account';
 import AccountModal  from '../../components/AccountModal';
 import Pagination from '../../components/Pagination';
 import { OFFSET } from '../../utils/constants';
@@ -38,9 +38,9 @@ const TableRow = ({row, editAccount, typeAction}) => (
   items: state.get('account').get('items'),
   loadErr: state.get('account').get('loadErr'),
   itemsCount: state.get('account').get('itemsCount'),
-  saveAccountErr: state.get('account').get('saveAccountErr'),
+  accountErr: state.get('account').get('accountErr'),
   accessToken: state.get('bitBucketRepo').get('accessToken'),
-  message: state.get('bitBucketRepo').get('message'),
+  message: state.get('bitBucketRepo').get('message') || state.get('account').get('accountMsg'),
   isLoad: state.get('bitBucketRepo').get('isLoad')
 }))
 
@@ -92,7 +92,9 @@ export default class Accounts extends Component {
     const { dispatch } = this.props;
     
     let accountDetail = {
-      id: selectedUser.id
+      id: selectedUser.id,
+      firstName: selectedUser.firstName,
+      lastName: selectedUser.lastName
     };
     
     if (type === 'delete') {
@@ -103,7 +105,7 @@ export default class Accounts extends Component {
       accountDetail.status = 3;
     }
     
-    dispatch(saveAccount(accountDetail, false)).then(response => {
+    dispatch(updateAccount(accountDetail, false)).then(response => {
       this.setState({openConfirmBox: false, selectedUser: null});
     });
   };
@@ -122,16 +124,16 @@ export default class Accounts extends Component {
     const { dispatch } = this.props;
     delete details.events;
     Object.keys(details).forEach((key) => (!details[key]) && delete details[key]);
-    console.log('details ----->>> ', details);
-    return new Promise((resolve, reject) => {
-      dispatch(saveAccount(details, true)).then(response => {
-        this.setState({modalOpen: false, selectedUser: null});
-        if (response && response.id) {
-          resolve(response);
-        } else {
-          reject(response);
-        }
-      });
+    return new Promise( async (resolve, reject) => {
+      const response = (details.id)
+        ? await dispatch(updateAccount(details, true))
+        : await dispatch(saveAccount(details));
+      this.setState({modalOpen: false, selectedUser: null});
+      if (response && response.id) {
+        resolve(response);
+      } else {
+        reject(response);
+      }
     });
   };
   
@@ -156,7 +158,7 @@ export default class Accounts extends Component {
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
   render() {
-    const { items, loadErr, saveAccountErr, itemsCount, message } = this.props;
+    const { items, loadErr, accountErr, itemsCount, message } = this.props;
     const { sortCol, sortDir, selectedUser, showMessageFlag } = this.state;
     const sortDirClass = sortDir === 'asc' ? 'active sortAsc' : 'active sortDesc';
     
@@ -182,9 +184,9 @@ export default class Accounts extends Component {
             </Message>
           }
           {
-            (loadErr || saveAccountErr) && showMessageFlag &&
+            (loadErr || accountErr) && showMessageFlag &&
             <Message onDismiss={this.messageDismiss}>
-              <span style={{ color: 'red' }}>{ loadErr || saveAccountErr }</span>
+              <span style={{ color: 'red' }}>{ loadErr || accountErr }</span>
             </Message>
           }
           <Grid>

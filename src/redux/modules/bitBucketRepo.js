@@ -157,6 +157,30 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 };
 
 /**
+ * deleteBitBucketFile: used to delete file on Bitbucket
+ * @param data
+ */
+export const deleteBitBucketFile = (data) => async (dispatch, getState, api) => {
+	dispatch({ type: LOAD });
+	let res = {};
+	
+	try {
+		res = await api.post('/bitBucket/deleteFile', { data });
+		if (strictValidObjectWithKeys(res)) {
+			dispatch({ type: LOAD_FAIL, error: 'Unable to delete file' });
+			dispatch(internals.resetMessage());
+			return;
+		}
+		dispatch({ type: LOAD_SUCCESS, message: 'Successfully Deleted To BitBucket. Loading file' });
+		dispatch(internals.resetMessage());
+	} catch (error) {
+		dispatch({ type: LOAD_FAIL, error });
+		dispatch(internals.resetMessage());
+	}
+	return res;
+};
+
+/**
  * convertMd2Json
  * @param content
  */

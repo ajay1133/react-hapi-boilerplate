@@ -14,9 +14,9 @@ module.exports = {
   
   tags: ['api', 'bitBucket'],
   
-  description: 'Updates a file in a repository',
+  description: 'Delete a file in a repository',
   
-  notes: 'Updates a file in a repository',
+  notes: 'Delete a file in a repository',
   
   validate: {
     payload: {
@@ -24,17 +24,13 @@ module.exports = {
                       .required()
                       .description('Access Token'),
       
-      path: joi.string()
-               .required()
-               .description('path of file name after "src"'),
-      
-      content: joi.string()
-                  .required()
-                  .description('Content of file'),
-      
+      files: joi.string()
+                .required()
+                .description('path of file name after "src"'),
+  
       message: joi.string()
                   .allow('')
-                  .default('Edited with Bitbucket')
+                  .default('Deleted with Bitbucket')
                   .description('Commit message')
     },
     options: { abortEarly: false },
@@ -42,16 +38,13 @@ module.exports = {
   
   handler: async (request, h) => {
     const { payload } = request;
-    const { accessToken, path, content, message } = payload;
+    const { accessToken, files, message } = payload;
     
     let res = {};
     const url = `${config.bitBucket.basePath}/src`;
     
     try {
-      const postObj = {
-        [path]: content,
-        message
-      };
+      const postObj = { files, message };
       
       res = await superagent
         .post(url)

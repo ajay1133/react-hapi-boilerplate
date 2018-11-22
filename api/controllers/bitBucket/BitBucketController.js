@@ -15,5 +15,10 @@ module.exports = [
 		path: `${prefix}/updateFile`,
 		method: 'POST',
 		config: require('./fileUpdate'),
+	},
+  {
+		path: `${prefix}/deleteFile`,
+		method: 'POST',
+		config: require('./fileDelete'),
 	}
 ];
