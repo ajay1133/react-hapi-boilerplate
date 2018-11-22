@@ -65,12 +65,14 @@ export default class Dashboard extends Component {
 	};
 	
   componentDidMount = () => {
-    const { location, history } = this.props;
+    const { location, history, accessToken } = this.props;
     const params = getHashParams(location.hash);
 	
-	  const validParamsFlag = strictValidObjectWithKeys(params) && params.access_token;
+    if (accessToken) {
+      this.setState({ accessModalOpenFlag: false });
+    }
     
-    if (validParamsFlag) {
+    if (strictValidObjectWithKeys(params) && params.access_token) {
       history.replace('/dashboard');
 	
       this.setState({ accessModalOpenFlag: false });
