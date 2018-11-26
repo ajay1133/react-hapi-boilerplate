@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-//import TurndownService from 'turndown';
-//import { gfm } from 'turndown-plugin-gfm';
 import { Table, Modal, Grid, Button, Header, Message, Confirm } from  'semantic-ui-react';
 import { loadAccounts, saveAccount, updateAccount, sortAccounts, selectUser } from '../../redux/modules/account';
 import AccountModal  from '../../components/AccountModal';
@@ -15,10 +13,6 @@ import '../../style/css/style.css';
 const rowBgColor = [];
 rowBgColor[1] = 'bg-success';
 rowBgColor[3] = 'bg-danger';
-
-// TurnDown
-//const turndownService = new TurndownService();
-//turndownService.use(gfm);
 
 const TableRow = ({row, editAccount, typeAction}) => (
   <Table.Row className={(row.status) ? rowBgColor[row.status] : 'bg-warning'}>

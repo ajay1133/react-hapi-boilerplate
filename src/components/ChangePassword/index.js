@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Button, Form, Header, Grid, Segment } from 'semantic-ui-react'
 import PropTypes from 'prop-types'
 import { reduxForm } from 'redux-form/immutable'
-import Input from '../Form/Input'
+import { Input } from '../Form'
 import { required } from '../../utils/validations'
 
 

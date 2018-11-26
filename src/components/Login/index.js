@@ -5,7 +5,7 @@ import PropTypes from 'prop-types'
 import { login, load } from '../../redux/modules/auth'
 import { connect } from 'react-redux'
 import { reduxForm } from 'redux-form/immutable'
-import Input from '../../components/Form/Input'
+import { Input } from '../../components/Form'
 import { required, email } from '../../utils/validations';
 import { strictValidObjectWithKeys } from '../../utils/commonutils';
 

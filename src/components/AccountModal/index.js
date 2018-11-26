@@ -2,10 +2,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Field, reduxForm, SubmissionError } from 'redux-form/immutable';
-//import { stateToHTML } from 'draft-js-export-html';
 import { Button, Form, Header } from 'semantic-ui-react';
-import TextBox from '../Form/TextBox';
-import TextArea from '../Form/TextArea';
+import { TextBox, RichEditor } from '../Form';
 import { required, email } from '../../utils/validations';
 
 @connect(state => ({
@@ -37,10 +35,6 @@ export default class AccountModal extends Component {
   account(formData) {
     const { saveAccount } = this.props;
     const account = formData.toJS();
-//    const editorState = this.state.editorState;
-//    const contentState = editorState.getCurrentContent();
-//    const html = stateToHTML(contentState);
-    
     return saveAccount(account).then(data => {
       if (data) {
         console.log('Account Saved/Updated!');
@@ -50,7 +44,7 @@ export default class AccountModal extends Component {
       if (err.statusCode === 400) {
         throw new SubmissionError({ number: err.message });
       }
-  });
+    });
   }
   
   render() {
@@ -120,8 +114,7 @@ export default class AccountModal extends Component {
           <Field
             name="description"
             placeholder="Description"
-            component={TextArea}
-            autoHeight
+            component={RichEditor}
           />
         </Form.Group>
         <Button
