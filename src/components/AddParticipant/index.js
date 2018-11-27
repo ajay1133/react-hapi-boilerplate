@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { Form } from 'semantic-ui-react'
 import PropTypes from 'prop-types'
 import { reduxForm, reset } from 'redux-form/immutable'
-import Input from '../../components/Form/Input'
+import { Input } from '../../components/Form'
 import { required } from '../../utils/validations'
 
 class AddParticipant extends Component {
@@ -39,7 +39,7 @@ class AddParticipant extends Component {
       <div className="newEntry">
         <Form onSubmit={handleSubmit(this.addParticipant)} loading={isAdding}>
           <Input
-            action={{ icon: 'plus' }} 
+            action={{ icon: 'plus' }}
             name="name"
             placeholder="Enter Participant Name"
             type="text"

@@ -3,9 +3,7 @@ import PropTypes from 'prop-types';
 import { Form } from 'semantic-ui-react';
 import { Field } from 'redux-form/immutable';
 import { strictValidObjectWithKeys } from '../../utils/commonutils';
-import TextBox from '../../components/Form/TextBox';
-import TextArea from '../../components/Form/TextArea';
-import RadioGroup from '../../components/Form/RadioGroup';
+import { TextBox, TextArea, RadioGroup } from '../../components/Form';
 
 const draftOptionsList = [
 	{

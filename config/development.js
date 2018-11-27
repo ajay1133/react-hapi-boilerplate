@@ -14,9 +14,9 @@ module.exports = {
     prefix: 'com_'
   },
   bitBucket: {
-    accessKeyId: db.bitBucket.key,
-    secretAccessKey: db.bitBucket.secret,
-    basePath: db.bitBucket.path
+    username: db.bitBucket.username,
+    password: db.bitBucket.password,
+    basePath: db.bitBucket.basePath
   },
   emailUrl:{
     host: ''

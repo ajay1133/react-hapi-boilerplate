@@ -20,7 +20,7 @@
     "dotenv": "4.0.0",
     "dotenv-expand": "4.2.0",
     "draft-js": "^0.10.5",
-    "draft-js-export-html": "^1.2.0",
+    "draftjs-md-converter": "^1.1.1",
     "email-templates": "^5.0.0",
     "eslint": "4.10.0",
     "eslint-config-react-app": "^2.1.0",

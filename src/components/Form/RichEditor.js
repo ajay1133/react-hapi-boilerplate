@@ -1,7 +1,13 @@
+/**
+ * Created by monty on 26/11/18.
+ * RichEditor: Accepts initial values as String and return HTML.
+ */
 import React from 'react'; // eslint-disable-line
 import PropTypes from 'prop-types';
-import { Editor, EditorState, RichUtils, getDefaultKeyBinding } from 'draft-js';
-
+import StyleButton from './StyleButton';
+import { mdToDraftjs, draftjsToMd } from 'draftjs-md-converter';
+import { Editor, EditorState, RichUtils, getDefaultKeyBinding, convertFromRaw, convertToRaw } from 'draft-js';
+import { Form } from "semantic-ui-react"; // eslint-disable-line
 // CSS
 import 'draft-js/dist/Draft.css';
 import '../../style/css/RickEditor.css';
@@ -13,18 +19,6 @@ const styleMap = {
     fontSize: 16,
     padding: 2,
   },
-};
-const StyleButton = (props) => {
-  const { active, label, onToggle } = props;
-  let className = 'RichEditor-styleButton';
-  if (active) {
-    className += ' RichEditor-activeButton';
-  }
-  return (
-    <span className={className} onMouseDown={onToggle}>
-      {label}
-    </span>
-  );
 };
 
 const BLOCK_TYPES = [
@@ -83,21 +77,30 @@ const InlineStyleControls = (props) => {
     </div>
   );
 };
-export default class RichEditor extends React.Component {
+
+class RichEditor extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { editorState: EditorState.createEmpty() };
+    const { input } = props;
+    const rawData = mdToDraftjs(input.value);
+    const contentState = convertFromRaw(rawData);
+    this.state = { editorState: EditorState.createWithContent(contentState) };
     this.focus = () => this.refs.editor.focus();
-    this.onChange = (editorState) => this.setState({ editorState });
+    
+    this.onChange = this._onChange.bind(this);
     this.handleKeyCommand = this._handleKeyCommand.bind(this);
     this.mapKeyToEditorCommand = this._mapKeyToEditorCommand.bind(this);
     this.toggleBlockType = this._toggleBlockType.bind(this);
     this.toggleInlineStyle = this._toggleInlineStyle.bind(this);
-    this.onToggle = (e) => {
-      e.preventDefault();
-      this.props.onToggle(this.props.style);
-    };
   }
+  _onChange(editorState) {
+    const { input } = this.props;
+    // converting to the HTML on change
+    const contentState = editorState.getCurrentContent();
+    const mdContent = draftjsToMd(convertToRaw(contentState));
+    input.onChange(mdContent);
+    this.setState({ editorState });
+  };
   _handleKeyCommand(command, editorState) {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
@@ -143,6 +146,10 @@ export default class RichEditor extends React.Component {
     }
   };
   render() {
+    const { meta, ...input } = this.props;
+    const { touched, error } = meta || {};
+    const hasError = (touched && !!error);
+    
     const { editorState } = this.state;
     // If the user changes block type before entering any text, we can
     // either style the placeholder or hide it. Let's just hide it now.
@@ -163,20 +170,32 @@ export default class RichEditor extends React.Component {
           editorState={ editorState }
           onToggle={ this.toggleInlineStyle }
         />
-        <div className={ className } onClick={ this.focus }>
-          <Editor
-            blockStyleFn={ this.getBlockStyle }
-            customStyleMap={ styleMap }
-            editorState={ editorState }
-            handleKeyCommand={ this.handleKeyCommand }
-            keyBindingFn={ this.mapKeyToEditorCommand }
-            onChange={ this.onChange }
-            placeholder="Tell a story..."
-            ref="editor"
-            spellCheck={ true }
-          />
-        </div>
+        <Form.Field error={hasError}>
+          <div className={ className } onClick={ this.focus }>
+            <Editor
+              { ...input }
+              blockStyleFn={ this.getBlockStyle }
+              customStyleMap={ styleMap }
+              editorState={ editorState }
+              handleKeyCommand={ this.handleKeyCommand }
+              keyBindingFn={ this.mapKeyToEditorCommand }
+              onChange={ this.onChange }
+              placeholder={ input.placeholder }
+              ref="editor"
+              spellCheck={ true }
+            />
+          </div>
+        </Form.Field>
       </div>
     );
   }
 }
+
+RichEditor.propTypes = {
+  input: PropTypes.object,
+  label: PropTypes.string,
+  meta: PropTypes.object,
+  custom: PropTypes.object,
+};
+
+export default RichEditor;
