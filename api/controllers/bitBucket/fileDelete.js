@@ -40,12 +40,11 @@ module.exports = {
     const url = `${config.bitBucket.basePath}/src`;
     
     try {
-      const postObj = { files, message };
-      
       res = await superagent
         .post(url)
         .auth(config.bitBucket.username, config.bitBucket.password)
-        .send(postObj);
+        .type('form')
+        .send({ files, message });
     } catch(err) {
       return boom.badRequest(err);
     }

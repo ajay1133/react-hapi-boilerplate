@@ -151,14 +151,10 @@ export const loadAccounts = () => async (dispatch, getState, api) => {
  */
 export const saveAccount = (accountDetails) => async (dispatch, getState, api) => {
   dispatch({ type: ACCOUNT });
-  const accessToken = getState().get('bitBucketRepo').get('accessToken');
-  if (!accessToken) {
-    dispatch({ type: ACCOUNT_FAIL, error: 'Access token is missing' });
-    return;
-  }
   
   try {
-    const addFileData = Object.assign({}, internals.getFileContent(accessToken, accountDetails), { type: 1 });
+    let addFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 1 });
+    addFileData.message = `Added: ${addFileData.path}`;
     await dispatch(updateBitBucketFile(addFileData));
     await api.post('/account', { data: accountDetails });
     dispatch(loadAccounts());
@@ -177,11 +173,6 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
 export const updateAccount = (accountDetails, isAllow) => async (dispatch, getState, api) => {
   dispatch({ type: ACCOUNT });
   let users = getState().get('account').get('items');
-  const accessToken = getState().get('bitBucketRepo').get('accessToken');
-  if (!accessToken) {
-    dispatch({ type: ACCOUNT_FAIL, error: 'Access token is missing' });
-    return;
-  }
   
   try {
     const { id } = accountDetails;
@@ -193,9 +184,9 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
       // Delete file on Bitbucket
       const { firstName, lastName } = accountDetails;
       const deleteFileData = {
-        accessToken,
         files: `/content/profile/${firstName+lastName}.md`
       };
+      deleteFileData.message = `Deleted: ${deleteFileData.files}`;
       await dispatch(deleteBitBucketFile(deleteFileData));
     } else {
       users.map((user) => {
@@ -216,7 +207,8 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
       });
       if (isAllow) {
         // Update file on Bitbucket
-        const updateFileData = Object.assign({}, internals.getFileContent(accessToken, accountDetails), { type: 2 });
+        let updateFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 2 });
+        updateFileData.message = `Updated: ${updateFileData.path}`;
         await dispatch(updateBitBucketFile(updateFileData));
       }
     }
@@ -262,7 +254,7 @@ export const selectUser = (user) => async (dispatch) => {
   dispatch( { type: SELECT_USER, user });
 };
 
-internals.getFileContent = (accessToken, accountDetails) => {
+internals.getFileContent = (accountDetails) => {
   const { firstName, lastName, title, image, phone, address, description } = accountDetails;
   const path = `/content/profile/${firstName+lastName}.md`;
   
@@ -278,5 +270,5 @@ draft: false
 
 `;
   content += description;
-  return { accessToken, path, content } ;
+  return { path, content } ;
 };

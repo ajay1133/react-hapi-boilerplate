@@ -52,6 +52,7 @@ module.exports = {
       res = await superagent
         .post(url)
         .auth(config.bitBucket.username, config.bitBucket.password)
+        .type('form')
         .send(postObj);
     } catch(err) {
       return boom.badRequest(err);

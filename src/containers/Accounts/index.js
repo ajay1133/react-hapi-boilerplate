@@ -33,7 +33,6 @@ const TableRow = ({row, editAccount, typeAction}) => (
   loadErr: state.get('account').get('loadErr'),
   itemsCount: state.get('account').get('itemsCount'),
   accountErr: state.get('account').get('accountErr'),
-  accessToken: state.get('bitBucketRepo').get('accessToken'),
   message: state.get('bitBucketRepo').get('message') || state.get('account').get('accountMsg'),
   isLoad: state.get('bitBucketRepo').get('isLoad')
 }))
