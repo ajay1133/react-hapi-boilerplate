@@ -24,7 +24,7 @@ const initialState = Immutable.fromJS({
 	loadErr: null,
 	accessToken: null,
 	repositories: [],
-	setFileFormInitialValues: {}
+  bitBucketInitialValues: {}
 });
 
 const internals = {};
@@ -52,7 +52,7 @@ export default function reducer(state = initialState, action) {
 		
 		case BIT_BUCKET_VIEW:
 			return state
-				.set('setFileFormInitialValues', action.result);
+				.set('bitBucketInitialValues', action.result);
 		
 		case ADD_ACCESS_TOKEN:
 			return state
@@ -74,13 +74,9 @@ export default function reducer(state = initialState, action) {
 
 export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
-	dispatch({ type: ADD_ACCESS_TOKEN, result: params.accessToken || '' });
-	
 	let res = {};
-	
   try {
 		res = await api.get('/bitBucket/listing', { params });
-  
 		if (!res) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull repositories' });
 			dispatch(internals.resetMessage());
