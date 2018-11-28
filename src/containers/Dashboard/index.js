@@ -14,7 +14,12 @@ import {
 	resetBitBucketFileForm
 } from '../../redux/modules/bitBucketRepo';
 import { strictValidObjectWithKeys } from '../../utils/commonutils';
-import { ACCESSIBLE_ROOT_PATH, REPO_PATH } from '../../utils/constants';
+import {
+	ACCESSIBLE_ROOT_PATH,
+	REPO_PATH,
+	MD_FILE_META_DATA_KEYS,
+	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS
+} from '../../utils/constants';
 
 const md = MarkDown({
   html: false,
@@ -145,6 +150,7 @@ export default class Dashboard extends Component {
 	      this.setState({
 		      loading: false,
 		      modalOpenFlag: !isLoadingDirectoryFlag,
+		      openRepoFile: !isLoadingDirectoryFlag,
 		      fileName: !isLoadingDirectoryFlag ? this.state.fileName : null,
 		      fileContent: !isLoadingDirectoryFlag && res.data ? res.data : null
 	      });
@@ -153,12 +159,11 @@ export default class Dashboard extends Component {
   };
 	
 	compileFormFieldsToMarkDown = (dataObj) => {
-	  const metaDataVariablesList = ['title', 'image', 'description', 'draft'];
-	
-	  const extraMetaDataKeys = Object.keys(dataObj)
-	                                  .filter(k => k !== 'content' && metaDataVariablesList.indexOf(k) <= -1);
-    const validMetaDataKeys = Object.keys(dataObj)
-                                    .filter(k => metaDataVariablesList.indexOf(k) > -1);
+	  const dataObjKeys = (strictValidObjectWithKeys(dataObj) && Object.keys(dataObj)) || [];
+	 
+	  const extraMetaDataKeys = dataObjKeys
+		  .filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
+    const validMetaDataKeys = dataObjKeys.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
 		
     let mdStr = '---\n';
 	
@@ -173,7 +178,7 @@ export default class Dashboard extends Component {
 	
 	  mdStr += '---\n';
    
-	  if (dataObj.content) {
+	  if (dataObjKeys.indexOf('content') > -1) {
 		  mdStr += dataObj.content.trim();
 	  }
 	  
@@ -204,8 +209,7 @@ export default class Dashboard extends Component {
 	    repoPath: null
     });
   };
-
-  
+	
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
   render () {

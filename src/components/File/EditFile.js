@@ -3,22 +3,8 @@ import PropTypes from 'prop-types';
 import { Form } from 'semantic-ui-react';
 import { Field } from 'redux-form/immutable';
 import { strictValidObjectWithKeys } from '../../utils/commonutils';
+import { MD_FILE_DRAFT_OPTIONS_LIST } from '../../utils/constants';
 import { TextBox, TextArea, RadioGroup, RichEditor } from '../../components/Form';
-
-const draftOptionsList = [
-	{
-		value: 'true',
-		text: 'true',
-		className: 'radioBtn',
-		readOnly: false
-	},
-	{
-		value: 'false',
-		text: 'false',
-		className: 'radioBtn',
-		readOnly: false
-	}
-];
 
 class EditFile extends Component {
 	static propTypes = {
@@ -62,7 +48,7 @@ class EditFile extends Component {
 						label="Draft"
 						className="w50"
 						component={ RadioGroup }
-						options={ draftOptionsList }
+						options={ MD_FILE_DRAFT_OPTIONS_LIST }
 					/>
 				}
 				{

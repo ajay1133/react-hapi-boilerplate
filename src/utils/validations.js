@@ -121,3 +121,11 @@ export function createValidator(rules) {
     return errors;
   };
 }
+
+export function fileNameValidator(fileName) {
+  const failedValidation = /^[0-9|a-z|A-Z]+.md$/.test(fileName);
+  
+  if (!failedValidation) {
+	  return 'Invalid File Name, must start with alphanumeric and have a /'.md/' extension';
+  }
+}
