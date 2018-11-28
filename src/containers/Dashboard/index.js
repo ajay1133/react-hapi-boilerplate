@@ -1,18 +1,20 @@
 import React, { Component } from 'react';
 import MarkDown from 'markdown-it';
-import TurnDown from 'turndown';
 import Markup from 'react-html-markup';
 import { connect } from 'react-redux';
 import { reduxForm } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
-import { Button, List, Loader, Modal, Icon, Message, Grid } from 'semantic-ui-react';
-import config from '../../config';
+import { Button, Table, Loader, Modal, Icon, Message, Grid } from 'semantic-ui-react';
 import AddFile from '../../components/File/AddFile';
 import EditFile from '../../components/File/EditFile';
-import { bitBucketListing, bitBucketView, updateBitBucketFile } from '../../redux/modules/bitBucketRepo';
-import { getHashParams, strictValidObjectWithKeys } from '../../utils/commonutils';
-
-const { bitBucket } = config;
+import {
+	bitBucketListing,
+	bitBucketView,
+	updateBitBucketFile,
+	resetBitBucketFileForm
+} from '../../redux/modules/bitBucketRepo';
+import { strictValidObjectWithKeys } from '../../utils/commonutils';
+import { ACCESSIBLE_ROOT_PATH, REPO_PATH } from '../../utils/constants';
 
 const md = MarkDown({
   html: false,
@@ -41,8 +43,7 @@ export default class Dashboard extends Component {
     fileContent: null,
     href: null,
     repoPath: null,
-    showMessageFlag: true,
-	  accessModalOpenFlag: true
+    showMessageFlag: true
   };
   
   static propTypes = {
@@ -64,12 +65,11 @@ export default class Dashboard extends Component {
 		this.saveAccount = this.getBitBucketData.bind(this);
 	};
 	
-  componentDidMount = () => {
+  componentDidMount = async () => {
     const { dispatch } = this.props;
-    const params = {
-      path: '/master/content/blog'
-    };
-    return dispatch(bitBucketListing(params));
+    const params = { path: ACCESSIBLE_ROOT_PATH };
+    await dispatch(bitBucketListing(params));
+    this.setState({ loading: false });
   };
  
   
@@ -86,9 +86,9 @@ export default class Dashboard extends Component {
     const { dispatch } = this.props;
 	  
     const params = Object.assign({}, {
-      path: href.split('/src')[1]
+      path: (href && typeof href === 'string' && href.split('/src')[1]) || ACCESSIBLE_ROOT_PATH
     });
-    
+	  
     this.setState({ loading: true });
     
     let res = null;
@@ -109,46 +109,32 @@ export default class Dashboard extends Component {
       repoPath
     });
   };
-  
-  getParentDir = (repo) => {
-    let href_1 = '', href_2 = '';
-    
-    if (repo.path.split('/').length > 1) {
-      href_2 = repo.path.split('/').slice(-4, -2)[0] || 'src';
-      href_1 = repo.links.self.href.split(href_2)[0];
-      
-      return (
-        <List.Icon
-          size='large'
-          name='reply'
-          onClick={ (e) => this.getBitBucketData(e, (href_1 + href_2), 'commit_directory', repo.path) }
-        />
-      );
-    }
-  };
-  
+	
   setFile = values => {
-    const { dispatch, user } = this.props;
+    const { dispatch } = this.props;
     const { href, repoPath } = this.state;
     
     const formValues = values.toJSON();
     
     const { fileName = '' } = formValues;
     
+    const basePath = repoPath || REPO_PATH;
+    
     const dataObject = {
-      path: fileName && repoPath ? repoPath + '/' + fileName : (fileName && !repoPath ? fileName : repoPath),
+      path: fileName && basePath ? basePath + '/' + fileName : (fileName && !basePath ? fileName : basePath),
       content: this.compileFormFieldsToMarkDown(formValues),
       type: 2
     };
     
     this.setState({ loading: true });
-		const params = Object.assign({}, {
-			path: href.split('/src')[1]
+		
+    const params = Object.assign({}, {
+			path: (href && typeof href === 'string' && href.split('/src')[1]) || ACCESSIBLE_ROOT_PATH
 		});
+    
     dispatch(updateBitBucketFile(dataObject))
 	    .then(() => dispatch(bitBucketListing(params)))
       .then(async (resp) => {
-	
 	      const isLoadingDirectoryFlag = !!fileName;
 	      let res = null;
 	      
@@ -169,17 +155,17 @@ export default class Dashboard extends Component {
 	compileFormFieldsToMarkDown = (dataObj) => {
 	  const metaDataVariablesList = ['title', 'image', 'description', 'draft'];
 	
-	  const turnDown = new TurnDown();
-	  
 	  const extraMetaDataKeys = Object.keys(dataObj)
-                                    .filter(k => k !== 'content' && metaDataVariablesList.indexOf(k) <= -1);
-    const validMetaDataKeys = Object.keys(dataObj).filter(k => metaDataVariablesList.indexOf(k) > -1);
-    
+	                                  .filter(k => k !== 'content' && metaDataVariablesList.indexOf(k) <= -1);
+    const validMetaDataKeys = Object.keys(dataObj)
+                                    .filter(k => metaDataVariablesList.indexOf(k) > -1);
+		
     let mdStr = '---\n';
 	
-	  validMetaDataKeys.forEach(k => {
-      mdStr += `${k} : ${dataObj[k].toString()}\n`;
-    });
+	  validMetaDataKeys
+		  .forEach(k => {
+        mdStr += `${k} : ${dataObj[k].toString()}\n`;
+      });
 	  
 	  extraMetaDataKeys.forEach(k => {
 		  mdStr += `${k} : ${dataObj[k]}\n`;
@@ -187,29 +173,35 @@ export default class Dashboard extends Component {
 	
 	  mdStr += '---\n';
    
-	  mdStr += turnDown.turndown(dataObj && dataObj.content) || '';
+	  if (dataObj.content) {
+		  mdStr += dataObj.content.trim();
+	  }
 	  
 	  return mdStr;
   };
   
-	modalOpen = (addNewFileFlag = false) => {
-	  const stateObject = { openRepoFile: true };
-	  
+	modalOpen = async (addNewFileFlag) => {
+		const { dispatch } = this.props;
+		const stateObject = { openRepoFile: true };
+		
 	  if (addNewFileFlag) {
 	    stateObject.modalOpenFlag = true;
+		  this.setState({ loading: true });
+		  await dispatch(resetBitBucketFileForm());
+		  this.setState({ loading: false });
     }
     
 	  this.setState(stateObject);
 	};
   
   modalClose = () => {
-    const { modalOpenFlag } = this.state;
-    
     this.setState({
-      modalOpenFlag: !modalOpenFlag,
+      modalOpenFlag: false,
       openRepoFile: false,
 	    fileName: null,
-	    fileContent: null
+	    fileContent: null,
+	    href: null,
+	    repoPath: null
     });
   };
 
@@ -218,17 +210,13 @@ export default class Dashboard extends Component {
   
   render () {
     const { isLoad, loadErr, bitBucketList = [], handleSubmit, user, message, initialValues } = this.props;
-    
-    const {
-      loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag
-    } = this.state;
+    const { loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag } = this.state;
 	
-	  const isValidUserFlag = strictValidObjectWithKeys(user) && user.id;
+	  const isValidUserFlag = strictValidObjectWithKeys(user) && !!user.id;
     const errorOccurredFlag = !loading && !isLoad && !isValidUserFlag;
     const loadingCompleteFlag = !isLoad;
     const validBitBucketListFlag = loadingCompleteFlag && Array.isArray(bitBucketList) && bitBucketList.length;
-    
-    const isFileLoadedSuccessFlag = fileName;
+    const isFileLoadedSuccessFlag = !!fileName;
 	  
     if (errorOccurredFlag) {
       return (
@@ -253,92 +241,96 @@ export default class Dashboard extends Component {
             <span style={{ color: 'red' }}>{ loadErr }</span>
           </Message>
         }
-		      <div className="ui card fluid cardShadow">
-			      <div className="content pageMainTitle">
-				      <Grid>
-					      <div className="ui left floated column innerAdjust">
-						      <h3 className="mainHeading"> Dashboard</h3>
-					      </div>
-					      <Grid.Row>
-							      <Grid.Column>
-								      <h4>
-									      { loadingCompleteFlag ? 'Listing' : 'Loading' } Files From BitBucket Repository
-									      <Button
-										      primary
-										      style={{ float: 'right', marginTop: '0px' }}
-										      onClick={ () => this.modalOpen(true) }
-									      >
-										      Add File
-									      </Button>
-								      </h4>
-								
-								      {
-									      validBitBucketListFlag &&
-									      <div className="content">
-										      <List>
-											      <List.Item>
-												      { <List.Icon size='large' name='folder open'/> }
-												      <List.Content>
-													      <List.Header>
-					                        <span style={{ textAlign: 'center' }}>
-					                          { bitBucketList[0].path.split('/').slice(-2, -1)[0] || 'src' }
-					                        </span>
-													      </List.Header>
-													      <List.List>
-														      {
-															      bitBucketList.map((repo, idx) => {
-																      return (
-																	      <List.Item
-																		      as='a'
-																		      key={idx}
-																		      onClick={ (e) => this.getBitBucketData(
-																			      e,
-																			      repo.links.self.href,
-																			      repo.type,
-																			      repo.path.split('/').pop(),
-																			      repo.path
-																		      ) }
-																	      >
-																		      <List.Icon
-																			      size='large'
-																			      verticalAlign='middle'
-																			      name={ repo.type === 'commit_directory' ? 'folder' : 'file' }
-																		      />
-																		      <List.Content>
-																			      <List.Header>
-																				      { repo.path.split('/').pop() }
-																			      </List.Header>
-																		      </List.Content>
-																	      </List.Item>
-																      );
-															      })
-														      }
-													      </List.List>
-												      </List.Content>
-											      </List.Item>
-										      </List>
-									      </div>
-								      }
-								
-								      {
-									      loadingCompleteFlag && !validBitBucketListFlag &&
-									      <div className="content">
-										      <span style={{ color: 'red' }}>{ 'Error loading directory' }</span>
-									      </div>
-								      }
-								
-								      {
-									      !loadingCompleteFlag &&
-									      <div className="content">
-										      <Loader active inline='centered'>Loading ...</Loader>
-									      </div>
-								      }
-							      </Grid.Column>
-					      </Grid.Row>
-				      </Grid>
-			      </div>
+	
+	      <div className="ui card fluid cardShadow">
+		      <div className="content pageMainTitle">
+			      <Grid>
+				      <div className="ui left floated column innerAdjust">
+					      <h3 className="mainHeading"> Dashboard</h3>
+				      </div>
+				      <Grid.Row>
+					      <Grid.Column>
+						      <h4>
+							      { loadingCompleteFlag ? 'Listing' : 'Loading' } Files From BitBucket Repository
+							      {
+								      loadingCompleteFlag &&
+								      <Button
+									      primary
+									      style={{ float: 'right', marginTop: '-10px' }}
+									      onClick={ () => this.modalOpen(true) }
+								      >
+									      Add File
+								      </Button>
+							      }
+						      </h4>
+						
+						      {
+							      validBitBucketListFlag &&
+							      <div className="content" style={{ marginTop: '10px' }}>
+								      <Table celled>
+									      <Table.Header>
+										      <Table.Row>
+											      <Table.HeaderCell>File Name</Table.HeaderCell>
+											      <Table.HeaderCell><span style={{ float: 'right' }}>Action</span></Table.HeaderCell>
+										      </Table.Row>
+									      </Table.Header>
+									      <Table.Body>
+										      {
+											      bitBucketList.map((repo, idx) => {
+												      return (
+													      <Table.Row
+														      key={idx}
+														      onClick={ (e) => this.getBitBucketData(
+															      e,
+															      repo.links.self.href,
+															      repo.type,
+															      repo.path.split('/').pop(),
+															      repo.path
+														      ) }
+													      >
+														      <Table.Cell>
+															      { repo.path.split('/').pop() }
+														      </Table.Cell>
+														      <Table.Cell>
+															      <Icon
+																      name="eye"
+																      style={{ float: 'right' }}
+																      onClick={ (e) => this.getBitBucketData(
+																	      e,
+																	      repo.links.self.href,
+																	      repo.type,
+																	      repo.path.split('/').pop(),
+																	      repo.path
+																      ) }/>
+														      </Table.Cell>
+													      </Table.Row>
+												      );
+											      })
+										      }
+									      </Table.Body>
+								      </Table>
+							      </div>
+						      }
+						
+						      {
+							      loadingCompleteFlag && !validBitBucketListFlag &&
+							      <div className="content">
+								      <span style={{ color: 'red' }}>{ 'Error loading directory' }</span>
+							      </div>
+						      }
+						
+						      {
+							      !loadingCompleteFlag &&
+							      <div className="content">
+								      <Loader active inline='centered'>Loading ...</Loader>
+							      </div>
+						      }
+					      </Grid.Column>
+				      </Grid.Row>
+			      </Grid>
 		      </div>
-        
+	      </div>
+	      
         {
           !loading && loadingCompleteFlag &&
           <Modal
@@ -389,7 +381,7 @@ export default class Dashboard extends Component {
               }
               {
                 !openRepoFile &&
-                <Button primary onClick={this.modalOpen}>
+                <Button primary onClick={ () => this.modalOpen(false) }>
                   <i aria-hidden='true' className='edit icon' />Edit
                 </Button>
               }

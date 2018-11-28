@@ -11,3 +11,9 @@ export const SCORE_INTERVAL_OPTIONS =[
 export const SCORE_ERROR_MESSAGE = 'There must be at least 10 options for fans to score by, please adjust the Min, Max, and Score Interval';
 
 export const DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES = 3000;
+
+export const ROOT_BRANCH = 'master';
+
+export const REPO_PATH = 'content/blog';
+
+export const ACCESSIBLE_ROOT_PATH = '/' + ROOT_BRANCH + '/' + REPO_PATH;

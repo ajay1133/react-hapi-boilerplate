@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Form } from 'semantic-ui-react';
 import { Field } from 'redux-form/immutable';
-import { TextBox, TextArea } from '../../components/Form';
+import { TextBox, RichEditor } from '../../components/Form';
 
 class AddFile extends Component {
 	static propTypes = {
@@ -34,7 +34,7 @@ class AddFile extends Component {
 				<Field
 					name="content"
 					label="File Content"
-					component={TextArea}
+					component={ RichEditor }
 					placeholder="Enter File Content"
 					autoHeight
 				/>
