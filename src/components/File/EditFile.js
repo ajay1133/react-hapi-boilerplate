@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Form } from 'semantic-ui-react';
 import { Field } from 'redux-form/immutable';
 import { strictValidObjectWithKeys } from '../../utils/commonutils';
-import { TextBox, TextArea, RadioGroup } from '../../components/Form';
+import { TextBox, TextArea, RadioGroup, RichEditor } from '../../components/Form';
 
 const draftOptionsList = [
 	{
@@ -80,7 +80,7 @@ class EditFile extends Component {
 					<Field
 						name="content"
 						label="File Content"
-						component={ TextArea }
+						component={ RichEditor }
 						placeholder="Enter Content"
 						autoHeight={true}
 					/>

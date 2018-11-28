@@ -5,7 +5,6 @@ import {
 	strictValidSplittableStringWithMinLength
 } from '../../utils/commonutils';
 import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
-import markdownObject from 'markdown';
 
 const LOAD = 'bitBucketRepo/LOAD';
 const LOAD_SUCCESS = 'bitBucketRepo/LOAD_SUCCESS';
@@ -77,6 +76,7 @@ export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 	let res = {};
   try {
 		res = await api.get('/bitBucket/listing', { params });
+		
 		if (!res) {
 			dispatch({ type: LOAD_FAIL, error: 'Unable to pull repositories' });
 			dispatch(internals.resetMessage());
@@ -186,8 +186,6 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 	let res = {};
 	
 	try {
-		const md = markdownObject.markdown;
-		
 		const delimiterToDiffDetailsWithContent = '---';
 		const delimiterToDiffDetails = '\n';
 		const delimiterToDiffEachDetail = ':';
@@ -222,9 +220,7 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 				});
 		}
 		
-		const content = await md.renderJsonML(md.toHTMLTree(md.parse(
-			res.slice(2).join(delimiterToDiffDetailsWithContent)
-		)));
+		const content = res.slice(2).join(delimiterToDiffDetailsWithContent).trim();
 		
 		res = Object.assign({}, details, { content });
 	} catch (error) {
@@ -235,6 +231,12 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 	}
 	
 	return res;
+};
+
+export const resetBitBucketFileForm = () => async (dispatch, getState, api) => {
+	dispatch({ type: LOAD });
+	dispatch({ type: BIT_BUCKET_VIEW, result: {} });
+	dispatch({ type: LOAD_SUCCESS });
 };
 
 internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES) => {
