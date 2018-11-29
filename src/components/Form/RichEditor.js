@@ -161,31 +161,34 @@ class RichEditor extends React.Component {
       }
     }
     return (
-      <div className="RichEditor-root">
-        <BlockStyleControls
-          editorState={ editorState }
-          onToggle={ this.toggleBlockType }
-        />
-        <InlineStyleControls
-          editorState={ editorState }
-          onToggle={ this.toggleInlineStyle }
-        />
-        <Form.Field error={hasError}>
-          <div className={ className } onClick={ this.focus }>
-            <Editor
-              { ...input }
-              blockStyleFn={ this.getBlockStyle }
-              customStyleMap={ styleMap }
-              editorState={ editorState }
-              handleKeyCommand={ this.handleKeyCommand }
-              keyBindingFn={ this.mapKeyToEditorCommand }
-              onChange={ this.onChange }
-              placeholder={ input.placeholder }
-              ref="editor"
-              spellCheck={ true }
-            />
-          </div>
-        </Form.Field>
+      <div style={ input.style || {} }>
+        { input.label && <div style={{ margin: '0em 0em 0.28571429rem 0em' }}><strong>{ input.label }</strong></div> }
+        <div className="RichEditor-root">
+          <BlockStyleControls
+            editorState={ editorState }
+            onToggle={ this.toggleBlockType }
+          />
+          <InlineStyleControls
+            editorState={ editorState }
+            onToggle={ this.toggleInlineStyle }
+          />
+          <Form.Field error={hasError}>
+            <div className={ className } onClick={ this.focus }>
+              <Editor
+                { ...input }
+                blockStyleFn={ this.getBlockStyle }
+                customStyleMap={ styleMap }
+                editorState={ editorState }
+                handleKeyCommand={ this.handleKeyCommand }
+                keyBindingFn={ this.mapKeyToEditorCommand }
+                onChange={ this.onChange }
+                placeholder={ input.placeholder }
+                ref="editor"
+                spellCheck={ true }
+              />
+            </div>
+          </Form.Field>
+        </div>
       </div>
     );
   }

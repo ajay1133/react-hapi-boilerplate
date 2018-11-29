@@ -40,3 +40,5 @@ export const MD_FILE_DRAFT_OPTIONS_LIST = [
 export const MD_META_INITIAL_VALUES = {
   draft: false
 };
+
+export const VALID_ACCESSIBLE_FILE_FORMATS = ['md'];
