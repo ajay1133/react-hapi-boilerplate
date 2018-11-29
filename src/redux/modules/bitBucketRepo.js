@@ -4,7 +4,7 @@ import {
 	strictValidString,
 	strictValidSplittableStringWithMinLength
 } from '../../utils/commonutils';
-import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
+import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES, MD_META_INITIAL_VALUES } from '../../utils/constants';
 
 const LOAD = 'bitBucketRepo/LOAD';
 const LOAD_SUCCESS = 'bitBucketRepo/LOAD_SUCCESS';
@@ -23,7 +23,7 @@ const initialState = Immutable.fromJS({
 	loadErr: null,
 	accessToken: null,
 	repositories: [],
-  bitBucketInitialValues: {}
+  bitBucketInitialValues: MD_META_INITIAL_VALUES
 });
 
 const internals = {};
@@ -189,6 +189,7 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 		const delimiterToDiffDetailsWithContent = '---';
 		const delimiterToDiffDetails = '\n';
 		const delimiterToDiffEachDetail = ':';
+		
 		res = (strictValidSplittableStringWithMinLength(fileContent, delimiterToDiffDetailsWithContent, 2) &&
 			fileContent.split(delimiterToDiffDetailsWithContent)) || [];
 		
@@ -198,7 +199,6 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 				error: `Invalid file. The '---' are not wrapping the meta-data fields. You can only view the file.
 				 If opened in edit mode the data won't be fetched.`
 			});
-			dispatch(internals.resetMessage());
 			return {};
 		}
 		
@@ -235,7 +235,7 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 
 export const resetBitBucketFileForm = () => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
-	dispatch({ type: BIT_BUCKET_VIEW, result: {} });
+	dispatch({ type: BIT_BUCKET_VIEW, result: MD_META_INITIAL_VALUES });
 	dispatch({ type: LOAD_SUCCESS });
 };
 

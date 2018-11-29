@@ -16,6 +16,15 @@ body {
 .m-0{
 	margin:0px;
 }
+.m-5{
+	margin:5px;
+}
+.m-10{
+	margin:10px;
+}
+.m-20{
+	margin:20px;
+}
 .pushable .ui.visible.overlay.sidebar ~ .pusher {
 	position: relative;
 	height: 100% !important;

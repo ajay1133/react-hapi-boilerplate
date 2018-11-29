@@ -17,7 +17,9 @@ const db = new Sequelize(settings.database, settings.username, settings.password
 );
 
 db.models = {};
-db.models.User = require('./models/User')(db);
+db.models.User = db.import('./models/User');
+db.models.ServiceTypes = db.import('./models/servicetypes');
+db.models.Services = db.import('./models/services');
 
 // Associations
 const models = db.models;
