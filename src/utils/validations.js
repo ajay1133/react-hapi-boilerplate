@@ -1,5 +1,7 @@
 /* eslint-disable */
 import './objectExtensions';
+import { VALID_ACCESSIBLE_FILE_FORMATS } from '../utils/constants';
+import { validFileName } from '../utils/commonutils';
 
 const isEmpty = value => value === undefined || value === null || value === '';
 const join = rules => (value, data) => rules
@@ -123,9 +125,7 @@ export function createValidator(rules) {
 }
 
 export function fileNameValidator(fileName) {
-  const failedValidation = /^[0-9|a-z|A-Z]+.md$/.test(fileName);
-  
-  if (!failedValidation) {
-	  return 'Invalid File Name, must start with alphanumeric and have a /'.md/' extension';
+  if (!validFileName(fileName, VALID_ACCESSIBLE_FILE_FORMATS)) {
+	  return 'Invalid File Name, a valid file must start with alphanumeric and have a \'.md\' extension';
   }
 }

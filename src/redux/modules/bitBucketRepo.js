@@ -199,7 +199,6 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 				error: `Invalid file. The '---' are not wrapping the meta-data fields. You can only view the file.
 				 If opened in edit mode the data won't be fetched.`
 			});
-			dispatch(internals.resetMessage());
 			return {};
 		}
 		
