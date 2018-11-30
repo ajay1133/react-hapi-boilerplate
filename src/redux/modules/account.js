@@ -1,13 +1,14 @@
 import Immutable from 'immutable';
 import orderBy from 'lodash/orderBy';
+import { updateBitBucketFile, deleteBitBucketFile } from './bitBucketRepo';
 
 const LOAD = 'account/LOAD';
 const LOAD_SUCCESS = 'account/LOAD_SUCCESS';
 const LOAD_FAIL = 'account/LOAD_FAIL';
 
-const SAVE_ACCOUNT = 'account/SAVE_ACCOUNT';
-const SAVE_ACCOUNT_SUCCESS = 'account/SAVE_ACCOUNT_SUCCESS';
-const SAVE_ACCOUNT_FAIL = 'account/SAVE_ACCOUNT_FAIL';
+const ACCOUNT = 'account/ACCOUNT';
+const ACCOUNT_SUCCESS = 'account/ACCOUNT_SUCCESS';
+const ACCOUNT_FAIL = 'account/ACCOUNT_FAIL';
 
 const VERIFY_TOKEN = 'account/VERIFY_TOKEN';
 const VERIFY_TOKEN_SUCCESS = 'account/VERIFY_TOKEN_SUCCESS';
@@ -30,6 +31,8 @@ const initialState = Immutable.fromJS({
   selectedUser: undefined
 });
 
+const internals = {};
+
 export default function reducer(state = initialState, action) {
   switch (action.type) {
     case LOAD:
@@ -50,27 +53,31 @@ export default function reducer(state = initialState, action) {
         .set('loadErr', action.error)
         .set('items', null);
 
-    case SAVE_ACCOUNT:
+    case ACCOUNT:
       return state
-        .set('savingAccount', true)
-        .set('saveAccountErr', null);
+        .set('account', true)
+        .set('accountErr', null)
+        .set('accountMsg', null);
 
-    case SAVE_ACCOUNT_SUCCESS: {
+    case ACCOUNT_SUCCESS: {
       if (action.users) {
         return state
-        .set('savingAccount', false)
-        .set('saveAccountErr', null)
-        .set('items', action.users)  
+        .set('account', false)
+        .set('accountErr', null)
+        .set('items', action.users)
+        .set('accountMsg', action.message || null)
       }
       return state
-        .set('savingAccount', false)
-        .set('saveAccountErr', null)
-    }    
+        .set('account', false)
+        .set('accountErr', null)
+        .set('accountMsg', action.message || null)
+    }
 
-    case SAVE_ACCOUNT_FAIL:
+    case ACCOUNT_FAIL:
       return state
-        .set('savingAccount', false)
-        .set('saveAccountErr', action.err );  
+        .set('account', false)
+        .set('accountErr', action.error )
+        .set('accountMsg', null);
 
     case VERIFY_TOKEN:
       return state
@@ -85,9 +92,8 @@ export default function reducer(state = initialState, action) {
     case VERIFY_TOKEN_FAIL:
       return state
         .set('tokenValid', false)
-        .set('confirmationErr', action.error );  
-
-
+        .set('confirmationErr', action.error );
+    
     case UPDATE_PASSWORD:
       return state
         .set('updatingPassword', true)
@@ -104,17 +110,16 @@ export default function reducer(state = initialState, action) {
       return state
         .set('updatingPassword', false)
         .set('passwordUpdated', false)
-        .set('confirmationErr', action.error );      
+        .set('confirmationErr', action.error );
         
-    case SELECT_USER: 
+    case SELECT_USER:
       return state
-        .set('selectedUser', action.user)    
+        .set('selectedUser', action.user);
 
     default:
       return state;
   }
 }
-
 
 export const loadAccounts = () => async (dispatch, getState, api) => {
   dispatch({ type: LOAD });
@@ -140,33 +145,79 @@ export const loadAccounts = () => async (dispatch, getState, api) => {
   }
 };
 
+/**
+ * saveAccount: used to add account details
+ * @param accountDetails
+ */
 export const saveAccount = (accountDetails) => async (dispatch, getState, api) => {
-  dispatch({ type: SAVE_ACCOUNT });
+  dispatch({ type: ACCOUNT });
+  
   try {
-    if (accountDetails.id) {
-      let users = getState().get('account').get('items');
-      let index = users.findIndex((user) => user.id === accountDetails.id)
-      if (accountDetails.isDeleted) {
-        users.splice(index, 1);
-      } else {
-        let selectedUser = users[index];
-        selectedUser.firstName = accountDetails.firstName;
-        selectedUser.lastName =accountDetails.lastName;
-        selectedUser.email = accountDetails.email;
-        users.splice(index, 1, selectedUser)
-      }
-      await api.put('/account', { data: accountDetails });
-      dispatch(loadAccounts());
-      dispatch({ type: SAVE_ACCOUNT_SUCCESS, users });
-    } else {
-      await api.post('/account', { data: accountDetails });
-      dispatch(loadAccounts());
-      dispatch({ type: SAVE_ACCOUNT_SUCCESS });
-    }
+    let addFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 1 });
+    addFileData.message = `Added: ${addFileData.path}`;
+    await dispatch(updateBitBucketFile(addFileData));
+    await api.post('/account', { data: accountDetails });
+    dispatch(loadAccounts());
+    dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!'});
    return accountDetails;
   } catch (err) {
-    dispatch({ type: SAVE_ACCOUNT_FAIL, error: err.message });
-    return err;
+    dispatch({ type: ACCOUNT_FAIL, error: err.message });
+  }
+};
+
+/**
+ * updateAccount: used to update account details
+ * @param accountDetails
+ * @param isAllow
+ */
+export const updateAccount = (accountDetails, isAllow) => async (dispatch, getState, api) => {
+  dispatch({ type: ACCOUNT });
+  let users = getState().get('account').get('items');
+  
+  try {
+    const { id } = accountDetails;
+    delete accountDetails.id;
+    if (accountDetails.isDeleted) {
+      users.filter((user) => {
+        return user.id !== id;
+      });
+      // Delete file on Bitbucket
+      const { firstName, lastName } = accountDetails;
+      const deleteFileData = {
+        files: `/content/profile/${firstName+lastName}.md`
+      };
+      deleteFileData.message = `Deleted: ${deleteFileData.files}`;
+      await dispatch(deleteBitBucketFile(deleteFileData));
+    } else {
+      users.map((user) => {
+        if (user.id === id) {
+          Object.assign(user, accountDetails);
+            user.title = accountDetails.title;
+            user.firstName = accountDetails.firstName;
+            user.lastName = accountDetails.lastName;
+            user.address = accountDetails.address;
+            user.email = accountDetails.email;
+            user.phone = accountDetails.phone;
+            user.url = accountDetails.url;
+            user.description = accountDetails.description;
+            user.image = accountDetails.image;
+            user.status = accountDetails.status;
+        }
+        return user;
+      });
+      if (isAllow) {
+        // Update file on Bitbucket
+        let updateFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 2 });
+        updateFileData.message = `Updated: ${updateFileData.path}`;
+        await dispatch(updateBitBucketFile(updateFileData));
+      }
+    }
+    await api.put(`/account/${id}`, { data: accountDetails });
+    dispatch(loadAccounts());
+    dispatch({ type: ACCOUNT_SUCCESS, users, message: 'Updated Successfully !!' });
+   return accountDetails;
+  } catch (err) {
+    dispatch({ type: ACCOUNT_FAIL, error: err.message });
   }
 };
 
@@ -193,12 +244,31 @@ export const updatePassword = (accountDetails) => async (dispatch, getState, api
   }
 };
 
-export const sortAccounts = (sortDir, sortCol) => async (dispatch, getState, api) => {  
+export const sortAccounts = (sortDir, sortCol) => async (dispatch, getState, api) => {
   const items = getState().get('account').get('items');
   const sortedList = orderBy(items,[`${sortCol}`],[`${sortDir}`]);
   dispatch({ type: LOAD_SUCCESS, items: sortedList, count: sortedList.length });
-}
+};
 
 export const selectUser = (user) => async (dispatch) => {
   dispatch( { type: SELECT_USER, user });
-}
+};
+
+internals.getFileContent = (accountDetails) => {
+  const { firstName, lastName, title, image, phone, address, description } = accountDetails;
+  const path = `/content/profile/${firstName+lastName}.md`;
+  
+  let content = `---
+title: "${title}"
+featured_image: ''
+image: ${image}
+contact: ${phone}
+address: "${address}"
+draft: false
+---
+
+
+`;
+  content += description;
+  return { path, content } ;
+};

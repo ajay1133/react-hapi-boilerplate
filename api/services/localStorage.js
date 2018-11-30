@@ -1,16 +1,8 @@
-/**
- * Created by deven on 26/10/16.
- */
 
 "use strict";
-//const AWS = require('aws-sdk');
-//const config = require('config');
 var fs = require('fs');
 const uuid = require('uuid');
 const config = require('config');
-
-//AWS.config.update({accessKeyId: config.aws.accessKeyId, secretAccessKey: config.aws.secretAccessKey});
-//const s3        = new AWS.S3();
 
 exports.uploadFile = (uploadFile, callback) => {
 

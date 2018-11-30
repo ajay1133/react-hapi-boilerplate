@@ -6,36 +6,57 @@ const cryptoHelper = require('../helpers/cryptoHelper');
 const logger = require('../helpers/logHelper');
 const Boom = require('boom');
 const User = db.models.User;
-const jwtHelper = require('../helpers/jwtHelper')
-const mailer = require('../mailer')
+const jwtHelper = require('../helpers/jwtHelper');
+const mailer = require('../mailer');
+
+const defaultUserAttributes = [
+  'id',
+  'email',
+  'firstName',
+  'lastName',
+  'title',
+  'address',
+  'phone',
+  'url',
+  'description',
+  'image',
+  'status'
+];
 
 /**
  * Create a user
  * @param userPayload {email, password}
  */
-
 exports.createUser = async (userPayload) =>  {
   assert(userPayload, i18n('services.accountService.missingUserPayload'));
 
   const userData = Object.assign({}, userPayload);
+  
   delete userData.password;
-  userData.role = userPayload.role || 2; 
+  userData.role = userPayload.role || 2;
+  
   try {
     let foundUser = await User.findOne({where: { email: userPayload.email }});
+    
     if (foundUser) {
       return reject(i18n('services.accountService.emailExists'));
     }
+    
     if (userPayload.password) {
       let response = await cryptoHelper.hashString(userPayload.password);
-      userData.role = 1; 
+      
+      userData.role = 1;
       userData.hash = response.hash;
       userData.salt = response.salt;
+      
       let result = User.create(userData);
       return result;
     } else {
       let inviteToken =  await jwtHelper.sign(userData, '48h', 'HS512');
+      
       userData.inviteToken = inviteToken;
-      userData.inviteStatus = 0; 
+      userData.inviteStatus = 0;
+      
       let result = User.create(userData);
       return result;
     }
@@ -47,29 +68,29 @@ exports.createUser = async (userPayload) =>  {
 /**
  * Return all user accounts for management
  */
-exports.getAllAccounts = ( ) => new Promise( ( resolve, reject ) => {
-  User.findAndCountAll({
-    distinct: true,
-    where: { 
-      role: 2
-    }, 
-    attributes: ['id', 'email', 'firstName', 'lastName', 'createdAt']
-  })
-  .then((users) => {
-    resolve(users);
-  }).catch ((err) => {
-    reject(err);
-  });
+exports.getAllAccounts = () => new Promise( ( resolve, reject ) => {
+	User
+    .findAndCountAll({
+      where: {
+        role: 2
+      },
+      attributes: defaultUserAttributes
+    })
+    .then(resolve)
+    .catch (reject);
 });
 
 /**
  * Get User on basis of user id
  * @param userId
  */
-
-exports.getUser = async ( userId ) => {
+exports.getUser = async (userId) => {
   try {
-    let userDetails = await User.findOne({ attributes: ['id', 'email', 'role'], where: { id: userId }});
+    let userDetails = await User.findOne({
+      attributes: ['id', 'role', 'email', 'firstName', 'lastName'],
+      where: { id: userId }
+    });
+    
     if (userDetails) {
       return userDetails.toJSON();
     } else {
@@ -84,12 +105,13 @@ exports.getUser = async ( userId ) => {
  * Update User
  * @param userPayload { email, password, firstName, lastName } etc
  */
- exports.updateUser = (userPayload) => new Promise((resolve, reject) => {
-   assert(userPayload, i18n('services.accountService.missingUserPayload'));
+ exports.updateUser = (id, userPayload) => new Promise((resolve, reject) => {
+   // assert(userPayload, i18n('services.accountService.missingUserPayload'));
    const userData = Object.assign({}, userPayload);
    if (userPayload.password) {
      delete userData.password;
      delete userData.id;
+     
      cryptoHelper
        .hashString(userPayload.password)
        .then(({ hash, salt }) => {
@@ -102,19 +124,21 @@ exports.getUser = async ( userId ) => {
        });
    }
    else {
-     User.findOne({ where: { id: userPayload.id }})
-      .then((existingUser) => {
-        User.update(userData, {where:{id:userPayload.id}})
-          .then((data) => {
-            if (existingUser.dataValues.email !== userData.email) {
-              let name = userPayload.firstName + ' ' + userPayload.lastName;
-              let response = mailer.userRegistration({email: userPayload.email, inviteToken: existingUser.dataValues.inviteToken, name: name });
-              console.log("Mail Response", response);
-            }
-            resolve(data);
-          })
-          .catch('error');
-      });
+     User.update(userData, { where: { id } })
+         .then((data) => {
+//            if (existingUser.dataValues.email !== userData.email) {
+//              let name = userPayload.firstName + ' ' + userPayload.lastName;
+//
+//              let response = mailer.userRegistration({
+//                email: userPayload.email,
+//                inviteToken: existingUser.dataValues.inviteToken,
+//                name: name
+//              });
+//              console.log("Mail Response", response);
+//            }
+           resolve(data);
+         })
+         .catch('error');
    }
  });
 
@@ -126,12 +150,17 @@ exports.getUser = async ( userId ) => {
  exports.updatePassword = async (userPayload) => {
   try {
     const userData = Object.assign({}, userPayload);
+    
     delete userData.password;
+    
     let hashDetails = await cryptoHelper.hashString(userPayload.password);
+    
     if (hashDetails) {
       userData.hash = hashDetails.hash;
       userData.salt = hashDetails.salt;
+      
       let result = await User.update(userData, {where:{email: userPayload.email }});
+      
       return result;
     }
   } catch(err) {

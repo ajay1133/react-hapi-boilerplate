@@ -96,20 +96,26 @@ export default function reducer(state = initialState, action) {
 export const load = (forced) => async (dispatch, getState, api) => {
   // dont call api if user data is in state
   const user = getState().get('auth').get('user');
+  
   if (user && !forced) {
     return;
   }
+  
   dispatch({ type: LOAD });
+  
   try {
     const res = await api.get('/sessions');
+    
     if (res.message) {
       dispatch({ type: LOAD_FAIL, error: res.message });
       return;
     }
+    
     if (res.accessToken) {
       store('authToken', res.accessToken);
       store('refreshToken', res.refreshToken);
     }
+    
     dispatch({ type: LOAD_SUCCESS, user: res });
     return res;
   } catch (error) {
@@ -119,12 +125,16 @@ export const load = (forced) => async (dispatch, getState, api) => {
 
 export const login = (email, password) => async (dispatch, getState, api) => {
   dispatch({ type: LOGIN });
+  
   try {
     const res = await api.post('/sessions?jwt=1', { data: { email: email, password:  password} });
+    
     // set authToken to local storage
     store('authToken', res.accessToken);
+    
     dispatch({ type: LOGIN_SUCCESS, user: res });
     dispatch(load(true));
+    
     return res;
   } catch (err) {
     dispatch({ type: LOGIN_FAIL, error: err.message });
@@ -134,7 +144,9 @@ export const login = (email, password) => async (dispatch, getState, api) => {
 export const logout = () => (dispatch, getState, api) => {
   store.remove('authToken');
   store.remove('refreshToken');
+  
   dispatch({ type: LOGOUT });
   dispatch({ type: 'FLUSH' });
+  
   dispatch(push('/'));
 };

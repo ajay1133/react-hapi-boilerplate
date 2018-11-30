@@ -10,14 +10,12 @@ module.exports = {
   redis: {
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT,
-    prefix: 'fan_'
+    prefix: 'com_'
   },
   aws: {
-    accessKeyId: process.env.AWS_KEY,
-    secretAccessKey: process.env.AWS_SECRET,
     s3: {
-      bucketWrite: 'fan-production-original',
-      bucket: 'fan-production'
+      bucketWrite: 'compass-original',
+      bucket: 'compass-production'
     }
   },
   BasePath:{

@@ -16,19 +16,56 @@ module.exports = {
     strategy: 'default',
     scope: ['admin']
   },
-  tags: ['api', 'campaign'],
+  tags: ['api', 'account'],
   description: 'Create user',
-
   notes: 'Create user',
-
-
   validate: {
     payload: {
-      email: joi.any(),
+      email: joi.string()
+                .email()
+                .allow('')
+                .description('Email of User'),
+      
       password: joi.string(),
-      firstName: joi.string(),
-      lastName: joi.string(),
-      phoneNumber: joi.string()
+      
+      firstName: joi.string()
+                    .max(100)
+                    .description('First Name of User')
+                    .required(),
+  
+      lastName: joi.string()
+                   .max(100)
+                   .description('Last Name of User')
+                   .required(),
+  
+      title: joi.string()
+                .description('Title of User')
+                .required(),
+      
+      address: joi.string()
+                  .allow('')
+                  .description('Address of User'),
+      
+      phone: joi.string()
+                .allow('')
+                .description('Phone of User'),
+  
+      url: joi.string()
+              .allow('')
+              .description('Url of User'),
+  
+      description: joi.string()
+                      .allow('')
+                      .description('Description of User'),
+      
+      image: joi.string()
+                .allow('')
+                .description('Image of User'),
+      
+      status: joi.number()
+                 .valid([1,2,3])
+                 .allow(null)
+                 .description('1=Active, 2=Pending, 3=Denied'),
     },
     options: { abortEarly: false },
   },

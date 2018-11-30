@@ -2,7 +2,6 @@ const AWS = require('aws-sdk');
 const config = require('config');
 
 AWS.config.update({ region: 'us-east-1' });
-AWS.config.update({ accessKeyId: config.aws.accessKeyId, secretAccessKey: config.aws.secretAccessKey });
 
 exports.ses = new AWS.SES();
 

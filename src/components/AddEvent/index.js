@@ -3,9 +3,8 @@ import { Button, Form, Header, Grid } from 'semantic-ui-react'
 import PropTypes from 'prop-types'
 import { reduxForm, Field } from 'redux-form/immutable'
 import { SCORE_INTERVAL_OPTIONS } from '../../utils/constants'
-import Input from '../../components/Form/Input'
-import ErrorText from '../../components/Form/ErrorText'
-import Dropdown from '../../components/Form/Dropdown'
+
+import { Input, ErrorText, Dropdown } from '../../components/Form'
 import { required } from '../../utils/validations'
 import DateTimePicker from 'react-widgets/lib/DateTimePicker'
 import 'react-widgets/dist/css/react-widgets.css'
@@ -16,7 +15,7 @@ const renderDateTimePicker = ({input: {onChange, value}, meta: {touched, error},
         const hasError = touched && !!error;
        return (
         <div className={hasError?'error inline field':''}>
-            <DateTimePicker 
+            <DateTimePicker
             onChange={onChange}
             format="MM/DD/YYYY"
             time={showTime}
@@ -54,7 +53,7 @@ class AddEvent extends Component {
         return saveEvent(event).then(response => {
             console.log("Saved Successfully");
         }).catch(err => {
-            console.log(err);            
+            console.log(err);
             if (err.statusCode === 400 && err.message === "Event code already used.") {
                 throw new SubmissionError({ number: err.message });
             } else {
@@ -96,9 +95,9 @@ class AddEvent extends Component {
                                             <label>Date</label>
                                         </Grid.Column>
                                         <Grid.Column computer={8}>
-                                            <Field 
-                                            name="eventDate" 
-                                            showTime={false} 
+                                            <Field
+                                            name="eventDate"
+                                            showTime={false}
                                             component={renderDateTimePicker}
                                             validate={required}/>
                                         </Grid.Column>
@@ -117,7 +116,7 @@ class AddEvent extends Component {
                                             validate={[required]}
                                             options={SCORE_INTERVAL_OPTIONS}
                                         />
-                                    </Grid.Column>                                      
+                                    </Grid.Column>
                                     </Grid.Row>
                                 </Grid>
 
@@ -166,15 +165,15 @@ class AddEvent extends Component {
                                         <label>Text Number</label>
                                     </Grid.Column>
                                     <Grid.Column computer={8}>
-                                        <Input 
+                                        <Input
                                         name="number"
-                                        size="small" 
-                                        fluid 
-                                        error={error} 
+                                        size="small"
+                                        fluid
+                                        error={error}
                                         validate={[required]}
                                         disabled={initialValues ? true : false}/>
                                     </Grid.Column>
-                                </Grid.Row>                       
+                                </Grid.Row>
                             </Grid>
 
                         </Grid.Column>
@@ -183,7 +182,7 @@ class AddEvent extends Component {
                         <Grid.Column>
                             <Button className="ui large fluid button front" type="submit" primary disabled={submitting} loading={submitting}>
                                 Save
-                            </Button>                           
+                            </Button>
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

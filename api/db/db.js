@@ -1,8 +1,7 @@
-const Sequelize = require('sequelize')
-const config = require('config')
-const settings = config.db
-const globalHooks = require('./globalHooks')
-
+const Sequelize = require('sequelize');
+const config = require('config');
+const settings = config.db;
+const globalHooks = require('./globalHooks');
 
 const db = new Sequelize(settings.database, settings.username, settings.password, {
   host: settings.host,
@@ -18,7 +17,10 @@ const db = new Sequelize(settings.database, settings.username, settings.password
 );
 
 db.models = {};
-db.models.User = require('./models/User')(db);
+db.models.User = db.import('./models/User');
+db.models.ServiceTypes = db.import('./models/servicetypes');
+db.models.Services = db.import('./models/services');
+
 // Associations
 const models = db.models;
 //Hooks
@@ -27,8 +29,6 @@ const models = db.models;
 models.User.addHook('afterCreate', 'sendInviteLink', (user, options) => {
   console.log("User Created");
 });
-
-
 
 // Export
 module.exports = db;

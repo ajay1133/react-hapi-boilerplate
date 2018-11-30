@@ -1,5 +1,6 @@
 const db = require('./db');
 const path = require('path');
+
 module.exports = {
   api: {
     host: 'localhost',
@@ -10,11 +11,12 @@ module.exports = {
   redis: {
     host: db.redis.host,
     port: db.redis.port,
-    prefix: 'fan_'
+    prefix: 'com_'
   },
-  aws: {
-    accessKeyId: db.aws.key,
-    secretAccessKey: db.aws.secret,
+  bitBucket: {
+    username: db.bitBucket.username,
+    password: db.bitBucket.password,
+    basePath: db.bitBucket.basePath
   },
   emailUrl:{
     host: ''

@@ -2,14 +2,14 @@ module.exports = {
     development: {
       username: 'root',
       password: 'root',
-      database: 'fan',
+      database: 'compass',
       host: 'localhost',
       dialect: 'mysql'
     },
     test: {
       username: 'root',
       password: null,
-      database: 'fan_test',
+      database: 'compass_test',
       host: '127.0.0.1',
       dialect: 'mysql'
     },
@@ -28,8 +28,8 @@ module.exports = {
       dialect: 'mysql'
     },
     aws: {
-      key: process.env.AWS_KEY || 'AKIAIQHJ4IHVFTQUHIPQ',
-      secret: process.env.AWS_SECRET || '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'
+      key: process.env.AWS_KEY,
+      secret: process.env.AWS_SECRET
     },
     redis: {
       host: process.env.REDIS_HOST || '127.0.0.1',

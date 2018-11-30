@@ -20,29 +20,36 @@ module.exports = {
     query: {
       jwt: joi.number().valid(0, 1).default(0).description('set 1 to get jwt token'),
     },
+    
     payload: {
       email: joi.string().email().max(250).required(),
       password: joi.string().max(250).required(),
     },
+    
     options: { abortEarly: false },
   },
 
   handler: async (request, h) => {
     const payload = request.payload;
+    
     const onError = (err) => {
       throw Boom.badRequest(err);
     };
 
     try {
       let user = await sessionService.authenticate(payload.email, payload.password);
+      
       if (user && user.id) {
         let scope = ['user'];
+        
         if (user.role == 1) {
           scope.push('admin');
         } else {
           scope.push('customer');
         }
+        
         user.scope = scope;
+        
         if (request.query.jwt) {
           try {
             let accessToken =  await jwtHelper.sign(user);
