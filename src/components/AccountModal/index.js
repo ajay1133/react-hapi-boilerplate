@@ -21,10 +21,6 @@ const selector = formValueSelector('accountForm');
 })
 export default class AccountModal extends Component {
   state = {
-//    treatmentType: this.props.treatmentType,
-//    typeOfServices: this.props.typeOfServices,
-//    levelOfCare: this.props.levelOfCare,
-//    treatmentFocus: this.props.treatmentFocus,
     treatmentTypeArr: [],
     typeOfServicesArr: [],
     levelOfCareArr: [],
@@ -34,6 +30,7 @@ export default class AccountModal extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     handleSubmit: PropTypes.func,
+    change: PropTypes.func,
     isLoading: PropTypes.bool,
     selectedUser: PropTypes.object
   };
@@ -47,7 +44,7 @@ export default class AccountModal extends Component {
   constructor(props) {
     super(props);
     this.account = this.account.bind(this);
-  }
+  };
   
   account(formData) {
     const { saveAccount } = this.props;
@@ -62,34 +59,41 @@ export default class AccountModal extends Component {
         throw new SubmissionError({ number: err.message });
       }
     });
-  }
+  };
   
-  addRemoveInput = (action, type, idx) => {
+  addRemoveInput = (e, action, type, idx) => {
+    e.preventDefault();
+    
     const { treatmentType, typeOfServices, levelOfCare, treatmentFocus } = this.props;
     const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = this.state;
     
     if (type === 1){
-      (action === 'add')
+      (action === 'add' && treatmentType)
         ? treatmentTypeArr.push(treatmentType)
         : treatmentTypeArr.splice(idx, 1);
       this.setState({ treatmentTypeArr });
+      this.props.change('treatmentType', '');
     } else if (type === 2) {
-      (action === 'add')
+      (action === 'add' && typeOfServices)
         ? typeOfServicesArr.push(typeOfServices)
         : typeOfServicesArr.splice(idx, 1);
       this.setState({ typeOfServicesArr });
+      this.props.change('typeOfServices', '');
     } else if (type === 3) {
-      (action === 'add')
+      (action === 'add' && levelOfCare)
         ? levelOfCareArr.push(levelOfCare)
         : levelOfCareArr.splice(idx, 1);
       this.setState({ levelOfCareArr });
+      this.props.change('levelOfCare', '');
     } else if (type === 4) {
-      (action === 'add')
+      (action === 'add' && treatmentFocus)
         ? treatmentFocusArr.push(treatmentFocus)
         : treatmentFocusArr.splice(idx, 1);
       this.setState({ treatmentFocusArr });
+      this.props.change('treatmentFocus', '');
     }
   };
+  
   render() {
     const { handleSubmit, submitting, selectedUser } = this.props;
     const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = this.state;
@@ -171,7 +175,7 @@ export default class AccountModal extends Component {
           />
           <Button
             icon='add'
-            onClick={() => this.addRemoveInput('add', 1)}
+            onClick={(e) => this.addRemoveInput(e, 'add', 1)}
           />
         </Form.Group>
         {
@@ -179,7 +183,7 @@ export default class AccountModal extends Component {
             return (
               <Form.Group key={idx}>
                 <label className="m-10">{ val } </label>
-                <Button icon='minus' onClick={() => this.addRemoveInput('remove', 1, idx)}/>
+                <Button icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', 1, idx)}/>
               </Form.Group>
             );
           })
@@ -193,7 +197,7 @@ export default class AccountModal extends Component {
           />
           <Button
             icon='add'
-            onClick={() => this.addRemoveInput('add', 2)}
+            onClick={(e) => this.addRemoveInput(e, 'add', 2)}
           />
         </Form.Group>
         {
@@ -201,7 +205,7 @@ export default class AccountModal extends Component {
             return (
               <Form.Group key={idx}>
                 <label className="m-10">{ val } </label>
-                <Button icon='minus' onClick={() => this.addRemoveInput('remove', 2, idx)}/>
+                <Button icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', 2, idx)}/>
               </Form.Group>
             );
           })
@@ -215,7 +219,7 @@ export default class AccountModal extends Component {
           />
           <Button
             icon='add'
-            onClick={() => this.addRemoveInput('add', 3)}
+            onClick={(e) => this.addRemoveInput(e, 'add', 3)}
           />
         </Form.Group>
         {
@@ -223,7 +227,7 @@ export default class AccountModal extends Component {
             return (
               <Form.Group key={idx}>
                 <label className="m-10">{ val } </label>
-                <Button icon='minus' onClick={() => this.addRemoveInput('remove', 3, idx)}/>
+                <Button icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', 3, idx)}/>
               </Form.Group>
             );
           })
@@ -237,7 +241,7 @@ export default class AccountModal extends Component {
           />
           <Button
             icon='add'
-            onClick={() => this.addRemoveInput('add', 4)}
+            onClick={(e) => this.addRemoveInput(e, 'add', 4)}
           />
         </Form.Group>
         {
@@ -245,7 +249,7 @@ export default class AccountModal extends Component {
             return (
               <Form.Group key={idx}>
                 <label className="m-10">{ val } </label>
-                <Button icon='minus' onClick={() => this.addRemoveInput('remove', 4, idx)}/>
+                <Button icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', 4, idx)}/>
               </Form.Group>
             );
           })
