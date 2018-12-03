@@ -157,6 +157,11 @@ export default class AccountModal extends Component {
             placeholder="image"
             component={TextBox}
           />
+          <Field
+            name="featuredVideo"
+            placeholder="Video"
+            component={TextBox}
+          />
         </Form.Group>
         <Form.Group widths="equal">
           <Field
