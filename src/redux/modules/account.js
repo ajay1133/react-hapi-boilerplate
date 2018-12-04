@@ -201,6 +201,7 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
             user.url = accountDetails.url;
             user.description = accountDetails.description;
             user.image = accountDetails.image;
+            user.featuredVideo = accountDetails.featuredVideo;
             user.status = accountDetails.status;
         }
         return user;
@@ -255,20 +256,30 @@ export const selectUser = (user) => async (dispatch) => {
 };
 
 internals.getFileContent = (accountDetails) => {
-  const { firstName, lastName, title, image, phone, address, description } = accountDetails;
+  const {
+    firstName,
+    lastName,
+    title,
+    image = '',
+    featuredVideo = '',
+    phone = '',
+    address = '',
+    description = ''
+  } = accountDetails;
   const path = `/content/profile/${firstName+lastName}.md`;
   
   let content = `---
 title: "${title}"
-featured_image: ''
+featured_video: "${featuredVideo}"
 image: ${image}
 contact: ${phone}
 address: "${address}"
 draft: false
+description: "${description}"
+longDescription: "${description}"
 ---
 
 
 `;
-  content += description;
   return { path, content } ;
 };
