@@ -20,6 +20,7 @@ const defaultUserAttributes = [
   'url',
   'description',
   'image',
+  'featuredVideo',
   'status'
 ];
 
