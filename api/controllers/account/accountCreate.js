@@ -32,12 +32,12 @@ module.exports = {
                     .max(100)
                     .description('First Name of User')
                     .required(),
-  
+      
       lastName: joi.string()
                    .max(100)
                    .description('Last Name of User')
                    .required(),
-  
+      
       title: joi.string()
                 .description('Title of User')
                 .required(),
@@ -49,11 +49,11 @@ module.exports = {
       phone: joi.string()
                 .allow('')
                 .description('Phone of User'),
-  
+      
       url: joi.string()
               .allow('')
               .description('Url of User'),
-  
+      
       description: joi.string()
                       .allow('')
                       .description('Description of User'),
@@ -62,6 +62,10 @@ module.exports = {
                 .allow('')
                 .description('Image of User'),
       
+      featuredVideo: joi.string()
+                        .allow('')
+                        .description('FeaturedVideo of User'),
+      
       status: joi.number()
                  .valid([1,2,3])
                  .allow(null)
@@ -69,19 +73,19 @@ module.exports = {
     },
     options: { abortEarly: false },
   },
-
+  
   handler: (request, h) => {
     const payload = request.payload;
     const onError = (err) => {
       request.server.log(['error'], err);
       return boom.badRequest(err);
     };
-
+    
     return accountService.createUser(payload)
-        .then((data) => {
-          return h.response(data);
-        })
-        .catch(onError);
-    }
-
+                         .then((data) => {
+                           return h.response(data);
+                         })
+                         .catch(onError);
+  }
+  
 };
