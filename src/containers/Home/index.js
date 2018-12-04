@@ -8,7 +8,7 @@ import '../../style/css/style.css';
 
 const Home = withRouter(({ location, user }) => {
   return (
-    <div>
+    <div className="pt-15">
       <Container fluid>
         <Grid centered verticalAlign="middle">
           <Grid.Row className="mainLogin p-0">
