@@ -25,11 +25,8 @@ body {
 .m-20{
 	margin:20px;
 }
-.pushable .ui.visible.overlay.sidebar ~ .pusher {
-	position: relative;
-	height: 100% !important;
-	width: 100% !important;
-	overflow: auto;
+.full-height {
+	height: 100%;
 }
 .ui.visible.left.overlay.sidebar {
 	position: fixed !important;
@@ -112,14 +109,102 @@ body {
 .text-center{
 	text-align: center;
 }
-.bg-success{
-	color: #0ea432;
+.bg-success {
+	box-shadow: 11px 0px 0px -6px #15D54B inset;
 }
-.bg-warning{
-	color: #9c6f04;
+.bg-warning {
+	-webkit-box-shadow: 11px 0px 0px -6px #EAD520 inset;
+	box-shadow: 11px 0px 0px -6px #EAD520 inset;
+	font-weight: 700;
 }
 .bg-danger{
-	color: #912d2b;
+	box-shadow: 11px 0px 0px -6px #E22B2B inset;
+}
+.ui.thin.left.sidebar, .ui.thin.right.sidebar {
+	width: 300px;
+	background: linear-gradient(205deg, #3D74FF 0%, #0142E5 100%);
+}
+.ui.visible.thin.left.sidebar ~ .fixed, .ui.visible.thin.left.sidebar ~ .pusher {
+	-webkit-transform: translate3d(150px, 0, 0);
+	transform: translate3d(300px, 0, 0);
+	padding-right: 310px;
+}
+button.ui.button.hide {
+	display: none;
+}
+.ui.segment.pushable {
+	margin: 0;
+}
+.ui.menu {
+	display: -ms-flexbox;
+	display: flex;
+	margin: 1rem 0em;
+	font-family: 'Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif;
+	background: #FFFFFF;
+	font-weight: normal;
+	border: 0;
+	border-bottom: 1px solid rgba(34, 36, 38, 0.15);
+	-webkit-box-shadow: 0px 1px 2px 0 rgba(34, 36, 38, 0.15);
+	box-shadow: 0px 1px 2px 0 rgba(34, 36, 38, 0);
+	border-radius: 0;
+	min-height: 3.857143em;
+}
+.innerData .row {
+	margin: 0;
+	padding-top: 0 !important;
+}
+.ui.celled.table tr th, .ui.celled.table tr td {
+	border-left: 0px solid rgba(34, 36, 38, 0.1);
+}
+.ui.table thead th {
+	background: #E3ECF3;
+}
+.ui.table tfoot th {
+	background: #f9fafb00;
+}
+.ui.segment {
+	border-radius: 0;
+	border: 0;
+}
+a {
+	color: #323232;
+}
+.mainContent {
+	padding-left: 0 !important;
+}
+.ui.borderless.menu {
+	padding-left: 13px;
+}
+.ui.menu .active.item {
+	background: rgba(0, 0, 0, 0);
+}
+.ui.borderless.menu a.active.item {
+	border-bottom: 3px solid #3468f8;
+	border-radius: 0px !important;
+}
+.ui.message {
+	border: 0 !important;
+	box-shadow: none;
+	background: #f0f3ff;
+	margin-top: 10px !important;
+}
+i.small.icon, i.small.icons {
+	margin: 0em 1.25rem 0em 0em;
+	font-size: 14px;
+}
+.ui.pagination.right.floated.menu {
+	background: #eee;
+	min-height: auto !important;
+	border: 1px solid #dedede;
+	border-radius: 80px;
+}
+a.ui.basic.button.page-item.active {
+	background: transparent !important;
+	box-shadow: none;
+	color: #3062f5 !important;
+}
+.ui.message > .close.icon {
+	top: 1em;
 }
 @media only screen and (max-width: 767px) {
 	.blueBg {
