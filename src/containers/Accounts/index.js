@@ -62,7 +62,7 @@ export default class Accounts extends Component {
   constructor(props) {
     super(props);
     
-    this.saveAccount = this.saveAccount.bind(this);
+    this.account = this.account.bind(this);
     this.handleOpen = this.handleOpen.bind(this);
     this.handleClose = this.handleClose.bind(this);
     this.editAccount = this.editAccount.bind(this);
@@ -113,7 +113,7 @@ export default class Accounts extends Component {
     this.setState({ openConfirmBox: true, type, selectedUser: row })
   };
   
-  saveAccount = details => {
+  account = details => {
     const { dispatch } = this.props;
     delete details.events;
     Object.keys(details).forEach((key) => (!details[key]) && delete details[key]);
@@ -202,7 +202,7 @@ export default class Accounts extends Component {
                   <Header content= {selectedUser ? 'Edit Account' : 'Add New Account'} />
                   <Modal.Content>
                     <AccountModal
-                      saveAccount = {this.saveAccount}
+                      account = {this.account}
                       selectedUser = {selectedUser}
                     />
                   </Modal.Content>

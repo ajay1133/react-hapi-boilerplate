@@ -7,6 +7,11 @@ module.exports = [
     config: require('./listAllService'),
   },
   {
+    path: `${prefix}/byUser/{usersId}`,
+    method: 'GET',
+    config: require('./listAllServiceByUser'),
+  },
+  {
     path: `${prefix}`,
     method: 'POST',
     config: require('./addService'),
