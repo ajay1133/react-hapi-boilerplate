@@ -1,4 +1,4 @@
-export const OFFSET = 20;
+export const OFFSET = 10;
 
 export const SCORE_INTERVAL_OPTIONS =[
   { value:.01, text: .01 },
@@ -16,11 +16,11 @@ export const ROOT_BRANCH = 'master';
 
 export const REPO_PATH = 'content/blog';
 
-export const ACCESSIBLE_ROOT_PATH = '/' + ROOT_BRANCH + '/' + REPO_PATH;
+export const DEFAULT_ACCESSIBLE_ROOT_PATH = `/${ROOT_BRANCH}/${REPO_PATH}`;
 
 export const MD_FILE_META_DATA_KEYS = ['title', 'image', 'description', 'draft'];
 
-export const KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS = ['fileName', 'content'];
+export const KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS = ['fileName', 'filePath', 'content'];
 
 export const MD_FILE_DRAFT_OPTIONS_LIST = [
 	{
@@ -42,3 +42,8 @@ export const MD_META_INITIAL_VALUES = {
 };
 
 export const VALID_ACCESSIBLE_FILE_FORMATS = ['md'];
+
+export const DEFAULT_BITBUCKET_LIST_FILTERS = {
+	path: DEFAULT_ACCESSIBLE_ROOT_PATH,
+	page: 1
+};
