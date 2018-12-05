@@ -8,19 +8,22 @@ import PropTypes from 'prop-types';
 import { Button, Table, Loader, Modal, Icon, Message, Grid } from 'semantic-ui-react';
 import AddFile from '../../components/File/AddFile';
 import EditFile from '../../components/File/EditFile';
+import Pagination from '../../components/Pagination';
 import {
 	bitBucketListing,
 	bitBucketView,
 	updateBitBucketFile,
 	resetBitBucketFileForm
 } from '../../redux/modules/bitBucketRepo';
-import { strictValidObjectWithKeys, validFileName } from '../../utils/commonutils';
+import { strictValidObjectWithKeys, validFileName, validObjectWithParameterKeys } from '../../utils/commonutils';
 import {
-	ACCESSIBLE_ROOT_PATH,
+	DEFAULT_ACCESSIBLE_ROOT_PATH,
 	REPO_PATH,
 	MD_FILE_META_DATA_KEYS,
 	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS,
-	VALID_ACCESSIBLE_FILE_FORMATS
+	VALID_ACCESSIBLE_FILE_FORMATS,
+	DEFAULT_BITBUCKET_LIST_FILTERS,
+	OFFSET
 } from '../../utils/constants';
 
 const md = MarkDown({
@@ -35,7 +38,8 @@ const md = MarkDown({
   message: state.get('bitBucketRepo').get('message'),
   isLoad: state.get('bitBucketRepo').get('isLoad'),
   loadErr: state.get('bitBucketRepo').get('loadErr'),
-	bitBucketList: state.get('bitBucketRepo').get('bitBucketList')
+	bitBucketList: state.get('bitBucketRepo').get('bitBucketList'),
+	bitBucketListFilters: state.get('bitBucketRepo').get('bitBucketListFilters')
 }))
 @reduxForm({
   form: 'setFileForm',
@@ -65,7 +69,8 @@ export default class Dashboard extends Component {
     loadErr: PropTypes.string,
     error: PropTypes.string,
     location: PropTypes.object,
-	  bitBucketList: PropTypes.array
+	  bitBucketList: PropTypes.array,
+	  bitBucketListFilters: PropTypes.object
   };
 	
 	constructor(props) {
@@ -74,10 +79,11 @@ export default class Dashboard extends Component {
 	};
 	
   componentDidMount = async () => {
-    const { dispatch } = this.props;
-    const params = { path: ACCESSIBLE_ROOT_PATH };
-    await dispatch(bitBucketListing(params));
-    this.setState({ loading: false });
+    const { dispatch, bitBucketListFilters } = this.props;
+    const params = validObjectWithParameterKeys(bitBucketListFilters, Object.keys(DEFAULT_BITBUCKET_LIST_FILTERS)) ?
+	    bitBucketListFilters : (bitBucketListFilters.toJSON() || DEFAULT_BITBUCKET_LIST_FILTERS);
+	  await dispatch(bitBucketListing(params));
+	  this.setState({ loading: false });
   };
 	
   getMd = (content) => {
@@ -90,11 +96,11 @@ export default class Dashboard extends Component {
   };
   
   getBitBucketData = async (e, href, type, displayName, repoPath, openFileInEditModeFlag = false) => {
-    const { dispatch } = this.props;
+    const { dispatch, bitBucketListFilters } = this.props;
 	  
-    const params = Object.assign({}, {
-      path: (href && typeof href === 'string' && href.split('/src')[1]) || ACCESSIBLE_ROOT_PATH
-    });
+    const params = {
+      path: (href && typeof href === 'string' && href.split('/src')[1]) || DEFAULT_ACCESSIBLE_ROOT_PATH
+    };
 	  
     this.setState({ loading: true });
     
@@ -102,11 +108,11 @@ export default class Dashboard extends Component {
     const isLoadingDirectoryFlag = type === 'commit_directory';
     
     if (isLoadingDirectoryFlag) {
-      res = await dispatch(bitBucketListing(params));
+      res = await dispatch(bitBucketListing(Object.assign({}, bitBucketListFilters, params)));
     } else {
 	    res = await dispatch(bitBucketView(params));
     }
-    
+	  
     this.setState({
       loading: false,
       modalOpenFlag: !isLoadingDirectoryFlag,
@@ -118,42 +124,46 @@ export default class Dashboard extends Component {
     });
   };
 	
+	navigateBitBucketListPage = async (page) => {
+		const { dispatch, bitBucketListFilters } = this.props;
+		this.setState({ loading: true });
+		await dispatch(bitBucketListing(Object.assign({}, bitBucketListFilters, { page })));
+		this.setState({ loading: false });
+	};
+	
   setFile = async (values) => {
-    const { dispatch } = this.props;
+    const { dispatch, bitBucketListFilters } = this.props;
     const { href, repoPath } = this.state;
     
     const formValues = values.toJSON() || {};
     
-    const { fileName } = formValues;
-	
-	  const isAddingFileFlag = !!fileName;
-    const basePath = repoPath || REPO_PATH;
+    const isAddingFileFlag = validObjectWithParameterKeys(formValues, ['fileName', 'filePath']);
 	  
-    if (isAddingFileFlag && !validFileName(fileName, VALID_ACCESSIBLE_FILE_FORMATS)) {
+    if (isAddingFileFlag && !validFileName(formValues.fileName, VALID_ACCESSIBLE_FILE_FORMATS)) {
     	throw new SubmissionError({
 		    _error: 'Invalid File Name, a valid file must start with alphanumeric and have a \'.md\' extension' });
     }
+	
+	  const basePath = repoPath || REPO_PATH;
     
     const dataObject = {
-      path: fileName && basePath ? basePath + '/' + fileName : (fileName && !basePath ? fileName : basePath),
+      path: isAddingFileFlag ? basePath + '/' + formValues.fileName : basePath,
       content: this.compileFormFieldsToMarkDown(formValues),
       type: 2
     };
     
     this.setState({ loading: true });
 		
-    const params = Object.assign({}, {
-			path: (href && typeof href === 'string' && href.split('/src')[1]) || ACCESSIBLE_ROOT_PATH
-		});
+    const params = {
+			path: (href && typeof href === 'string' && href.split('/src')[1]) || DEFAULT_ACCESSIBLE_ROOT_PATH
+		};
     
     await dispatch(updateBitBucketFile(dataObject));
-	  await dispatch(bitBucketListing(params));
+	  await dispatch(bitBucketListing(Object.assign({}, bitBucketListFilters, params)));
 	
 	  let res = null;
 	
-	  if (isAddingFileFlag) {
-		  res = await dispatch(bitBucketListing(params));
-	  } else {
+	  if (!isAddingFileFlag) {
 		  res = await dispatch(bitBucketView(params));
 	  }
 	
@@ -225,7 +235,9 @@ export default class Dashboard extends Component {
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
   render () {
-    const { dispatch, isLoad, loadErr, bitBucketList = [], handleSubmit, user, message, error } = this.props;
+    const {
+    	dispatch, isLoad, loadErr, bitBucketList = [], bitBucketListFilters, handleSubmit, user, message, error
+    } = this.props;
     const { loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag } = this.state;
 	  
 	  const isValidUserFlag = strictValidObjectWithKeys(user) && !!user.id;
@@ -331,6 +343,22 @@ export default class Dashboard extends Component {
 											      })
 										      }
 									      </Table.Body>
+									      <Table.Footer>
+										      <Table.Row>
+											      <Table.HeaderCell colSpan='5'>
+												      <Pagination
+													      totalEntries={
+													      	bitBucketList.length === OFFSET ?
+															      (bitBucketListFilters.page * OFFSET) + 1
+															      : bitBucketListFilters.page * OFFSET
+													      }
+													      offset={ OFFSET }
+													      currentPage={ bitBucketListFilters.page }
+													      navigate={(page) => this.navigateBitBucketListPage(page)}
+												      />
+											      </Table.HeaderCell>
+										      </Table.Row>
+									      </Table.Footer>
 								      </Table>
 							      </div>
 						      }

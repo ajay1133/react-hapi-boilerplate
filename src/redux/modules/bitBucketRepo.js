@@ -2,9 +2,14 @@ import Immutable from 'immutable';
 import {
 	strictValidObjectWithKeys,
 	strictValidString,
-	strictValidSplittableStringWithMinLength
+	strictValidSplittableStringWithMinLength,
+	validObjectWithParameterKeys
 } from '../../utils/commonutils';
-import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES, MD_META_INITIAL_VALUES } from '../../utils/constants';
+import {
+	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
+	MD_META_INITIAL_VALUES,
+	DEFAULT_BITBUCKET_LIST_FILTERS,
+} from '../../utils/constants';
 
 const LOAD = 'bitBucketRepo/LOAD';
 const LOAD_SUCCESS = 'bitBucketRepo/LOAD_SUCCESS';
@@ -23,7 +28,8 @@ const initialState = Immutable.fromJS({
 	loadErr: null,
 	accessToken: null,
 	repositories: [],
-  bitBucketInitialValues: MD_META_INITIAL_VALUES
+  bitBucketInitialValues: MD_META_INITIAL_VALUES,
+	bitBucketListFilters: DEFAULT_BITBUCKET_LIST_FILTERS
 });
 
 const internals = {};
@@ -47,7 +53,8 @@ export default function reducer(state = initialState, action) {
 		
 		case BIT_BUCKET_LISTING:
 			return state
-				.set('bitBucketList', action.result);
+				.set('bitBucketList', action.result)
+				.set('bitBucketListFilters', Object.assign({}, state.bitBucketListFilters, action.bitBucketListFilters));
 		
 		case BIT_BUCKET_VIEW:
 			return state
@@ -74,6 +81,11 @@ export default function reducer(state = initialState, action) {
 export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
 	let res = {};
+	
+	if (!validObjectWithParameterKeys(params, Object.keys(DEFAULT_BITBUCKET_LIST_FILTERS))) {
+		return res;
+	}
+	
   try {
 		res = await api.get('/bitBucket/listing', { params });
 		
@@ -82,14 +94,14 @@ export const bitBucketListing = (params) => async (dispatch, getState, api) => {
 			dispatch(internals.resetMessage());
 			return;
 		}
-		
-		dispatch({ type: BIT_BUCKET_LISTING, result: res });
+	 
+		dispatch({ type: BIT_BUCKET_LISTING, result: res, bitBucketListFilters: params });
     dispatch({ type: LOAD_SUCCESS });
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 	  dispatch(internals.resetMessage());
 	}
- 
+	
 	return res;
 };
 
