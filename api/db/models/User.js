@@ -16,6 +16,7 @@ module.exports = (sequelize) => {
       url                   : { type: Sequelize.STRING, allowNull: true },
       description           : { type: Sequelize.TEXT, allowNull: true },
       image                 : { type: Sequelize.STRING, allowNull: true },
+      featuredVideo         : { type: Sequelize.TEXT, allowNull: true },
       status                : { type: Sequelize.TINYINT, allowNull: true },
       role                  : { type: Sequelize.INTEGER, allowNull: true },
       isDeleted             : { type: Sequelize.BOOLEAN, defaultValue: 0 },

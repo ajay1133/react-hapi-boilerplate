@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Table, Modal, Grid, Button, Header, Message, Confirm } from  'semantic-ui-react';
+import { Table, Modal, Grid, Button, Header, Message, Confirm, Icon } from  'semantic-ui-react';
 import { loadAccounts, saveAccount, updateAccount, sortAccounts, selectUser } from '../../redux/modules/account';
 import AccountModal  from '../../components/AccountModal';
 import Pagination from '../../components/Pagination';
@@ -20,10 +20,10 @@ const TableRow = ({row, editAccount, typeAction}) => (
     <Table.Cell>{ row.email } </Table.Cell>
     <Table.Cell>{ row.phone }</Table.Cell>
     <Table.Cell>
-      <a onClick={ () => editAccount(row) } > Edit </a> |
-      <a onClick={() => typeAction('delete', row)} > Delete </a> |
-      <a onClick={() => typeAction('active', row)} > Active </a> |
-      <a onClick={() => typeAction('denied', row)} > Denied </a>
+      <a onClick={ () => editAccount(row) } >  <Icon name='edit outline' size='small' /> </a>
+      <a onClick={() => typeAction('delete', row)} > <Icon name='trash alternate outline' size='small' /> </a>
+      <a onClick={() => typeAction('active', row)} > <Icon name='check circle outline' size='small' /></a>
+      <a onClick={() => typeAction('denied', row)} > <Icon name='eye slash outline' size='small' /> </a>
     </Table.Cell>
   </Table.Row>
 );
@@ -62,7 +62,7 @@ export default class Accounts extends Component {
   constructor(props) {
     super(props);
     
-    this.saveAccount = this.saveAccount.bind(this);
+    this.account = this.account.bind(this);
     this.handleOpen = this.handleOpen.bind(this);
     this.handleClose = this.handleClose.bind(this);
     this.editAccount = this.editAccount.bind(this);
@@ -113,7 +113,7 @@ export default class Accounts extends Component {
     this.setState({ openConfirmBox: true, type, selectedUser: row })
   };
   
-  saveAccount = details => {
+  account = details => {
     const { dispatch } = this.props;
     delete details.events;
     Object.keys(details).forEach((key) => (!details[key]) && delete details[key]);
@@ -202,15 +202,16 @@ export default class Accounts extends Component {
                   <Header content= {selectedUser ? 'Edit Account' : 'Add New Account'} />
                   <Modal.Content>
                     <AccountModal
-                      saveAccount = {this.saveAccount}
+                      account = {this.account}
                       selectedUser = {selectedUser}
                     />
                   </Modal.Content>
                 </Modal>
+
               </Grid.Column>
             </Grid.Row>
             <Grid.Row>
-              <Grid.Column>
+              <Grid.Column  computer={12}>
                 <Table celled>
                   <Table.Header>
                     <Table.Row>
@@ -241,19 +242,13 @@ export default class Accounts extends Component {
                       })
                     }
                   </Table.Body>
-                  <Table.Footer>
-                    <Table.Row>
-                      <Table.HeaderCell colSpan='5'>
-                        <Pagination
-                          totalEntries={itemsCount}
-                          offset={OFFSET}
-                          currentPage={this.state.currentPage}
-                          navigate={(page) => this.setState({ currentPage: page })}
-                        />
-                      </Table.HeaderCell>
-                    </Table.Row>
-                  </Table.Footer>
                 </Table>
+                <Pagination
+                    totalEntries={itemsCount}
+                    offset={OFFSET}
+                    currentPage={this.state.currentPage}
+                    navigate={(page) => this.setState({ currentPage: page })}
+                />
               </Grid.Column>
             </Grid.Row>
           </Grid>

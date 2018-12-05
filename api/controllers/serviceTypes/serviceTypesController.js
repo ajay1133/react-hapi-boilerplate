@@ -7,6 +7,11 @@ module.exports = [
     config: require('./listAllServiceTypes'),
   },
   {
+    path: `${prefix}/services`,
+    method: 'GET',
+    config: require('./listServiceTypesAndServices'),
+  },
+  {
     path: `${prefix}`,
     method: 'POST',
     config: require('./addServiceTypes'),

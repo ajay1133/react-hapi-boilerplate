@@ -156,6 +156,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
     let addFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 1 });
     addFileData.message = `Added: ${addFileData.path}`;
     await dispatch(updateBitBucketFile(addFileData));
+    delete accountDetails.services;
     await api.post('/account', { data: accountDetails });
     dispatch(loadAccounts());
     dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!'});
@@ -184,7 +185,7 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
       // Delete file on Bitbucket
       const { firstName, lastName } = accountDetails;
       const deleteFileData = {
-        files: `/content/profile/${firstName+lastName}.md`
+        files: `/content/profile/${(firstName+lastName).trim()}.md`
       };
       deleteFileData.message = `Deleted: ${deleteFileData.files}`;
       await dispatch(deleteBitBucketFile(deleteFileData));
@@ -201,6 +202,7 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
             user.url = accountDetails.url;
             user.description = accountDetails.description;
             user.image = accountDetails.image;
+            user.featuredVideo = accountDetails.featuredVideo;
             user.status = accountDetails.status;
         }
         return user;
@@ -209,6 +211,7 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
         // Update file on Bitbucket
         let updateFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 2 });
         updateFileData.message = `Updated: ${updateFileData.path}`;
+        delete updateFileData.services;
         await dispatch(updateBitBucketFile(updateFileData));
       }
     }
@@ -255,20 +258,77 @@ export const selectUser = (user) => async (dispatch) => {
 };
 
 internals.getFileContent = (accountDetails) => {
-  const { firstName, lastName, title, image, phone, address, description } = accountDetails;
-  const path = `/content/profile/${firstName+lastName}.md`;
+  const {
+    firstName,
+    lastName,
+    title,
+    image = '',
+    featuredVideo = '',
+    phone = '',
+    address = '',
+    status = true,
+    description = '',
+    services
+  } = accountDetails;
+  const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = services;
+  const path = `/content/profile/${(firstName+lastName).trim()}.md`;
   
   let content = `---
 title: "${title}"
-featured_image: ''
+featured_video: "${featuredVideo}"
 image: ${image}
 contact: ${phone}
 address: "${address}"
-draft: false
+active: ${status}
+description: "${description}"
 ---
 
 
 `;
-  content += description;
+  if (treatmentTypeArr.length) {
+    content += '- ##### TREATMENT TYPE\n';
+    treatmentTypeArr.map((val) => content += `\n* ${val}`);
+    content += `
+
+>
+
+`;
+  }
+  
+  if (typeOfServicesArr.length) {
+    content += '- ##### TYPE OF SERVICES\n';
+    typeOfServicesArr.map((val) => content += `\n* ${val}`);
+    content += `
+
+>
+
+`;
+  }
+  
+  if (levelOfCareArr.length) {
+    content += '- ##### LEVEL OF CARE\n';
+    levelOfCareArr.map((val) => content += `\n* ${val}`);
+    content += `
+
+>
+
+`;
+  }
+  
+  if (treatmentFocusArr.length) {
+    content += '- ##### TREATMENT FOCUS\n';
+    treatmentFocusArr.map((val) => content += `\n* ${val}`);
+    content += `
+
+>
+
+`;
+  }
+  
+  content += '<div class="row w100">' +
+             '<h5 class="w100">TREATMENT FOCUS</h5>' +
+              '<div class="clearfix"></div>' +
+                '<p>Self Pay fee,  Financing Available,Private Insurance ,  State Financial Aid,Scholarships </p>' +
+              '</div>';
   return { path, content } ;
 };

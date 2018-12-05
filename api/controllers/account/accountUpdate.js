@@ -31,11 +31,11 @@ module.exports = {
                    .allow('')
                    .max(100)
                    .description('Last Name of User'),
-  
+      
       title: joi.string()
                 .allow('')
                 .description('Title of User'),
-  
+      
       address: joi.string()
                   .allow('')
                   .description('Address of User'),
@@ -51,16 +51,20 @@ module.exports = {
       description: joi.string()
                       .allow('')
                       .description('Description of User'),
-  
+      
       image: joi.string()
                 .allow('')
                 .description('Image of User'),
+      
+      featuredVideo: joi.string()
+                        .allow('')
+                        .description('FeaturedVideo of User'),
       
       status: joi.number()
                  .valid([1,2,3])
                  .allow(null)
                  .description('1=Active, 2=Pending, 3=Denied'),
-  
+      
       isDeleted: joi.boolean()
                     .valid(true, false)
                     .default(false)

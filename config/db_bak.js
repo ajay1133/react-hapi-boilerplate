@@ -36,4 +36,3 @@ module.exports = {
       port: process.env.REDIS_POST || '6379'
     },
   };
-  
