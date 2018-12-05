@@ -32,6 +32,7 @@ export default class AccountModal extends Component {
     handleSubmit: PropTypes.func,
     change: PropTypes.func,
     isLoading: PropTypes.bool,
+    account: PropTypes.func,
     selectedUser: PropTypes.object
   };
 
@@ -47,9 +48,15 @@ export default class AccountModal extends Component {
   };
   
   account(formData) {
-    const { saveAccount } = this.props;
-    const account = formData.toJS();
-    return saveAccount(account).then(data => {
+    const { account } = this.props;
+    const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = this.state;
+    const accountData = formData.toJS();
+    accountData.services = { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr };
+    delete accountData.treatmentType;
+    delete accountData.typeOfServices;
+    delete accountData.levelOfCare;
+    delete accountData.treatmentFocus;
+    return account(accountData).then(data => {
       if (data) {
         console.log('Account Saved/Updated!');
       }
