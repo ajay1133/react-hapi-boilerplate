@@ -69,12 +69,17 @@ exports.createUser = async (userPayload) =>  {
 /**
  * Return all user accounts for management
  */
-exports.getAllAccounts = () => new Promise( ( resolve, reject ) => {
+exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
+  const { status } = query;
+  
+  let condition = { role: 2 };
+  if (status) {
+    condition.status = status;
+  }
+  
 	User
     .findAndCountAll({
-      where: {
-        role: 2
-      },
+      where: condition,
       attributes: defaultUserAttributes
     })
     .then(resolve)
