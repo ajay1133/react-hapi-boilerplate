@@ -21,17 +21,28 @@ module.exports = {
   validate: {
     query: {
       path: joi.string()
-               .allow('')
+               .allow(''),
+      
+      page: joi.number()
+        .default(1)
     },
     options: { abortEarly: false },
   },
   
   handler: async (request, h) => {
     const { query } = request;
-    const { path = '' } = query;
+    const { path = '', page } = query;
+    
+    let queryStr = '';
+    
+    if (page) {
+      queryStr = `?page=${page}`;
+    }
     
     let res = {};
-    const url = `${config.bitBucket.basePath}/src${path}`;
+    const url = queryStr
+      ? `${config.bitBucket.basePath}/src${path}${queryStr}`
+      : `${config.bitBucket.basePath}/src${path}`;
     
     try {
       res = await superagent

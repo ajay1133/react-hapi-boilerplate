@@ -25,6 +25,11 @@ class AddFile extends Component {
 						<div className="col-8">
 							{ repoPath ? `${repoPath}/` : '/' }
 						</div>
+						<Field
+							name="filePath"
+							type="hidden"
+							component={TextBox}
+						/>
 					</div>
 				</div>
 				<Field

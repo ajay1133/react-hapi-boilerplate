@@ -1,3 +1,5 @@
+export const strictValidArrayWithLength = arr => arr && Array.isArray(arr) && !!arr.length;
+
 export const strictValidObject = obj => obj && obj === Object(obj) &&
 Object.prototype.toString.call(obj) !== '[object Array]';
 
@@ -11,7 +13,7 @@ Array.isArray(str.split(delimeter)) && str.split(delimeter).length >= minLength;
 export const concatenateRegularExpressions = (regExpList = []) => {
 	let regExp = new RegExp();
 	
-	if (regExpList && Array.isArray(regExpList) && !!regExpList.length) {
+	if (strictValidArrayWithLength(regExpList)) {
 		try {
 			regExp = new RegExp(regExpList.join(''));
 		} catch (error) {
@@ -25,3 +27,6 @@ export const concatenateRegularExpressions = (regExpList = []) => {
 export const validFileName = (fileName, validExtensionsList = []) => fileName && Array.isArray(validExtensionsList) &&
 !!validExtensionsList.length &&
 concatenateRegularExpressions(['^[_|0-9|a-z|A-Z]+.', validExtensionsList.join('|'), '$']).test(fileName);
+
+export const validObjectWithParameterKeys = (obj, parameterKeys = []) => strictValidObjectWithKeys(obj) &&
+strictValidArrayWithLength(parameterKeys) && !!Object.keys(obj).filter(k => parameterKeys.indexOf(k) > -1).length;
