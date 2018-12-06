@@ -23,7 +23,7 @@ module.exports = {
     payload: {
       email: joi.string()
                 .email()
-                .allow('')
+                .allow(['', null])
                 .description('Email of User'),
       
       password: joi.string(),
@@ -35,35 +35,34 @@ module.exports = {
       
       lastName: joi.string()
                    .max(100)
-                   .description('Last Name of User')
-                   .required(),
+                   .description('Last Name of User'),
       
       title: joi.string()
-                .description('Title of User')
-                .required(),
+                .allow(['', null])
+                .description('Title of User'),
       
       address: joi.string()
-                  .allow('')
+                  .allow(['', null])
                   .description('Address of User'),
       
       phone: joi.string()
-                .allow('')
+                .allow(['', null])
                 .description('Phone of User'),
       
       url: joi.string()
-              .allow('')
+              .allow(['', null])
               .description('Url of User'),
       
       description: joi.string()
-                      .allow('')
+                      .allow(['', null])
                       .description('Description of User'),
       
       image: joi.string()
-                .allow('')
+                .allow(['', null])
                 .description('Image of User'),
       
       featuredVideo: joi.string()
-                        .allow('')
+                        .allow(['', null])
                         .description('FeaturedVideo of User'),
       
       status: joi.number()
@@ -75,7 +74,7 @@ module.exports = {
   },
   
   handler: (request, h) => {
-    const payload = request.payload;
+    const { payload } = request;
     const onError = (err) => {
       request.server.log(['error'], err);
       return boom.badRequest(err);
