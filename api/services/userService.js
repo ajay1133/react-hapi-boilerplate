@@ -42,8 +42,14 @@ exports.deleteService = (id) => Services.destroy({ where: { id } });
 
 
 // Service Types
+const defaultServiceTypeAttributes = [
+  'id',
+  'name',
+  'status'
+];
+
 exports.getAllServiceTypes = () => ServiceTypes.findAndCountAll({
-  attributes: ['name', 'status'],
+  attributes: defaultServiceTypeAttributes,
   where: {
     status: 1
   }
@@ -76,7 +82,7 @@ exports.getServiceTypeAndServices = (query) => {
           status: 1,
         }
       },
-      attributes: ['name', 'status'],
+      attributes: defaultServiceTypeAttributes,
       where: condition
     }).then(resolve).catch(reject);
   });

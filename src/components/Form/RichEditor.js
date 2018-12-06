@@ -10,7 +10,7 @@ import { Editor, EditorState, RichUtils, getDefaultKeyBinding, convertFromRaw, c
 import { Form } from "semantic-ui-react"; // eslint-disable-line
 // CSS
 import 'draft-js/dist/Draft.css';
-import '../../style/css/RickEditor.css';
+import '../../style/css/RichEditor.css';
 
 const styleMap = {
   CODE: {

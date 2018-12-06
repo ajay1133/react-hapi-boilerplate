@@ -156,7 +156,6 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
     let addFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 1 });
     addFileData.message = `Added: ${addFileData.path}`;
     await dispatch(updateBitBucketFile(addFileData));
-    delete accountDetails.services;
     await api.post('/account', { data: accountDetails });
     dispatch(loadAccounts());
     dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!'});
@@ -182,7 +181,7 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
       users.filter((user) => {
         return user.id !== id;
       });
-      // Delete file on Bitbucket
+      // Delete file on BitBucket
       const { firstName, lastName } = accountDetails;
       const deleteFileData = {
         files: `/content/profile/${(firstName+lastName).trim()}.md`
@@ -193,10 +192,8 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
       users.map((user) => {
         if (user.id === id) {
           Object.assign(user, accountDetails);
-            user.title = accountDetails.title;
             user.firstName = accountDetails.firstName;
             user.lastName = accountDetails.lastName;
-            user.address = accountDetails.address;
             user.email = accountDetails.email;
             user.phone = accountDetails.phone;
             user.url = accountDetails.url;
@@ -207,14 +204,14 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
         }
         return user;
       });
-      if (isAllow) {
-        // Update file on Bitbucket
-        let updateFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 2 });
-        updateFileData.message = `Updated: ${updateFileData.path}`;
-        delete updateFileData.services;
-        await dispatch(updateBitBucketFile(updateFileData));
+      if (accountDetails.status === 1) {
+        accountDetails.active = true;
       }
+      let updateFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 2 });
+      updateFileData.message = `Updated: ${updateFileData.path}`;
+      await dispatch(updateBitBucketFile(updateFileData));
     }
+    delete accountDetails.active;
     await api.put(`/account/${id}`, { data: accountDetails });
     dispatch(loadAccounts());
     dispatch({ type: ACCOUNT_SUCCESS, users, message: 'Updated Successfully !!' });
@@ -259,16 +256,16 @@ export const selectUser = (user) => async (dispatch) => {
 
 internals.getFileContent = (accountDetails) => {
   const {
-    firstName,
-    lastName,
-    title,
+    firstName = '',
+    lastName = '',
+    title = '',
     image = '',
     featuredVideo = '',
     phone = '',
     address = '',
-    status = true,
+    active = false,
     description = '',
-    services
+    services = []
   } = accountDetails;
   const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = services;
   const path = `/content/profile/${(firstName+lastName).trim()}.md`;
@@ -279,13 +276,13 @@ featured_video: "${featuredVideo}"
 image: ${image}
 contact: ${phone}
 address: "${address}"
-active: ${status}
+active: ${active}
 description: "${description}"
 ---
 
 
 `;
-  if (treatmentTypeArr.length) {
+  if (treatmentTypeArr) {
     content += '- ##### TREATMENT TYPE\n';
     treatmentTypeArr.map((val) => content += `\n* ${val}`);
     content += `
@@ -295,7 +292,7 @@ description: "${description}"
 `;
   }
   
-  if (typeOfServicesArr.length) {
+  if (typeOfServicesArr) {
     content += '- ##### TYPE OF SERVICES\n';
     typeOfServicesArr.map((val) => content += `\n* ${val}`);
     content += `
@@ -305,7 +302,7 @@ description: "${description}"
 `;
   }
   
-  if (levelOfCareArr.length) {
+  if (levelOfCareArr) {
     content += '- ##### LEVEL OF CARE\n';
     levelOfCareArr.map((val) => content += `\n* ${val}`);
     content += `
@@ -315,7 +312,7 @@ description: "${description}"
 `;
   }
   
-  if (treatmentFocusArr.length) {
+  if (treatmentFocusArr) {
     content += '- ##### TREATMENT FOCUS\n';
     treatmentFocusArr.map((val) => content += `\n* ${val}`);
     content += `
