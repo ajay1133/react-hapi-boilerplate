@@ -25,6 +25,10 @@ body {
 .m-20{
 	margin:20px;
 }
+.mt-10{
+    margin-top: 10px;
+}
+
 .full-height {
 	height: 100%;
 }
@@ -88,13 +92,17 @@ body {
 .ui.large.input{
 	width:100% !important;
 }
-.ui.form input[type="text"]{
-	color: #376ffc !important;
-	border-color: #376ffc !important;
-}
+
 .ui.bg-primary{
 	background-color: #2d62c7;
 	color: #fff;
+}
+.ui.table thead th {
+    border-bottom: 0px solid rgba(34, 36, 38, 0.1);
+}
+.ui.table td {
+    padding: 17px 13px;
+    text-align: inherit;
 }
 .ui.attached.bottom.button{
 	border-radius:5px;
@@ -191,6 +199,7 @@ a {
 i.small.icon, i.small.icons {
 	margin: 0em 1.25rem 0em 0em;
 	font-size: 14px;
+	cursor: pointer;
 }
 .ui.pagination.right.floated.menu {
 	background: #eee;
@@ -205,6 +214,53 @@ a.ui.basic.button.page-item.active {
 }
 .ui.message > .close.icon {
 	top: 1em;
+}
+.ui.top.attached.header.Primary {
+	background: #356afa;
+	color: #fff;
+    padding:15px;
+}
+input {
+    border: 0 !important;
+    border-bottom: 1px solid #dedede !important;
+    border-radius: 0px !important;
+}
+.ui.primary.buttons .button, .ui.primary.button {
+    background-color: #356afa;
+    color: #FFFFFF;
+    text-shadow: none;
+    background-image: none;
+}
+.indicator{
+    float: right;
+}
+span.statusPending{
+    background: #EAD520;
+ }
+span.statusDenied{
+    background: #E22B2B;
+}
+span.statusActive{
+    background: #15D54B;
+}
+span.statusPending, .statusDenied, .statusActive {
+    height: 13px;
+    width: 13px;
+    border-radius: 30px;
+    float: left;
+}
+.indicator .content {
+    float: left;
+    margin-top: -2px;
+    padding-left: 3px;
+}
+.ui.selection.dropdown {
+    border: 0px;
+    border-bottom: 1px solid #dcdcdc;
+    border-radius: 0px;
+}
+.ui.selection.dropdown .menu {
+    border-top-width: 1px !important;
 }
 @media only screen and (max-width: 767px) {
 	.blueBg {
