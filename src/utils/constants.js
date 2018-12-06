@@ -47,3 +47,8 @@ export const DEFAULT_BITBUCKET_LIST_FILTERS = {
 	path: DEFAULT_ACCESSIBLE_ROOT_PATH,
 	page: 1
 };
+
+export const DEFAULT_HOME_PAGE_ROUTES = [];
+
+DEFAULT_HOME_PAGE_ROUTES[1] = '/accounts';
+DEFAULT_HOME_PAGE_ROUTES[2] = '/profile';

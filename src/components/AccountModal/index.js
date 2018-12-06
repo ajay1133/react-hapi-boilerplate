@@ -104,6 +104,7 @@ export default class AccountModal extends Component {
   render() {
     const { handleSubmit, submitting, selectedUser } = this.props;
     const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = this.state;
+    
     return (
       <Form className="login-form" onSubmit={handleSubmit(this.account)}>
         <Header as='h3' className="side">Account Details</Header>

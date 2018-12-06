@@ -4,7 +4,7 @@ import { Menu, Dropdown } from 'semantic-ui-react';
 import { logout, load } from '../../redux/modules/auth';
 import { connect } from 'react-redux';
 import { push } from 'connected-react-router';
-import { strictValidObjectWithKeys } from '../../utils/commonutils';
+import { strictValidObjectWithKeys, validObjectWithParameterKeys } from '../../utils/commonutils';
 
 class NavBar extends Component {
   state = { activeItem: 'dashboard' };
@@ -37,40 +37,43 @@ class NavBar extends Component {
   render() {
     const { user, isShow, location } = this.props;
     
-	  const validUserNameFlag = strictValidObjectWithKeys(user) && user.firstName && user.lastName;
+	  const validUserNameFlag = validObjectWithParameterKeys(user, ['firstName', 'lastName']) && !!user.firstName &&
+      !!user.lastName;
 	  const currentLocation = location && strictValidObjectWithKeys(location.toJSON()) && location.toJSON().pathname;
 	  
-    if (strictValidObjectWithKeys(user) && user.id && isShow) {
-      return (
-        <div className="topNavbar">
-          <div className="col-8">
-            <div className="ui right floated column">
-              <Menu borderless>
-                {
-                  user.role === 1 &&
-                  <Menu.Item active={ currentLocation === '/accounts' } onClick={ () => this.loadRoute('/accounts') }>
-                    Accounts
-                  </Menu.Item>
-                }
+	  if (!(validObjectWithParameterKeys(user, ['id']) && isShow)) {
+	    return null;
+    }
+	
+	  return (
+      <div className="topNavbar">
+        <div className="col-8">
+          <div className="ui right floated column">
+            <Menu borderless>
+						  {
+							  user.role === 1 &&
+                <Menu.Item active={ currentLocation === '/accounts' } onClick={ () => this.loadRoute('/accounts') }>
+                  Accounts
+                </Menu.Item>
+						  }
+						  {
+							  user.role === 1 &&
                 <Menu.Item active={ currentLocation === '/dashboard' } onClick={ () => this.loadRoute('/dashboard') }>
                   Dashboard
                 </Menu.Item>
-                <Menu.Menu position='right'>
-                  <Dropdown item text= { (validUserNameFlag && (user.firstName + ' ' + user.lastName)) || user.email }>
-                    <Dropdown.Menu>
-                      <Dropdown.Item onClick={this.logOut}>Logout</Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </Menu.Menu>
-              </Menu>
-            </div>
+						  }
+              <Menu.Menu position='right'>
+                <Dropdown item text= { (validUserNameFlag && (user.firstName + ' ' + user.lastName)) || user.email }>
+                  <Dropdown.Menu>
+                    <Dropdown.Item onClick={this.logOut}>Logout</Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              </Menu.Menu>
+            </Menu>
           </div>
         </div>
-      )
-    } else {
-      return null;
-    }
-
+      </div>
+	  );
   }
 }
 

@@ -18,6 +18,11 @@ const Accounts = Loadable({
   loading: Loading
 });
 
+const Profile = Loadable({
+	loader: () => import('./containers/Profile'),
+	loading: Loading
+});
+
 const Confirmation = Loadable({
   loader: () => import('./containers/Confirmation'),
   loading: Loading
@@ -29,9 +34,10 @@ const routes = (
       <Route exact path="/" component={Home} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/accounts" component={Accounts} />
+      <Route path="/profile" component={Profile} />
       <Route path="/accept/invitation/:inviteToken" component={Confirmation} />
     </Switch>
   </div>
-)
+);
 
-export default routes
+export default routes;

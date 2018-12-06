@@ -10,6 +10,9 @@ class Confirmation extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     isLoading: PropTypes.bool,
+	  tokenValid: PropTypes.bool,
+	  passUpdated: PropTypes.bool,
+    confirmationErr: PropTypes.string
   };
 
   static defaultProps = {
@@ -19,7 +22,6 @@ class Confirmation extends Component {
   
   constructor(props) {
     super(props);
-    
     this.savePassword = this.savePassword.bind(this);
   }
 
