@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Table, Modal, Grid, Button, Header, Message, Confirm, Icon } from  'semantic-ui-react';
-import { loadAccounts, saveAccount, updateAccount, sortAccounts, selectUser } from '../../redux/modules/account';
+import { Table, Modal, Grid, Button, Header, Message, Confirm, Icon, Segment, Image, Form, FormField, Dropdown, List } from  'semantic-ui-react';
+import { loadAccounts, saveAccount, updateAccount, sortAccounts, selectUser,  } from '../../redux/modules/account';
 import AccountModal  from '../../components/AccountModal';
+import { Field, reduxForm } from 'redux-form/immutable';
+import { TextBox } from '../../components/Form';
+import { required, email } from '../../utils/validations';
 import Pagination from '../../components/Pagination';
 import { OFFSET } from '../../utils/constants';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
@@ -14,6 +17,11 @@ const rowBgColor = [];
 rowBgColor[1] = 'bg-success';
 rowBgColor[3] = 'bg-danger';
 
+const options = [
+    { key: 1, text: 'Choice 1', value: 1 },
+    { key: 2, text: 'Choice 2', value: 2 },
+    { key: 3, text: 'Choice 3', value: 3 },
+]
 const TableRow = ({row, editAccount, typeAction}) => (
   <Table.Row className={(row.status) ? rowBgColor[row.status] : 'bg-warning'}>
     <Table.Cell>{ row.firstName } { row.lastName }</Table.Cell>
@@ -36,7 +44,10 @@ const TableRow = ({row, editAccount, typeAction}) => (
   message: state.get('bitBucketRepo').get('message') || state.get('account').get('accountMsg'),
   isLoad: state.get('bitBucketRepo').get('isLoad')
 }))
-
+@reduxForm({
+    form: 'listForm',
+    // enableReinitialize: true
+})
 export default class Accounts extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
@@ -187,7 +198,7 @@ export default class Accounts extends Component {
               <h3 className="mainHeading"> Accounts</h3>
             </div>
             <Grid.Row>
-              <Grid.Column>
+              <Grid.Column  computer={12}>
                 <Confirm
                   content={`Are you sure you want to ${this.state.type} this user ?`}
                   confirmButton="Confirm"
@@ -208,6 +219,44 @@ export default class Accounts extends Component {
                   </Modal.Content>
                 </Modal>
 
+                <div className="indicator">
+                  <List horizontal>
+                    <List.Item>
+                      <span className="statusPending"/>
+                      <List.Content>
+                       Pending
+                      </List.Content>
+                    </List.Item>
+                    <List.Item>
+                      <span className="statusDenied"/>
+                      <List.Content>
+                        Denied
+                      </List.Content>
+                    </List.Item>
+                    <List.Item>
+                      <span className="statusActive"/>
+                      <List.Content>
+                        Active
+                      </List.Content>
+                    </List.Item>
+
+                    <List.Item>
+                      <span className=""/>
+                      <List.Content>
+                       |    Sort All
+                      </List.Content>
+                    </List.Item>
+
+                    <List.Item>
+                      <List.Content>
+                        <Dropdown clearable options={options} selection />
+                      </List.Content>
+                    </List.Item>
+                  </List>
+
+
+
+                </div>
               </Grid.Column>
             </Grid.Row>
             <Grid.Row>
@@ -250,6 +299,33 @@ export default class Accounts extends Component {
                     navigate={(page) => this.setState({ currentPage: page })}
                 />
               </Grid.Column>
+
+              <Grid.Column  computer={4}>
+                <div>
+                  <Header as='h4' attached='top' className="Primary">
+                   Add New Profile
+                  </Header>
+                  <Segment attached>
+                    <Image src='https://react.semantic-ui.com/images/wireframe/square-image.png' size='tiny' circular />
+                    <Form className="mt-10">
+                      <Form.Field>
+                        <input placeholder='First Name' />
+                      </Form.Field>
+                      <Form.Field>
+                        <input placeholder='Last Name' />
+                      </Form.Field>
+                      <Form.Field>
+                        <input placeholder='Email' />
+                      </Form.Field>
+                      <Form.Field>
+                        <input placeholder='Phone Number' />
+                      </Form.Field>
+                      <Button className="primary" type='submit'>Add Profile</Button>
+                    </Form>
+                  </Segment>
+                </div>
+              </Grid.Column>
+
             </Grid.Row>
           </Grid>
         </AuthenticatedUser>

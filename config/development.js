@@ -4,7 +4,7 @@ const path = require('path');
 module.exports = {
   api: {
     host: 'localhost',
-    port: 5000,
+    port: 5020,
     secret: 'fdgwVtghrt5345gfdgfd653245235232v2rcra'
   },
   db: db.development,
