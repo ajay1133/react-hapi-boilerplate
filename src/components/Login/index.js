@@ -7,7 +7,8 @@ import { connect } from 'react-redux'
 import { reduxForm } from 'redux-form/immutable'
 import { Input } from '../../components/Form'
 import { required, email } from '../../utils/validations';
-import { strictValidObjectWithKeys } from '../../utils/commonutils';
+import { validObjectWithParameterKeys } from '../../utils/commonutils';
+import { DEFAULT_HOME_PAGE_ROUTES } from '../../utils/constants';
 
 @connect(state => ({
   user: state.get('auth').get('user'),
@@ -37,23 +38,22 @@ export default class Login extends Component {
     loginError: ''
   };
 
-  componentWillMount() {
+  componentDidMount() {
     const { dispatch } = this.props;
     dispatch(load());
-  }
+  };
 
-  _login = (formData) => {
+  _login = async (formData) => {
     const { dispatch } = this.props;
-    const user = formData.toJS();
-    dispatch(login(user.email, user.password));
+    const { email, password } = formData.toJS() || {};
+    await dispatch(login(email, password));
   };
 
   render() {
     const { handleSubmit, isLoading, loginBusy, loginError, user } = this.props;
     
-    if (strictValidObjectWithKeys(user) && user.id) {
-      const homePage = user.role === 1 ? '/accounts' : '/dashboard';
-	    return <Redirect to= {homePage} />;
+    if (!isLoading && validObjectWithParameterKeys(user, ['id', 'role'])) {
+	    return <Redirect to = {DEFAULT_HOME_PAGE_ROUTES[user.role]} />;
     }
     
     return (

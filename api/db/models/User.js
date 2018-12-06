@@ -20,6 +20,8 @@ module.exports = (sequelize) => {
       status                : { type: Sequelize.TINYINT, allowNull: true },
       role                  : { type: Sequelize.INTEGER, allowNull: true },
       isDeleted             : { type: Sequelize.BOOLEAN, defaultValue: 0 },
+	    inviteToken           : { type: Sequelize.TEXT, allowNull: true },
+	    inviteStatus          : { type: Sequelize.BOOLEAN, defaultValue: 0 },
       createdAt             : { type: Sequelize.DATE },
       updatedAt             : { type: Sequelize.DATE },
     },

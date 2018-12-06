@@ -49,6 +49,7 @@ export default class AccountModal extends Component {
   
   render() {
     const { handleSubmit, submitting, selectedUser } = this.props;
+    
     return (
       <Form className="mt-10" onSubmit={handleSubmit(this.account)}>
         {

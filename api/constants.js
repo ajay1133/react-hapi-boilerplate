@@ -5,3 +5,19 @@ exports.ROLES = [
   'pro',
   'enterprise'
 ];
+
+exports.DEFAULT_USER_ATTRIBUTES = [
+	'id',
+	'role',
+	'email',
+	'firstName',
+	'lastName',
+	'title',
+	'address',
+	'phone',
+	'url',
+	'description',
+	'image',
+	'featuredVideo',
+	'status'
+];

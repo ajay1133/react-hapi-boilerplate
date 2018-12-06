@@ -159,7 +159,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
     await api.post('/account', { data: accountDetails });
     dispatch(loadAccounts());
     dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!'});
-   return accountDetails;
+    return accountDetails;
   } catch (err) {
     dispatch({ type: ACCOUNT_FAIL, error: err.message });
   }

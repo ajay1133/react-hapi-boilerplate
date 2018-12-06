@@ -26,8 +26,7 @@ const initialState = Immutable.fromJS({
   loginErr: null,
   user: null,
   loading: false,
-  signupError: null,
-  inviteuser: null
+  signupError: null
 });
 
 export default function reducer(state = initialState, action) {

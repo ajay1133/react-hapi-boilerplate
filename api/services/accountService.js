@@ -18,7 +18,6 @@ const defaultUserAttributes = [
   'url',
   'description',
   'image',
-  'featuredVideo',
   'status'
 ];
 
@@ -35,14 +34,14 @@ exports.createUser = async (userPayload) =>  {
   userData.role = userPayload.role || 2;
   
   try {
-    let foundUser = await User.findOne({where: { email: userPayload.email }});
+    let foundUser = await User.findOne({ where: { email: userPayload.email }});
     
     if (foundUser) {
       return reject(i18n('services.accountService.emailExists'));
     }
-    
+	  
     if (userPayload.password) {
-      let response = await cryptoHelper.hashString(userPayload.password);
+	    let response = await cryptoHelper.hashString(userPayload.password);
       
       userData.role = 1;
       userData.hash = response.hash;
@@ -52,10 +51,10 @@ exports.createUser = async (userPayload) =>  {
       return result;
     } else {
       let inviteToken =  await jwtHelper.sign(userData, '48h', 'HS512');
-      
+	    
       userData.inviteToken = inviteToken;
       userData.inviteStatus = 0;
-      
+	    
       let result = User.create(userData);
       return result;
     }
