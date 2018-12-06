@@ -1,37 +1,22 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Field, reduxForm, SubmissionError, formValueSelector } from 'redux-form/immutable';
-import { Button, Form, Header } from 'semantic-ui-react';
-import { TextBox, RichEditor } from '../Form';
-import { required, email } from '../../utils/validations';
-
-const selector = formValueSelector('accountForm');
+import { Field, reduxForm, SubmissionError } from 'redux-form/immutable';
+import { Button, Form } from 'semantic-ui-react';
+import { TextBox, TextArea } from '../Form';
+import { required, email, normalizePhone, url } from '../../utils/validations';
 
 @connect(state => ({
-  initialValues: state.get('account').get('selectedUser'),
-  treatmentType: selector(state, 'treatmentType'),
-  typeOfServices: selector(state, 'typeOfServices'),
-  levelOfCare: selector(state, 'levelOfCare'),
-  treatmentFocus: selector(state, 'treatmentFocus'),
+  initialValues: state.get('account').get('selectedUser')
 }))
 @reduxForm({
   form: 'accountForm',
   enableReinitialize: true
 })
 export default class AccountModal extends Component {
-  state = {
-    treatmentTypeArr: [],
-    typeOfServicesArr: [],
-    levelOfCareArr: [],
-    treatmentFocusArr: [],
-  };
-  
   static propTypes = {
     dispatch: PropTypes.func,
     handleSubmit: PropTypes.func,
-    change: PropTypes.func,
-    isLoading: PropTypes.bool,
     account: PropTypes.func,
     selectedUser: PropTypes.object
   };
@@ -39,7 +24,6 @@ export default class AccountModal extends Component {
   static defaultProps = {
     dispatch: null,
     handleSubmit: null,
-    isLoading: false
   };
 
   constructor(props) {
@@ -49,13 +33,8 @@ export default class AccountModal extends Component {
   
   account(formData) {
     const { account } = this.props;
-    const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = this.state;
     const accountData = formData.toJS();
-    accountData.services = { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr };
-    delete accountData.treatmentType;
-    delete accountData.typeOfServices;
-    delete accountData.levelOfCare;
-    delete accountData.treatmentFocus;
+    
     return account(accountData).then(data => {
       if (data) {
         console.log('Account Saved/Updated!');
@@ -68,211 +47,56 @@ export default class AccountModal extends Component {
     });
   };
   
-  addRemoveInput = (e, action, type, idx) => {
-    e.preventDefault();
-    
-    const { treatmentType, typeOfServices, levelOfCare, treatmentFocus } = this.props;
-    const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = this.state;
-    
-    if (type === 1){
-      (action === 'add' && treatmentType)
-        ? treatmentTypeArr.push(treatmentType)
-        : treatmentTypeArr.splice(idx, 1);
-      this.setState({ treatmentTypeArr });
-      this.props.change('treatmentType', '');
-    } else if (type === 2) {
-      (action === 'add' && typeOfServices)
-        ? typeOfServicesArr.push(typeOfServices)
-        : typeOfServicesArr.splice(idx, 1);
-      this.setState({ typeOfServicesArr });
-      this.props.change('typeOfServices', '');
-    } else if (type === 3) {
-      (action === 'add' && levelOfCare)
-        ? levelOfCareArr.push(levelOfCare)
-        : levelOfCareArr.splice(idx, 1);
-      this.setState({ levelOfCareArr });
-      this.props.change('levelOfCare', '');
-    } else if (type === 4) {
-      (action === 'add' && treatmentFocus)
-        ? treatmentFocusArr.push(treatmentFocus)
-        : treatmentFocusArr.splice(idx, 1);
-      this.setState({ treatmentFocusArr });
-      this.props.change('treatmentFocus', '');
-    }
-  };
-  
   render() {
     const { handleSubmit, submitting, selectedUser } = this.props;
-    const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = this.state;
     return (
-      <Form className="login-form" onSubmit={handleSubmit(this.account)}>
-        <Header as='h3' className="side">Account Details</Header>
-        <Form.Group widths="equal">
-          <Field
-            name="title"
-            placeholder="Title"
-            component={TextBox}
-            validate={required}
-          />
-          {
-            !selectedUser
-            &&
+      <Form className="mt-10" onSubmit={handleSubmit(this.account)}>
+        {
+          !selectedUser
+          &&
+          <Form.Group widths="equal">
             <Field
               name="firstName"
               placeholder="First Name"
               component={TextBox}
               validate={required}
             />
-          }
-          {
-            !selectedUser
-            &&
             <Field
               name="lastName"
               placeholder="Last Name"
               component={TextBox}
-              validate={required}
             />
-          }
-        </Form.Group>
-        <Form.Group widths="equal">
-          <Field
-            name="email"
-            placeholder="Email"
-            component={TextBox}
-            validate={email}
-          />
-          <Field
-            name="phone"
-            placeholder="Phone"
-            component={TextBox}
-          />
-          <Field
-            name="url"
-            placeholder="Website Url"
-            component={TextBox}
-          />
-        </Form.Group>
-        <Form.Group widths="equal">
-          <Field
-            name="address"
-            placeholder="address"
-            component={TextBox}
-          />
-          <Field
-            name="image"
-            placeholder="image"
-            component={TextBox}
-          />
-          <Field
-            name="featuredVideo"
-            placeholder="Video"
-            component={TextBox}
-          />
-        </Form.Group>
-        <Form.Group widths="equal">
-          <Field
-            name="description"
-            placeholder="Description"
-            style={{ width:'100%' }}
-            component={RichEditor}
-          />
-        </Form.Group>
-        <Form.Group>
-          <Field
-            label='Treatment Type'
-            name="treatmentType"
-            placeholder="add content"
-            component={TextBox}
-          />
-          <Button
-            icon='add'
-            onClick={(e) => this.addRemoveInput(e, 'add', 1)}
-          />
-        </Form.Group>
-        {
-          treatmentTypeArr && treatmentTypeArr.map((val, idx) => {
-            return (
-              <Form.Group key={idx}>
-                <label className="m-10">{ val } </label>
-                <Button icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', 1, idx)}/>
-              </Form.Group>
-            );
-          })
+          </Form.Group>
         }
-        <Form.Group>
-          <Field
-            label='Type of Services'
-            name="typeOfServices"
-            placeholder="add content"
-            component={TextBox}
-          />
-          <Button
-            icon='add'
-            onClick={(e) => this.addRemoveInput(e, 'add', 2)}
-          />
-        </Form.Group>
-        {
-          typeOfServicesArr && typeOfServicesArr.map((val, idx) => {
-            return (
-              <Form.Group key={idx}>
-                <label className="m-10">{ val } </label>
-                <Button icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', 2, idx)}/>
-              </Form.Group>
-            );
-          })
-        }
-        <Form.Group>
-          <Field
-            label='Level of care'
-            name="levelOfCare"
-            placeholder="add content"
-            component={TextBox}
-          />
-          <Button
-            icon='add'
-            onClick={(e) => this.addRemoveInput(e, 'add', 3)}
-          />
-        </Form.Group>
-        {
-          levelOfCareArr && levelOfCareArr.map((val, idx) => {
-            return (
-              <Form.Group key={idx}>
-                <label className="m-10">{ val } </label>
-                <Button icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', 3, idx)}/>
-              </Form.Group>
-            );
-          })
-        }
-        <Form.Group>
-          <Field
-            label='Treatment Focus'
-            name="treatmentFocus"
-            placeholder="add content"
-            component={TextBox}
-          />
-          <Button
-            icon='add'
-            onClick={(e) => this.addRemoveInput(e, 'add', 4)}
-          />
-        </Form.Group>
-        {
-          treatmentFocusArr && treatmentFocusArr.map((val, idx) => {
-            return (
-              <Form.Group key={idx}>
-                <label className="m-10">{ val } </label>
-                <Button icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', 4, idx)}/>
-              </Form.Group>
-            );
-          })
-        }
+        <Field
+          name="email"
+          placeholder="Email"
+          component={TextBox}
+          validate={email}
+        />
+        <Field
+          name="phone"
+          placeholder="Phone Number"
+          component={TextBox}
+          normalize={ normalizePhone }
+        />
+        <Field
+          name="url"
+          placeholder="Website Url"
+          component={TextBox}
+          validate={url}
+        />
+        <Field
+          name="description"
+          placeholder="Description"
+          component={TextArea}
+        />
         <Button
-          className="ui large fluid button front"
           type="submit"
           primary
           disabled={submitting}
           loading={submitting}>
-          Save
+          { selectedUser ? 'Edit Profile' : 'Add Profile' }
         </Button>
       </Form>
     );

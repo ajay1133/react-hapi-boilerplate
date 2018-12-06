@@ -14,8 +14,6 @@ const defaultUserAttributes = [
   'email',
   'firstName',
   'lastName',
-  'title',
-  'address',
   'phone',
   'url',
   'description',

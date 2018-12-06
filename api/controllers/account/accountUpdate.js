@@ -19,50 +19,50 @@ module.exports = {
     payload: {
       email: joi.string()
                 .email()
-                .allow('')
+                .allow(['', null])
                 .description('Email of User'),
       
       firstName: joi.string()
-                    .allow('')
+                    .allow(['', null])
                     .max(100)
                     .description('First Name of User'),
       
       lastName: joi.string()
-                   .allow('')
+                   .allow(['', null])
                    .max(100)
                    .description('Last Name of User'),
       
       title: joi.string()
-                .allow('')
+                .allow(['', null])
                 .description('Title of User'),
       
       address: joi.string()
-                  .allow('')
+                  .allow(['', null])
                   .description('Address of User'),
       
       phone: joi.string()
-                .allow('')
+                .allow(['', null])
                 .description('Phone of User'),
       
       url: joi.string()
-              .allow('')
+              .allow(['', null])
               .description('Url of User'),
       
       description: joi.string()
-                      .allow('')
+                      .allow(['', null])
                       .description('Description of User'),
       
       image: joi.string()
-                .allow('')
+                .allow(['', null])
                 .description('Image of User'),
       
       featuredVideo: joi.string()
-                        .allow('')
+                        .allow(['', null])
                         .description('FeaturedVideo of User'),
       
       status: joi.number()
                  .valid([1,2,3])
-                 .allow(null)
+                 .allow(['', null])
                  .description('1=Active, 2=Pending, 3=Denied'),
       
       isDeleted: joi.boolean()
