@@ -4,6 +4,7 @@ import RadioGroup from './RadioGroup';
 import RichEditor from './RichEditor';
 import TextArea from './TextArea';
 import TextBox from './TextBox';
+import DropDown from './Dropdown';
 
 export {
   ErrorText,
@@ -11,5 +12,6 @@ export {
   RadioGroup,
   RichEditor,
   TextArea,
-  TextBox
+  TextBox,
+  DropDown
 };

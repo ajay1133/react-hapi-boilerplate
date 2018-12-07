@@ -1,12 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import {  Button,
-  Grid,
-  Header,
-  Image,
-  Menu,
-  Segment,
-  Sidebar, } from 'semantic-ui-react';
+import { Button, Grid, Image, Menu, Segment, Sidebar } from 'semantic-ui-react';
 import { ConnectedRouter } from 'connected-react-router/immutable';
 import { connect } from 'react-redux';
 import NavBar from '../../components/NavBar';
@@ -14,35 +8,6 @@ import routes from '../../routes';
 import 'semantic-ui-css/semantic.css';
 
 import '../../style/css/style.css';
-
-const HorizontalSidebar = ({ animation, direction, visible }) => (
-  <Sidebar as={Segment} animation={animation} direction={direction} visible={visible}>
-    <Grid textAlign='center'>
-      <Grid.Row columns={1}>
-        <Grid.Column>
-          <Header as='h3'>New Content Awaits</Header>
-        </Grid.Column>
-      </Grid.Row>
-      <Grid columns={3} divided>
-        <Grid.Column>
-          <Image src='/images/wireframe/media-paragraph.png' />
-        </Grid.Column>
-        <Grid.Column>
-          <Image src='/images/wireframe/media-paragraph.png' />
-        </Grid.Column>
-        <Grid.Column>
-          <Image src='/images/wireframe/media-paragraph.png' />
-        </Grid.Column>
-      </Grid>
-    </Grid>
-  </Sidebar>
-);
-
-HorizontalSidebar.propTypes = {
-  animation: PropTypes.string,
-  direction: PropTypes.string,
-  visible: PropTypes.bool,
-};
 
 const VerticalSidebar = ({ animation, direction, visible }) => (
   <Sidebar
@@ -56,7 +21,7 @@ const VerticalSidebar = ({ animation, direction, visible }) => (
     width='thin'
   >
     <Menu.Item as='a'>
-      <Image src='/images/logo.png' size='' centered />
+      <Image src='/images/logo.png' centered />
     </Menu.Item>
   
   </Sidebar>
@@ -70,7 +35,7 @@ VerticalSidebar.propTypes = {
 
 class App extends Component {
   state = {
-    animation: '',
+    animation: 'push',
     direction: 'left',
     dimmed: false,
     visible: false,
@@ -81,7 +46,6 @@ class App extends Component {
   render () {
     const { history, isShow = true, user } = this.props;
     const { animation, dimmed, direction, visible } = this.state;
-    // const vertical = direction === 'bottom' || direction === 'top'
     
     return (
       <div className="full-height">
