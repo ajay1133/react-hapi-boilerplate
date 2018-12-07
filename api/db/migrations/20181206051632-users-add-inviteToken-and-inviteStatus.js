@@ -6,14 +6,12 @@ module.exports = {
 		  queryInterface
 			  .addColumn('users', 'inviteToken', {
 				  type: Sequelize.TEXT,
-				  allowNull: true,
-				  after: 'isDeleted'
+				  allowNull: true
 			  }),
 		  queryInterface
 			  .addColumn('users', 'inviteStatus', {
 				  type: Sequelize.BOOLEAN,
-				  defaultValue: 0,
-				  after: 'inviteToken'
+				  defaultValue: 0
 			  })
     ];
   },
