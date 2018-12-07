@@ -28,7 +28,9 @@ body {
 .mt-10{
     margin-top: 10px;
 }
-
+.minWidth130{
+	min-width: 130px !important;
+}
 .full-height {
 	height: 100%;
 }
@@ -98,7 +100,13 @@ body {
 	color: #fff;
 }
 .ui.table thead th {
-    border-bottom: 0px solid rgba(34, 36, 38, 0.1);
+    border-bottom: 3px solid transparent;
+}
+.ui.table thead th.active {
+	border-bottom: 3px solid #0142E5;
+}
+.ui.table thead th.active a{
+	color: #1e70bf;
 }
 .ui.table td {
     padding: 17px 13px;

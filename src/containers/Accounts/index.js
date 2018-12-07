@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Table, Grid, Header, Message, Confirm, Icon, Segment, Dropdown, List } from  'semantic-ui-react';
-import { loadAccounts, saveAccount, updateAccount, sortAccounts, selectUser,  } from '../../redux/modules/account';
+import { Table, Grid, Header, Message, Confirm, Icon, Segment, List } from  'semantic-ui-react';
+import { Field, reduxForm } from 'redux-form/immutable';
+import { DropDown } from '../../components/Form';
+import { loadAccounts, saveAccount, updateAccount, sortAccounts, selectUser } from '../../redux/modules/account';
 import AccountModal  from '../../components/AccountModal';
 import Pagination from '../../components/Pagination';
 import { OFFSET } from '../../utils/constants';
@@ -12,13 +14,15 @@ import '../../style/css/style.css';
 
 const rowBgColor = [];
 rowBgColor[1] = 'bg-success';
+rowBgColor[2] = 'bg-warning';
 rowBgColor[3] = 'bg-danger';
 
-const options = [
-  { key: 1, text: 'Choice 1', value: 1 },
-  { key: 2, text: 'Choice 2', value: 2 },
-  { key: 3, text: 'Choice 3', value: 3 },
-]
+const statusDropDownArr = [
+  { key: 0, text: 'Please select', value: '' },
+  { key: 2, text: 'Pending', value: 2, label: { color: 'yellow', empty: true, circular: true }, },
+  { key: 3, text: 'Denied', value: 3, label: { color: 'red', empty: true, circular: true }, },
+  { key: 1, text: 'Active', value: 1, label: { color: 'green', empty: true, circular: true } },
+];
 const TableRow = ({row, editAccount, typeAction}) => (
   <Table.Row className={(row.status) ? rowBgColor[row.status] : 'bg-warning'}>
     <Table.Cell>{ row.firstName } { row.lastName }</Table.Cell>
@@ -41,6 +45,10 @@ const TableRow = ({row, editAccount, typeAction}) => (
   message: state.get('bitBucketRepo').get('message') || state.get('account').get('accountMsg'),
   isLoad: state.get('bitBucketRepo').get('isLoad')
 }))
+@reduxForm({
+  form: 'listAccount',
+  enableReinitialize: true
+})
 export default class Accounts extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
@@ -59,7 +67,8 @@ export default class Accounts extends Component {
     selectedUser: null,
     openConfirmBox: false,
     type: null,
-    showMessageFlag: true
+    showMessageFlag: true,
+    status: ''
   };
   
   constructor(props) {
@@ -73,10 +82,11 @@ export default class Accounts extends Component {
   
   componentDidMount() {
     const { dispatch, user } = this.props;
+    const { status } = this.state;
     if (strictValidObjectWithKeys(user) && user.role !== 1) {
       dispatch.push('/dashboard');
     }
-    dispatch(loadAccounts());
+    dispatch(loadAccounts({ status }));
   };
   
   handleConfirm = () => {
@@ -85,6 +95,7 @@ export default class Accounts extends Component {
     
     let accountDetail = {
       id: selectedUser.id,
+      title: selectedUser.title,
       firstName: selectedUser.firstName,
       lastName: selectedUser.lastName,
       email: selectedUser.email,
@@ -126,7 +137,6 @@ export default class Accounts extends Component {
       const response = (details.id)
         ? await dispatch(updateAccount(details, true))
         : await dispatch(saveAccount(details));
-      this.setState({selectedUser: null});
       if (response && response.id) {
         resolve(response);
       } else {
@@ -134,8 +144,6 @@ export default class Accounts extends Component {
       }
     });
   };
-  
-  
   
   handleSort = clickedColumn => {
     const { dispatch } = this.props;
@@ -145,14 +153,27 @@ export default class Accounts extends Component {
     this.setState({ sortDir : sortDir === 'asc' ? 'desc' : 'asc', sortCol : clickedColumn });
   };
   
+  handleStatus = (e, status) => {
+    e.preventDefault();
+    const { dispatch } = this.props;
+    this.setState({ status });
+    dispatch(loadAccounts({ status }));
+  };
+  
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
   closeConfirmBox = () => this.setState({ openConfirmBox: false, selectedUser: null });
+  
+  resetForm = () => {
+    console.log('I am here');
+//    this.setState({ selectedUser: {} });
+  };
   
   render() {
     const { items, loadErr, accountErr, itemsCount, message } = this.props;
     const { sortCol, sortDir, selectedUser, showMessageFlag, openConfirmBox, currentPage, type } = this.state;
     const sortDirClass = sortDir === 'asc' ? 'active sortAsc' : 'active sortDesc';
+    const sortIconClass = sortDir === 'asc' ? 'down' : 'up';
     
     let users = [];
     
@@ -186,41 +207,37 @@ export default class Accounts extends Component {
               <h3 className="mainHeading"> Accounts</h3>
             </div>
             <Grid.Row>
-              <Grid.Column  computer={12}>
-                <div className="indicator">
-                  <List horizontal>
-                    <List.Item>
-                      <span className="statusPending"/>
-                      <List.Content>
-                        Pending
-                      </List.Content>
-                    </List.Item>
-                    <List.Item>
-                      <span className="statusDenied"/>
-                      <List.Content>
-                        Denied
-                      </List.Content>
-                    </List.Item>
-                    <List.Item>
-                      <span className="statusActive"/>
-                      <List.Content>
-                        Active
-                      </List.Content>
-                    </List.Item>
-                    
-                    <List.Item>
-                      <span className=""/>
-                      <List.Content>
-                        |    Sort All
-                      </List.Content>
-                    </List.Item>
-                    <List.Item>
-                      <List.Content>
-                        <Dropdown clearable options={options} selection />
-                      </List.Content>
-                    </List.Item>
-                  </List>
-                </div>
+              <Grid.Column computer={12}>
+                <List horizontal floated='right'>
+                  <List.Item>
+                    <span className="statusPending"/>
+                    <List.Content floated='right'> Pending </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <span className="statusDenied"/>
+                    <List.Content floated='right'> Denied </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <span className="statusActive"/>
+                    <List.Content floated='right'> Active </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <List.Content floated='right'>
+                      <Field
+                        className="minWidth130"
+                        name="status"
+                        component={ DropDown }
+                        options={ statusDropDownArr }
+                        inline={ true }
+                        fluid={ true }
+                        search={ true }
+                        selectOnBlur={ true }
+                        placeholder="Please select"
+                        onChange={(e, v) => this.handleStatus(e, v)}
+                      />
+                    </List.Content>
+                  </List.Item>
+                </List>
               </Grid.Column>
             </Grid.Row>
             <Grid.Row>
@@ -228,17 +245,20 @@ export default class Accounts extends Component {
                 <Table celled>
                   <Table.Header>
                     <Table.Row>
-                      <Table.HeaderCell
-                        className={`${sortCol === 'firstName' ? sortDirClass : 'sortAsc'}` }>
-                        <a onClick={() => this.handleSort('firstName') }>Name<i className="sort amount down icon ml-05"></i></a>
+                      <Table.HeaderCell className={`${sortCol === 'firstName' ? sortDirClass : 'sortAsc'}` }>
+                        <a onClick={() => this.handleSort('firstName') }>Name
+                          <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
+                        </a>
                       </Table.HeaderCell>
-                      <Table.HeaderCell
-                        className={`${sortCol === 'email' ? sortDirClass : 'sortAsc'}` }>
-                        <a onClick={() => this.handleSort('email') }>Email<i className="sort amount down icon ml-05"></i></a>
+                      <Table.HeaderCell className={`${sortCol === 'email' ? sortDirClass : 'sortAsc'}` }>
+                        <a onClick={() => this.handleSort('email') }>Email
+                          <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
+                        </a>
                       </Table.HeaderCell>
-                      <Table.HeaderCell
-                        className={`${sortCol==='phone' ? sortDirClass : 'sortAsc'}` }>
-                        <a onClick={() => this.handleSort('phone') }>Phone<i className="sort amount down icon ml-05"></i></a>
+                      <Table.HeaderCell className={`${sortCol==='phone' ? sortDirClass : 'sortAsc'}` }>
+                        <a onClick={() => this.handleSort('phone') }>Phone
+                          <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
+                        </a>
                       </Table.HeaderCell>
                       <Table.HeaderCell>Action</Table.HeaderCell>
                     </Table.Row>
@@ -278,6 +298,7 @@ export default class Accounts extends Component {
                   <AccountModal
                     account = {this.account}
                     selectedUser = {selectedUser}
+                    resetForm = {this.resetForm}
                   />
                 </Segment>
               </Grid.Column>

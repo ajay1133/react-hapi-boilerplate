@@ -38,7 +38,7 @@ module.exports = {
                    .description('Last Name of User'),
       
       title: joi.string()
-                .allow(['', null])
+                .required()
                 .description('Title of User'),
       
       address: joi.string()

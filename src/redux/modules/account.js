@@ -121,10 +121,10 @@ export default function reducer(state = initialState, action) {
   }
 }
 
-export const loadAccounts = () => async (dispatch, getState, api) => {
+export const loadAccounts = (params) => async (dispatch, getState, api) => {
   dispatch({ type: LOAD });
   try {
-    const res = await api.get('/account/all');
+    const res = await api.get('/account/all', { params });
     if (res.message) {
       dispatch({ type: LOAD_FAIL, error: res.message });
       return;
@@ -192,6 +192,7 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
       users.map((user) => {
         if (user.id === id) {
           Object.assign(user, accountDetails);
+            user.title = accountDetails.title;
             user.firstName = accountDetails.firstName;
             user.lastName = accountDetails.lastName;
             user.email = accountDetails.email;
