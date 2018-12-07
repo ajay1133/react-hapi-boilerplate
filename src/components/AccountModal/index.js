@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Field, reduxForm, SubmissionError } from 'redux-form/immutable';
-import { Button, Form } from 'semantic-ui-react';
+import { Field, reduxForm, SubmissionError, reset } from 'redux-form/immutable';
+import { Button, Form, Grid } from 'semantic-ui-react';
 import { TextBox, TextArea } from '../Form';
 import { required, email, normalizePhone, url } from '../../utils/validations';
 
@@ -18,6 +18,7 @@ export default class AccountModal extends Component {
     dispatch: PropTypes.func,
     handleSubmit: PropTypes.func,
     account: PropTypes.func,
+    resetForm: PropTypes.func,
     selectedUser: PropTypes.object
   };
 
@@ -48,7 +49,7 @@ export default class AccountModal extends Component {
   };
   
   render() {
-    const { handleSubmit, submitting, selectedUser } = this.props;
+    const { handleSubmit, submitting, selectedUser, resetForm } = this.props;
     
     return (
       <Form className="mt-10" onSubmit={handleSubmit(this.account)}>
@@ -61,19 +62,25 @@ export default class AccountModal extends Component {
         {
           !selectedUser
           &&
-          <Form.Group widths="equal">
-            <Field
-              name="firstName"
-              placeholder="First Name"
-              component={TextBox}
-              validate={required}
-            />
-            <Field
-              name="lastName"
-              placeholder="Last Name"
-              component={TextBox}
-            />
-          </Form.Group>
+            <Form.Field>
+              <Grid columns='equal'>
+                <Grid.Column>
+                  <Field
+                    name="firstName"
+                    placeholder="First Name"
+                    component={TextBox}
+                    validate={required}
+                  />
+                </Grid.Column>
+                <Grid.Column width={8}>
+                  <Field
+                    name="lastName"
+                    placeholder="Last Name"
+                    component={TextBox}
+                  />
+                </Grid.Column>
+              </Grid>
+            </Form.Field>
         }
         <Field
           name="email"
@@ -105,6 +112,12 @@ export default class AccountModal extends Component {
           loading={submitting}>
           { selectedUser ? 'Edit Profile' : 'Add Profile' }
         </Button>
+        <Button
+          primary
+          type="button"
+          content="Reset"
+          onClick={resetForm}
+        />
       </Form>
     );
   }
