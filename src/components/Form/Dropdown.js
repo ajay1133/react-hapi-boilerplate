@@ -1,41 +1,79 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Field } from 'redux-form/immutable';
-import { Dropdown as DDL, Form } from 'semantic-ui-react';
-import { pick } from 'lodash';
+import { Dropdown, Form } from 'semantic-ui-react';
 
-const DropdownField = ({ input, meta: { touched, error }, ...custom }) => (
-  <Form.Field
-    error={touched && !!error}
-    control={DDL}
-    {...input}
-    {...pick(Object.assign(input, custom), ['as', 'children', 'className', 'disabled', 'inline',
-      'label', 'required', 'type', 'width', 'options'
-    ])
+
+const DropDown = ({ input, label, meta, ...rest }) => {
+  const { touched, error } = meta || {};
+  const custom = rest || {};
+  
+  // Filed level attr
+  const inline = custom.inline;
+  delete custom.inline;
+  
+  // remove onChange from custom to avoid unwanted behaviour
+  const onChange = (input && input.onChange) || custom.onChange;
+  
+  if (custom.onChange) {
+    delete custom.onChange;
+  }
+  
+  const handleChange = (e, data) => {
+    // don't change in disabled mode.
+    if (custom.disabled) {
+      return;
     }
-    onChange={(e, { value }) => input.onChange(value)}
-  />
-);
+    const val = data.value;
+    
+    if (input && (input.value === val)) {
+      return;
+    }
+    
+    if (onChange) {
+      onChange(val);
+    }
+  };
+  
+  
+  let value = '';
+  if (input && input.value !== undefined) {
+    value = input.value;
+  } else if (custom && custom.value !== undefined) {
+    value = custom.value;
+  }
+  
+  if (custom.multiple && !Array.isArray(value)) {
+    value = [].concat(value);
+  }
+  
+  return (
+    <Form.Field
+      error={ (touched && !!error) }
+      inline={ inline }
+    >
+      { label && <label>{ label }</label> }
+      <Dropdown
+        name={ (input && input.name) || custom.name }
+        selection={ true }
+        fluid={ custom.fluid || true }
+        onChange={ handleChange }
+        // in case multiple is we require default be []
+        value={ value }
+        // added to show selected value in dropdown which was not showing when tabbing to & fro earlier in first case
+        // text={value}
+        { ...custom }
+        autoComplete='poo'
+      />
+      { touched && error && <span className="help-block">{ touched && error ? error : '' }</span> }
+    </Form.Field>
+  );
+};
 
-DropdownField.propTypes = {
+DropDown.propTypes = {
   input: PropTypes.object,
+  label: PropTypes.string,
   meta: PropTypes.object,
+  children: PropTypes.node
 };
 
-DropdownField.defaultProps = {
-  input: null,
-  meta: null,
-};
-
-const Dropdown = ({ name, ...rest }) => (
-  <Field name={name} component={DropdownField} {...rest} />
-);
-
-Dropdown.propTypes = {
-  name: PropTypes.string,
-};
-
-Dropdown.defaultProps = {
-  name: '',
-};
-export default Dropdown;
+export default DropDown;

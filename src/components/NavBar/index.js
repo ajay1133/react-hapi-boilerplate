@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Menu, Dropdown } from 'semantic-ui-react';
+import { Menu, Dropdown, Icon } from 'semantic-ui-react';
 import { logout, load } from '../../redux/modules/auth';
 import { connect } from 'react-redux';
 import { push } from 'connected-react-router';
@@ -37,8 +37,8 @@ class NavBar extends Component {
   render() {
     const { user, isShow, location } = this.props;
     
-	  const validUserNameFlag = validObjectWithParameterKeys(user, ['firstName', 'lastName']) && !!user.firstName &&
-      !!user.lastName;
+	  const validUserNameFlag = validObjectWithParameterKeys(user, ['firstName', 'lastName']) && (!!user.firstName ||
+      !!user.lastName);
 	  const currentLocation = location && strictValidObjectWithKeys(location.toJSON()) && location.toJSON().pathname;
 	  
 	  if (!(validObjectWithParameterKeys(user, ['id']) && isShow)) {
@@ -63,11 +63,15 @@ class NavBar extends Component {
                 </Menu.Item>
 						  }
               <Menu.Menu position='right'>
-                <Dropdown item text= { (validUserNameFlag && (user.firstName + ' ' + user.lastName)) || user.email }>
-                  <Dropdown.Menu>
-                    <Dropdown.Item onClick={this.logOut}>Logout</Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
+                <Menu.Item>
+                  <i className="user icon mr-10" />
+                  { (validUserNameFlag && (user.firstName + ' ' + user.lastName)) || user.email }
+                </Menu.Item>
+                <Menu.Item>
+                  <a onClick={this.logOut}>
+                    <Icon link name="sign out" />
+                  </a>
+                </Menu.Item>
               </Menu.Menu>
             </Menu>
           </div>

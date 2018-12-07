@@ -1,5 +1,4 @@
 const joi = require('joi');
-const boom = require('boom');
 const accountService = require('../../services/accountService');
 const { genericReply } = require('../../helpers');
 module.exports = {

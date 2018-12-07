@@ -52,6 +52,12 @@ export default class AccountModal extends Component {
     
     return (
       <Form className="mt-10" onSubmit={handleSubmit(this.account)}>
+        <Field
+          name="title"
+          placeholder="Title"
+          component={TextBox}
+          validate={required}
+        />
         {
           !selectedUser
           &&
