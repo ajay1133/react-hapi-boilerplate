@@ -9,19 +9,6 @@ const User = db.models.User;
 const jwtHelper = require('../helpers/jwtHelper');
 const mailer = require('../mailer');
 
-const defaultUserAttributes = [
-  'id',
-  'email',
-  'firstName',
-  'lastName',
-  'title',
-  'phone',
-  'url',
-  'description',
-  'image',
-  'status'
-];
-
 /**
  * Create a user
  * @param userPayload {email, password}
@@ -76,10 +63,7 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
   }
   
 	User
-    .findAndCountAll({
-      where: condition,
-      attributes: defaultUserAttributes
-    })
+    .findAndCountAll({ where: condition })
     .then(resolve)
     .catch (reject);
 });
@@ -91,7 +75,6 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
 exports.getUser = async (userId) => {
   try {
     let userDetails = await User.findOne({
-      attributes: ['id', 'role', 'email', 'firstName', 'lastName'],
       where: { id: userId }
     });
     
