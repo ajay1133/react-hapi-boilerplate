@@ -47,7 +47,7 @@ const TableRow = ({row, editAccount, typeAction}) => (
 }))
 @reduxForm({
   form: 'listAccount',
-//  enableReinitialize: true
+  enableReinitialize: true
 })
 export default class Accounts extends Component {
   static propTypes = {
@@ -137,7 +137,6 @@ export default class Accounts extends Component {
       const response = (details.id)
         ? await dispatch(updateAccount(details, true))
         : await dispatch(saveAccount(details));
-      this.setState({selectedUser: null});
       if (response && response.id) {
         resolve(response);
       } else {
@@ -165,10 +164,16 @@ export default class Accounts extends Component {
   
   closeConfirmBox = () => this.setState({ openConfirmBox: false, selectedUser: null });
   
+  resetForm = () => {
+    console.log('I am here');
+//    this.setState({ selectedUser: {} });
+  };
+  
   render() {
     const { items, loadErr, accountErr, itemsCount, message } = this.props;
     const { sortCol, sortDir, selectedUser, showMessageFlag, openConfirmBox, currentPage, type } = this.state;
     const sortDirClass = sortDir === 'asc' ? 'active sortAsc' : 'active sortDesc';
+    const sortIconClass = sortDir === 'asc' ? 'down' : 'up';
     
     let users = [];
     
@@ -219,6 +224,7 @@ export default class Accounts extends Component {
                   <List.Item>
                     <List.Content floated='right'>
                       <Field
+                        className="minWidth130"
                         name="status"
                         component={ DropDown }
                         options={ statusDropDownArr }
@@ -241,17 +247,17 @@ export default class Accounts extends Component {
                     <Table.Row>
                       <Table.HeaderCell className={`${sortCol === 'firstName' ? sortDirClass : 'sortAsc'}` }>
                         <a onClick={() => this.handleSort('firstName') }>Name
-                          <i className="sort amount down icon ml-05"></i>
+                          <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
                         </a>
                       </Table.HeaderCell>
                       <Table.HeaderCell className={`${sortCol === 'email' ? sortDirClass : 'sortAsc'}` }>
                         <a onClick={() => this.handleSort('email') }>Email
-                          <i className="sort amount down icon ml-05"></i>
+                          <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
                         </a>
                       </Table.HeaderCell>
                       <Table.HeaderCell className={`${sortCol==='phone' ? sortDirClass : 'sortAsc'}` }>
                         <a onClick={() => this.handleSort('phone') }>Phone
-                          <i className="sort amount down icon ml-05"></i>
+                          <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
                         </a>
                       </Table.HeaderCell>
                       <Table.HeaderCell>Action</Table.HeaderCell>
@@ -292,6 +298,7 @@ export default class Accounts extends Component {
                   <AccountModal
                     account = {this.account}
                     selectedUser = {selectedUser}
+                    resetForm = {this.resetForm}
                   />
                 </Segment>
               </Grid.Column>
