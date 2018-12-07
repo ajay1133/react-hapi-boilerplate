@@ -163,6 +163,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
     let addFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 1 });
     addFileData.message = `Added: ${addFileData.path}`;
     await dispatch(updateBitBucketFile(addFileData));
+	  accountDetails.status = 1;
     await api.post('/account', { data: accountDetails });
     dispatch(loadAccounts());
     dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!'});
@@ -233,7 +234,7 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 	dispatch({ type: ACCOUNT });
 	
 	try {
-		const { id } = formData;
+		const { id } = getState().get('auth').get('user');
 		
 		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails)) {
 			formData.profileDetails.active = true;

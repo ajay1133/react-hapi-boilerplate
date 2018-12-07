@@ -13,7 +13,14 @@ import '../../style/css/style.css';
 const selector = formValueSelector('profileForm');
 
 @connect(state => ({
-  initialValues: state.get('auth').get('user') || {},
+  initialValues: {
+    title: state.get('auth').get('user') && state.get('auth').get('user').title,
+    firstName: state.get('auth').get('user') && state.get('auth').get('user').firstName,
+    lastName: state.get('auth').get('user') && state.get('auth').get('user').lastName,
+    phone: state.get('auth').get('user') && state.get('auth').get('user').phone,
+    url: state.get('auth').get('user') && state.get('auth').get('user').url,
+    description: state.get('auth').get('user') && state.get('auth').get('user').description
+  },
   user: state.get('auth').get('user'),
   isLoad: state.get('auth').get('isLoad'),
   loadErr: state.get('auth').get('loadErr'),
@@ -52,7 +59,12 @@ export default class Profile extends Component {
     levelOfCareArr: [],
     treatmentFocusArr: [],
   };
-  
+	
+	constructor(props) {
+		super(props);
+		this.handleSubmit = this.handleSubmit.bind(this);
+	};
+	
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
   addRemoveInput = (e, action, type, idx) => {
@@ -250,8 +262,6 @@ export default class Profile extends Component {
   };
   
   renderTabs = () => {
-    const { handleSubmit } = this.props;
-  
     const tabContent = {
 	    profileDetails: this.getProfileTabsSection(),
       userServices: this.getUserServicesSection(),
@@ -260,14 +270,7 @@ export default class Profile extends Component {
     
     const pane = (type) => {
       return (
-        <Form onSubmit={ handleSubmit(this.handleProfile) }>
-          <Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
-          <Button
-            type="submit"
-            primary >
-            Update Profile
-          </Button>
-        </Form>
+        <Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
       );
     };
     
@@ -293,18 +296,21 @@ export default class Profile extends Component {
       />
     );
   };
-  
-  handleProfile = async (data) => {
-    const { dispatch } = this.props;
-    console.log('here is form data --- ', data);
+	
+	handleSubmit = async (data) => {
+	  const { dispatch } = this.props;
+	  
+	  const formData = {
+	    profileDetails: data.toJSON()
+    };
     
     this.setState({ loading: true });
-    await dispatch(updateUserProfile(data));
+    await dispatch(updateUserProfile(formData));
 	  this.setState({ loading: false });
   };
   
   render() {
-    const { isLoad, loadErr, accountMsg, accountErr } = this.props;
+    const { isLoad, loadErr, message, handleSubmit } = this.props;
     const { loading, showMessageFlag } = this.state;
     
     const loadingCompleteFlag = !isLoad && !loading;
@@ -312,15 +318,15 @@ export default class Profile extends Component {
     return (
       <AuthenticatedUser>
         {
-          accountMsg && showMessageFlag &&
+	        message && showMessageFlag &&
           <Message onDismiss={this.messageDismiss}>
-            <span style={{ color: 'green' }}>{ accountMsg }</span>
+            <span style={{ color: 'green' }}>{ message }</span>
           </Message>
         }
         {
-          (loadErr || accountErr) && showMessageFlag &&
+          loadErr && showMessageFlag &&
           <Message onDismiss={this.messageDismiss}>
-            <span style={{ color: 'red' }}>{ loadErr || accountErr }</span>
+            <span style={{ color: 'red' }}>{ loadErr }</span>
           </Message>
         }
         
@@ -331,7 +337,13 @@ export default class Profile extends Component {
           <Grid.Row>
             <Grid.Column>
               { !loadingCompleteFlag && <Loader>Loading...</Loader> }
-              { this.renderTabs() }
+              {
+                loadingCompleteFlag &&
+                <Form onSubmit={ handleSubmit(this.handleSubmit) }>
+                  { this.renderTabs() }
+                  <Button type="submit" primary>Update Profile</Button>
+                </Form>
+              }
             </Grid.Column>
           </Grid.Row>
         </Grid>
