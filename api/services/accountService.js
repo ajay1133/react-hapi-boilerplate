@@ -25,27 +25,21 @@ exports.createUser = async (userPayload) =>  {
     let foundUser = await User.findOne({ where: { email: userPayload.email }});
     
     if (foundUser) {
-      return reject(i18n('services.accountService.emailExists'));
+      return i18n('services.accountService.emailExists');
     }
 	  
     if (userPayload.password) {
 	    let response = await cryptoHelper.hashString(userPayload.password);
-      
       userData.role = 1;
       userData.hash = response.hash;
       userData.salt = response.salt;
-      
-      let result = User.create(userData);
-      return result;
     } else {
-      let inviteToken =  await jwtHelper.sign(userData, '48h', 'HS512');
-	    
-      userData.inviteToken = inviteToken;
+      userData.inviteToken = await jwtHelper.sign(userData, '48h', 'HS512');
       userData.inviteStatus = 0;
-	    
-      let result = User.create(userData);
-      return result;
     }
+    
+    const result = await User.create(userData);
+    return result;
   } catch(err) {
     return err;
   }

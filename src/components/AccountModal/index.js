@@ -112,12 +112,6 @@ export default class AccountModal extends Component {
           loading={submitting}>
           { selectedUser ? 'Edit Profile' : 'Add Profile' }
         </Button>
-        <Button
-          primary
-          type="button"
-          content="Reset"
-          onClick={resetForm}
-        />
       </Form>
     );
   }
