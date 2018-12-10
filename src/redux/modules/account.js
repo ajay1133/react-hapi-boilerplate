@@ -187,6 +187,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
     await api.post('/account', { data: accountDetails });
     dispatch(loadAccounts());
     dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!'});
+	  dispatch(internals.resetMessage());
 	  
     return accountDetails;
   } catch (err) {
