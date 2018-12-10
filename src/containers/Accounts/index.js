@@ -46,7 +46,7 @@ const TableRow = ({row, editAccount, typeAction}) => (
   isLoad: state.get('bitBucketRepo').get('isLoad')
 }))
 @reduxForm({
-  form: 'listAccount',
+  form: 'listAccountForm',
   enableReinitialize: true
 })
 export default class Accounts extends Component {
@@ -83,9 +83,11 @@ export default class Accounts extends Component {
   componentDidMount() {
     const { dispatch, user } = this.props;
     const { status } = this.state;
+    
     if (strictValidObjectWithKeys(user) && user.role !== 1) {
       dispatch.push('/dashboard');
     }
+    
     dispatch(loadAccounts({ status }));
   };
   
@@ -132,11 +134,14 @@ export default class Accounts extends Component {
   account = details => {
     const { dispatch } = this.props;
     delete details.events;
+    
     Object.keys(details).forEach((key) => (!details[key]) && delete details[key]);
+    
     return new Promise( async (resolve, reject) => {
       const response = (details.id)
-        ? await dispatch(updateAccount(details, true))
-        : await dispatch(saveAccount(details));
+	      ? await dispatch(updateAccount(details, true))
+	      : await dispatch(saveAccount(details));
+      
       if (response && response.id) {
         resolve(response);
       } else {
@@ -164,10 +169,7 @@ export default class Accounts extends Component {
   
   closeConfirmBox = () => this.setState({ openConfirmBox: false, selectedUser: null });
   
-  resetForm = () => {
-    console.log('I am here');
-//    this.setState({ selectedUser: {} });
-  };
+  resetForm = () => {};
   
   render() {
     const { items, loadErr, accountErr, itemsCount, message } = this.props;
