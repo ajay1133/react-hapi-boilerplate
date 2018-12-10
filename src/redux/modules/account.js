@@ -1,6 +1,8 @@
 import Immutable from 'immutable';
 import orderBy from 'lodash/orderBy';
+import { load } from './auth';
 import { updateBitBucketFile, deleteBitBucketFile } from './bitBucketRepo';
+import { strictValidObjectWithKeys } from '../../utils/commonutils';
 
 const LOAD = 'account/LOAD';
 const LOAD_SUCCESS = 'account/LOAD_SUCCESS';
@@ -18,6 +20,7 @@ const UPDATE_PASSWORD = 'account/UPDATE_PASSWORD';
 const UPDATE_PASSWORD_SUCCESS = 'account/UPDATE_PASSWORD_SUCCESS';
 const UPDATE_PASSWORD_FAIL = 'account/UPDATE_PASSWORD_FAIL';
 
+const UPDATED_PROFILE = 'account/UPDATED_PROFILE';
 const SELECT_USER = 'account/SELECT_USER';
 
 const initialState = Immutable.fromJS({
@@ -44,8 +47,8 @@ export default function reducer(state = initialState, action) {
       return state
         .set('isLoad', false)
         .set('loadErr', null)
-        .set('items', action.items)
-        .set('itemsCount', action.count);
+        .set('items', action.items || state.items)
+        .set('itemsCount', action.count || state.itemsCount);
 
     case LOAD_FAIL:
       return state
@@ -115,7 +118,11 @@ export default function reducer(state = initialState, action) {
     case SELECT_USER:
       return state
         .set('selectedUser', action.user);
-
+      
+    case UPDATED_PROFILE:
+      return state
+        .set('message', action.message);
+    
     default:
       return state;
   }
@@ -156,6 +163,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
     let addFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 1 });
     addFileData.message = `Added: ${addFileData.path}`;
     await dispatch(updateBitBucketFile(addFileData));
+	  accountDetails.status = 1;
     await api.post('/account', { data: accountDetails });
     dispatch(loadAccounts());
     dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!'});
@@ -170,7 +178,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
  * @param accountDetails
  * @param isAllow
  */
-export const updateAccount = (accountDetails, isAllow) => async (dispatch, getState, api) => {
+export const updateAccount = (accountDetails) => async (dispatch, getState, api) => {
   dispatch({ type: ACCOUNT });
   let users = getState().get('account').get('items');
   
@@ -220,6 +228,32 @@ export const updateAccount = (accountDetails, isAllow) => async (dispatch, getSt
   } catch (err) {
     dispatch({ type: ACCOUNT_FAIL, error: err.message });
   }
+};
+
+export const updateUserProfile = (formData) => async (dispatch, getState, api) => {
+	dispatch({ type: ACCOUNT });
+	
+	try {
+		const { id } = getState().get('auth').get('user');
+		
+		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails)) {
+			formData.profileDetails.active = true;
+			
+			let updateFileData = Object.assign({}, internals.getFileContent(formData.profileDetails), { type: 2 });
+			updateFileData.message = `Updated: ${updateFileData.path}`;
+			
+			await dispatch(updateBitBucketFile(updateFileData));
+			delete formData.profileDetails.active;
+			
+			await api.put(`/account/${id}`, { data: formData.profileDetails });
+			await dispatch(load(true));
+    }
+    
+		dispatch({ type: LOAD_SUCCESS });
+		dispatch({ type: UPDATED_PROFILE, message: 'Updated Successfully !!' });
+	} catch (err) {
+		dispatch({ type: ACCOUNT_FAIL, error: err.message });
+	}
 };
 
 export const verifyToken = (inviteToken) => async (dispatch, getState, api) => {
