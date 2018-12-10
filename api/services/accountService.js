@@ -48,15 +48,14 @@ exports.createUser = async (userPayload) =>  {
       userData.hash = response.hash;
       userData.salt = response.salt;
       
-      let result = User.create(userData);
+      const result = User.create(userData);
       return result;
     } else {
-      let inviteToken =  await jwtHelper.sign(userData, '48h', 'HS512');
-	    
-      userData.inviteToken = inviteToken;
+      
+      userData.inviteToken = await jwtHelper.sign(userData, '48h', 'HS512');
       userData.inviteStatus = 0;
-	    
-      let result = User.create(userData);
+  
+      const result = User.create(userData);
       return result;
     }
   } catch(err) {
