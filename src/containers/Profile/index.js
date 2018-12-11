@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Field, reduxForm, SubmissionError, formValueSelector } from 'redux-form/immutable';
+import { Field, reduxForm, formValueSelector } from 'redux-form/immutable';
 import { Grid, Message, Loader, Tab } from  'semantic-ui-react';
 import { Button, Form } from 'semantic-ui-react';
 import { TextBox, TextArea } from '../../components/Form';
@@ -248,13 +248,18 @@ export default class Profile extends Component {
     return (
       <Form.Group>
         <Field
-          name="password"
-          placeholder="Password"
+          name="oldPassword"
+          placeholder="Enter Old Password"
           component={TextBox}
         />
         <Field
-          name="url"
-          placeholder="confirm Password"
+          name="password"
+          placeholder="Enter New Password"
+          component={TextBox}
+        />
+        <Field
+          name="confirmPassword"
+          placeholder="Confirm New Password"
           component={TextBox}
         />
       </Form.Group>

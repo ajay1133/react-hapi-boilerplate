@@ -15,12 +15,11 @@ import { DEFAULT_HOME_PAGE_ROUTES } from '../../utils/constants';
   isLoading: state.get('auth').get('isLoad'),
   loginBusy: state.get('auth').get('isLogin'),
   loginError: state.get('auth').get('loginErr'),
+	passwordUpdatedMsg: state.get('account').get('passwordUpdatedMsg'),
 }))
-
 @reduxForm({
   form: 'login',
 })
-
 export default class Login extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
@@ -50,7 +49,7 @@ export default class Login extends Component {
   };
 
   render() {
-    const { handleSubmit, isLoading, loginBusy, loginError, user } = this.props;
+    const { handleSubmit, isLoading, loginBusy, loginError, user, passwordUpdatedMsg } = this.props;
     
     if (!isLoading && validObjectWithParameterKeys(user, ['id', 'role'])) {
 	    return <Redirect to = {DEFAULT_HOME_PAGE_ROUTES[user.role]} />;
@@ -58,6 +57,12 @@ export default class Login extends Component {
     
     return (
       <Segment className=" centered loginOuter">
+        {
+          passwordUpdatedMsg &&
+          <Message>
+            <span style={{ color: 'green' }}>{ passwordUpdatedMsg }</span>
+          </Message>
+        }
         <Form className="login-form" onSubmit={handleSubmit(this._login)}>
           <Input
             className="username"

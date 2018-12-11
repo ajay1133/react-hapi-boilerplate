@@ -34,7 +34,8 @@ const initialState = Immutable.fromJS({
   itemsCount: 0,
   columns: [],
   sort: {by: '', dir: 'asc'},
-  selectedUser: undefined
+  selectedUser: undefined,
+	passwordUpdatedMsg: null
 });
 
 const internals = {};
@@ -110,6 +111,7 @@ export default function reducer(state = initialState, action) {
       return state
         .set('updatingPassword', false)
         .set('passwordUpdated', true)
+        .set('passwordUpdatedMsg', 'Please login using your new password')
         .set('confirmationErr', null);
 
     case UPDATE_PASSWORD_FAIL:
@@ -129,6 +131,7 @@ export default function reducer(state = initialState, action) {
 	  case RESET_MESSAGE:
 		  return state
 			  .set('accountMsg', null)
+			  .set('passwordUpdatedMsg', null)
 			  .set('loadErr', null)
 			  .set('confirmationErr', null)
 			  .set('accountErr', null);
@@ -186,7 +189,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
     
     await api.post('/account', { data: accountDetails });
     dispatch(loadAccounts());
-    dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!'});
+    dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!' });
 	  dispatch(internals.resetMessage());
 	  
     return accountDetails;
@@ -311,6 +314,7 @@ export const updatePassword = (accountDetails) => async (dispatch, getState, api
   try {
     let res = await api.put('/account/update/password', { data: accountDetails });
     dispatch({ type: UPDATE_PASSWORD_SUCCESS });
+	  dispatch(internals.resetMessage());
     return res;
   } catch (err) {
     dispatch({ type: UPDATE_PASSWORD_FAIL, error: err.message || typeCastToString(err) });
@@ -348,6 +352,7 @@ internals.getFileContent = (accountDetails) => {
     description = '',
     services = []
   } = accountDetails;
+  
   const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = services;
   const path = `/content/profile/${(firstName+lastName).trim()}.md`;
   
@@ -408,5 +413,6 @@ description: "${description}"
               '<div class="clearfix"></div>' +
                 '<p>Self Pay fee,  Financing Available,Private Insurance ,  State Financial Aid,Scholarships </p>' +
               '</div>';
+  
   return { path, content } ;
 };

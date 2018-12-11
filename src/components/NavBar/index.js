@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Menu, Dropdown, Icon } from 'semantic-ui-react';
+import { Menu, Icon } from 'semantic-ui-react';
 import { logout, load } from '../../redux/modules/auth';
 import { connect } from 'react-redux';
 import { push } from 'connected-react-router';

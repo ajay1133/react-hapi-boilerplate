@@ -1,15 +1,15 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Table, Grid, Header, Message, Confirm, Icon, Segment, List } from  'semantic-ui-react';
+import { Table, Grid, Header, Message, Confirm, Icon, Segment, List, Form } from  'semantic-ui-react';
 import { Field, reduxForm } from 'redux-form/immutable';
 import { DropDown } from '../../components/Form';
 import { loadAccounts, saveAccount, updateAccount, sortAccounts, selectUser } from '../../redux/modules/account';
 import AccountModal  from '../../components/AccountModal';
 import Pagination from '../../components/Pagination';
+import { strictValidArrayWithLength } from '../../utils/commonutils';
 import { OFFSET } from '../../utils/constants';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
-import { strictValidObjectWithKeys } from '../../utils/commonutils';
 import '../../style/css/style.css';
 
 const rowBgColor = [];
@@ -46,8 +46,8 @@ const TableRow = ({row, editAccount, typeAction}) => (
   isLoad: state.get('bitBucketRepo').get('isLoad')
 }))
 @reduxForm({
-  form: 'listAccountForm',
-  enableReinitialize: true
+  form: 'listAccountFiltersForm',
+	enableReinitialize: true
 })
 export default class Accounts extends Component {
   static propTypes = {
@@ -81,12 +81,8 @@ export default class Accounts extends Component {
   };
   
   componentDidMount() {
-    const { dispatch, user } = this.props;
+    const { dispatch } = this.props;
     const { status } = this.state;
-    
-    if (strictValidObjectWithKeys(user) && user.role !== 1) {
-      dispatch.push('/dashboard');
-    }
     
     dispatch(loadAccounts({ status }));
   };
@@ -116,9 +112,8 @@ export default class Accounts extends Component {
       accountDetail.status = 3;
     }
     
-    dispatch(updateAccount(accountDetail, false)).then(response => {
-      this.setState({openConfirmBox: false, selectedUser: null});
-    });
+    dispatch(updateAccount(accountDetail, false))
+      .then(response => this.setState({ openConfirmBox: false, selectedUser: null }));
   };
   
   editAccount = row => {
@@ -169,8 +164,6 @@ export default class Accounts extends Component {
   
   closeConfirmBox = () => this.setState({ openConfirmBox: false, selectedUser: null });
   
-  resetForm = () => {};
-  
   render() {
     const { items, loadErr, accountErr, itemsCount, message } = this.props;
     const { sortCol, sortDir, selectedUser, showMessageFlag, openConfirmBox, currentPage, type } = this.state;
@@ -179,52 +172,48 @@ export default class Accounts extends Component {
     
     let users = [];
     
-    if (items && items.length > 0) {
+    if (strictValidArrayWithLength(items)) {
       let begin = (this.state.currentPage - 1) * OFFSET;
       let end = OFFSET * this.state.currentPage;
-      users = items.slice(begin, end)
+      users = items.slice(begin, end);
     }
-    
-    if (loadErr) {
-      return (
-        <Message negative> <Message.Header> {loadErr} </Message.Header> </Message>
-      );
-    } else if (items) {
-      return (
-        <AuthenticatedUser>
-          {
-            message && showMessageFlag &&
-            <Message onDismiss={this.messageDismiss}>
-              <span style={{ color: 'green' }}>{ message }</span>
-            </Message>
-          }
-          {
-            (loadErr || accountErr) && showMessageFlag &&
-            <Message onDismiss={this.messageDismiss}>
-              <span style={{ color: 'red' }}>{ loadErr || accountErr }</span>
-            </Message>
-          }
-          <Grid>
-            <div className="ui left floated column innerAdjust">
-              <h3 className="mainHeading"> Accounts</h3>
-            </div>
-            <Grid.Row>
-              <Grid.Column computer={12}>
-                <List horizontal floated='right'>
-                  <List.Item>
-                    <span className="statusPending"/>
-                    <List.Content floated='right'> Pending </List.Content>
-                  </List.Item>
-                  <List.Item>
-                    <span className="statusDenied"/>
-                    <List.Content floated='right'> Denied </List.Content>
-                  </List.Item>
-                  <List.Item>
-                    <span className="statusActive"/>
-                    <List.Content floated='right'> Active </List.Content>
-                  </List.Item>
-                  <List.Item>
-                    <List.Content floated='right'>
+	
+	  return (
+      <AuthenticatedUser>
+			  {
+				  message && showMessageFlag &&
+          <Message onDismiss={this.messageDismiss}>
+            <span style={{ color: 'green' }}>{ message }</span>
+          </Message>
+			  }
+			  {
+				  (loadErr || accountErr) && showMessageFlag &&
+          <Message onDismiss={this.messageDismiss}>
+            <span style={{ color: 'red' }}>{ loadErr || accountErr }</span>
+          </Message>
+			  }
+        <Grid>
+          <div className="ui left floated column innerAdjust">
+            <h3 className="mainHeading"> Accounts</h3>
+          </div>
+          <Grid.Row>
+            <Grid.Column computer={12}>
+              <List horizontal floated='right'>
+                <List.Item>
+                  <span className="statusPending"/>
+                  <List.Content floated='right'> Pending </List.Content>
+                </List.Item>
+                <List.Item>
+                  <span className="statusDenied"/>
+                  <List.Content floated='right'> Denied </List.Content>
+                </List.Item>
+                <List.Item>
+                  <span className="statusActive"/>
+                  <List.Content floated='right'> Active </List.Content>
+                </List.Item>
+                <List.Item>
+                  <List.Content floated='right'>
+                    <Form className="mt-10">
                       <Field
                         className="minWidth130"
                         name="status"
@@ -237,79 +226,82 @@ export default class Accounts extends Component {
                         placeholder="Please select"
                         onChange={(e, v) => this.handleStatus(e, v)}
                       />
-                    </List.Content>
-                  </List.Item>
-                </List>
-              </Grid.Column>
-            </Grid.Row>
-            <Grid.Row>
-              <Grid.Column  computer={12}>
-                <Table celled>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.HeaderCell className={`${sortCol === 'firstName' ? sortDirClass : 'sortAsc'}` }>
-                        <a onClick={() => this.handleSort('firstName') }>Name
-                          <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
-                        </a>
-                      </Table.HeaderCell>
-                      <Table.HeaderCell className={`${sortCol === 'email' ? sortDirClass : 'sortAsc'}` }>
-                        <a onClick={() => this.handleSort('email') }>Email
-                          <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
-                        </a>
-                      </Table.HeaderCell>
-                      <Table.HeaderCell className={`${sortCol==='phone' ? sortDirClass : 'sortAsc'}` }>
-                        <a onClick={() => this.handleSort('phone') }>Phone
-                          <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
-                        </a>
-                      </Table.HeaderCell>
-                      <Table.HeaderCell>Action</Table.HeaderCell>
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
-                    { users.length > 0 &&
-                    users.map(row => {
-                      return <TableRow
-                        key={row.id}
-                        row={row}
-                        editAccount={this.editAccount}
-                        typeAction={this.typeAction}
-                      />
-                    })
-                    }
-                  </Table.Body>
-                </Table>
+                    </Form>
+                  </List.Content>
+                </List.Item>
+              </List>
+            </Grid.Column>
+          </Grid.Row>
+          <Grid.Row>
+            <Grid.Column  computer={12}>
+              <Table celled>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.HeaderCell className={`${sortCol === 'firstName' ? sortDirClass : 'sortAsc'}` }>
+                      <a onClick={() => this.handleSort('firstName') }>Name
+                        <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
+                      </a>
+                    </Table.HeaderCell>
+                    <Table.HeaderCell className={`${sortCol === 'email' ? sortDirClass : 'sortAsc'}` }>
+                      <a onClick={() => this.handleSort('email') }>Email
+                        <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
+                      </a>
+                    </Table.HeaderCell>
+                    <Table.HeaderCell className={`${sortCol==='phone' ? sortDirClass : 'sortAsc'}` }>
+                      <a onClick={() => this.handleSort('phone') }>Phone
+                        <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
+                      </a>
+                    </Table.HeaderCell>
+                    <Table.HeaderCell>Action</Table.HeaderCell>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
+						      {
+							      strictValidArrayWithLength(users) &&
+							      users.map(row => {
+								      return (
+                        <TableRow
+                          key={row.id}
+                          row={row}
+                          editAccount={this.editAccount}
+                          typeAction={this.typeAction}
+                        />
+								      );
+							      })
+						      }
+                </Table.Body>
+              </Table>
+              {
+                strictValidArrayWithLength(items) &&
                 <Pagination
                   totalEntries={itemsCount}
                   offset={OFFSET}
                   currentPage={currentPage}
                   navigate={(page) => this.setState({ currentPage: page })}
                 />
-              </Grid.Column>
-              <Grid.Column computer={4}>
-                <Confirm
-                  content={`Are you sure you want to ${type} this user ?`}
-                  confirmButton="Confirm"
-                  open={openConfirmBox}
-                  onCancel={this.closeConfirmBox}
-                  onConfirm={this.handleConfirm}
+              }
+            </Grid.Column>
+            <Grid.Column computer={4}>
+              <Confirm
+                content={`Are you sure you want to ${type} this user ?`}
+                confirmButton="Confirm"
+                open={openConfirmBox}
+                onCancel={this.closeConfirmBox}
+                onConfirm={this.handleConfirm}
+              />
+              <Header as='h4' attached='top' className="Primary">
+					      { selectedUser ? 'Edit Profile' : 'Add New Profile' }
+              </Header>
+              <Segment attached>
+                <AccountModal
+                  account = {this.account}
+                  selectedUser = {selectedUser}
                 />
-                <Header as='h4' attached='top' className="Primary">
-                  {selectedUser ? 'Edit Profile' : 'Add New Profile'}
-                </Header>
-                <Segment attached>
-                  <AccountModal
-                    account = {this.account}
-                    selectedUser = {selectedUser}
-                    resetForm = {this.resetForm}
-                  />
-                </Segment>
-              </Grid.Column>
-            </Grid.Row>
-          </Grid>
-        </AuthenticatedUser>
-      );
-    } else {
-      return;
-    }
+              </Segment>
+            </Grid.Column>
+          </Grid.Row>
+        </Grid>
+      </AuthenticatedUser>
+	  );
   }
 }
