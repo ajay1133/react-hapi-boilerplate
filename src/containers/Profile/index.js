@@ -1,26 +1,44 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Field, reduxForm, formValueSelector } from 'redux-form/immutable';
-import { Grid, Message, Loader, Tab } from  'semantic-ui-react';
+import { Field, reduxForm, formValueSelector, SubmissionError } from 'redux-form/immutable';
+import { Grid, Message, Loader, Tab } from 'semantic-ui-react';
 import { Button, Form } from 'semantic-ui-react';
 import { TextBox, TextArea } from '../../components/Form';
-import { required, email, normalizePhone, url } from '../../utils/validations';
+import { required, email, normalizePhone, url, passwordValidator } from '../../utils/validations';
+import { strictValidObjectWithKeys } from '../../utils/commonutils';
+import { verifyUser } from '../../redux/modules/auth';
 import { updateUserProfile } from '../../redux/modules/account';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
+import _ from 'lodash';
 import '../../style/css/style.css';
+
+const profileDetailsFormKeys = [
+	'title',
+	'firstName',
+	'lastName',
+	'email',
+	'phone',
+	'url',
+	'description'
+];
+
+const userServicesFormKeys = [
+	'treatmentType',
+	'typeOfServices',
+	'levelOfCare',
+	'treatmentFocus'
+];
+
+const passwordFormKeys = [
+	'password',
+	'confirmPassword'
+];
 
 const selector = formValueSelector('profileForm');
 
 @connect(state => ({
-  initialValues: {
-    title: state.get('auth').get('user') && state.get('auth').get('user').title,
-    firstName: state.get('auth').get('user') && state.get('auth').get('user').firstName,
-    lastName: state.get('auth').get('user') && state.get('auth').get('user').lastName,
-    phone: state.get('auth').get('user') && state.get('auth').get('user').phone,
-    url: state.get('auth').get('user') && state.get('auth').get('user').url,
-    description: state.get('auth').get('user') && state.get('auth').get('user').description
-  },
+  initialValues: (strictValidObjectWithKeys(state.get('auth').get('user')) && state.get('auth').get('user')) || {},
   user: state.get('auth').get('user'),
   isLoad: state.get('auth').get('isLoad'),
   loadErr: state.get('auth').get('loadErr'),
@@ -30,6 +48,7 @@ const selector = formValueSelector('profileForm');
   typeOfServices: selector(state, 'typeOfServices'),
   levelOfCare: selector(state, 'levelOfCare'),
   treatmentFocus: selector(state, 'treatmentFocus'),
+	currentPassword: selector(state, 'currentPassword'),
 }))
 @reduxForm({
   form: 'profileForm',
@@ -58,6 +77,7 @@ export default class Profile extends Component {
     typeOfServicesArr: [],
     levelOfCareArr: [],
     treatmentFocusArr: [],
+	  userVerifiedFlag: false
   };
 	
 	constructor(props) {
@@ -245,23 +265,46 @@ export default class Profile extends Component {
   };
   
   getPasswordSection = () => {
+  	const { userVerifiedFlag } = this.state;
+  	
     return (
       <Form.Group>
-        <Field
-          name="oldPassword"
-          placeholder="Enter Old Password"
-          component={TextBox}
-        />
-        <Field
-          name="password"
-          placeholder="Enter New Password"
-          component={TextBox}
-        />
-        <Field
-          name="confirmPassword"
-          placeholder="Confirm New Password"
-          component={TextBox}
-        />
+	      {
+		      !userVerifiedFlag &&
+			    <Field
+				    name="currentPassword"
+				    placeholder="Verify Your Password"
+				    type="password"
+				    component={TextBox}
+				    validate={passwordValidator}
+			    />
+	      }
+	      {
+		      !userVerifiedFlag &&
+		      <Button type="button" primary onClick={() => this.handleVerifyUser()} style={{ float: 'right' }}>
+			      Verify
+		      </Button>
+	      }
+	      {
+		      userVerifiedFlag &&
+		      <Field
+			      name="password"
+			      placeholder="Enter New Password"
+			      type="password"
+			      component={TextBox}
+			      validate={passwordValidator}
+		      />
+	      }
+	      {
+		      userVerifiedFlag &&
+		      <Field
+			      name="confirmPassword"
+			      placeholder="Confirm New Password"
+			      type="password"
+			      component={TextBox}
+			      validate={passwordValidator}
+		      />
+	      }
       </Form.Group>
     );
   };
@@ -274,22 +317,32 @@ export default class Profile extends Component {
     };
     
     const pane = (type) => {
-      return (
+    	return (
         <Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
       );
     };
     
     const panes = [
       {
-        menuItem: { key: 'profileDetails', icon: 'user', content: 'PROFILE DETAILS' },
+        menuItem: {
+        	key: 'profileDetails',
+	        icon: 'user',
+	        content: 'PROFILE DETAILS',
+	        onClick: () => this.handleResetVerification()
+        },
         render: () => pane('profileDetails')
       },
       {
-        menuItem: { key: 'userServices', icon: 'sign language', content: 'USER SERVICES' },
+        menuItem: {
+        	key: 'userServices',
+	        icon: 'sign language',
+	        content: 'USER SERVICES',
+	        onClick: () => this.handleResetVerification()
+        },
         render: () => pane('userServices')
       },
       {
-        menuItem: { key: 'password', icon: 'key', content: 'PASSWORD' },
+        menuItem: { key: 'password', icon: 'key', content: 'CHANGE PASSWORD' },
         render: () => pane('password')
       },
     ];
@@ -302,20 +355,58 @@ export default class Profile extends Component {
     );
   };
 	
-	handleSubmit = async (data) => {
-	  const { dispatch } = this.props;
-	  
-	  const formData = {
-	    profileDetails: data.toJSON()
-    };
-    
-    this.setState({ loading: true });
-    await dispatch(updateUserProfile(formData));
-	  this.setState({ loading: false });
+  handleResetVerification = () => {
+  	this.setState({ userVerifiedFlag: false });
+  	this.props.change('currentPassword', '');
   };
   
+	handleSubmit = async (data) => {
+	  const { dispatch } = this.props;
+	  const { userVerifiedFlag } = this.state;
+	  
+	  const dataObj = (strictValidObjectWithKeys(data.toJSON()) && data.toJSON()) || {};
+	  
+	  if (strictValidObjectWithKeys(dataObj)) {
+		  const formData = {
+			  profileDetails: _.pick(dataObj, profileDetailsFormKeys),
+			  userServices: _.pick(dataObj, userServicesFormKeys),
+			  password: _.pick(dataObj, passwordFormKeys)
+		  };
+		  
+		  if (userVerifiedFlag) {
+		    const validPasswordFlag = dataObj.password === dataObj.confirmPassword &&
+			    !passwordValidator(dataObj.password);
+		    
+		    if (!validPasswordFlag) {
+		      throw new SubmissionError({
+			      _error: passwordValidator(dataObj.password) || 'Password & Confirm Password do not match'
+		      });
+		    }
+		  }
+		  
+		  this.setState({ loading: true });
+		  await dispatch(updateUserProfile(formData));
+		  this.setState({
+			  loading: false,
+			  userVerifiedFlag: false
+		  });
+	  }
+  };
+	
+	handleVerifyUser = async () => {
+		const { dispatch, currentPassword, user } = this.props;
+		const res = await dispatch(verifyUser(user.email, currentPassword));
+		
+		const areUsersSameFlag = strictValidObjectWithKeys(res) && strictValidObjectWithKeys(res.user) &&
+			res.user.id === user.id;
+		
+		this.setState({
+			userVerifiedFlag: areUsersSameFlag
+		})
+	};
+	
   render() {
-    const { isLoad, loadErr, message, handleSubmit } = this.props;
+    const { isLoad, loadErr, accountMsg, handleSubmit } = this.props;
     const { loading, showMessageFlag } = this.state;
     
     const loadingCompleteFlag = !isLoad && !loading;
@@ -323,9 +414,9 @@ export default class Profile extends Component {
     return (
       <AuthenticatedUser>
         {
-	        message && showMessageFlag &&
+	        accountMsg && showMessageFlag &&
           <Message onDismiss={this.messageDismiss}>
-            <span style={{ color: 'green' }}>{ message }</span>
+            <span style={{ color: 'green' }}>{ accountMsg }</span>
           </Message>
         }
         {
@@ -341,7 +432,10 @@ export default class Profile extends Component {
           </div>
           <Grid.Row>
             <Grid.Column>
-              { !loadingCompleteFlag && <Loader>Loading...</Loader> }
+              {
+              	!loadingCompleteFlag &&
+                <Loader active inline='centered'>Loading...</Loader>
+              }
               {
                 loadingCompleteFlag &&
                 <Form onSubmit={ handleSubmit(this.handleSubmit) }>
