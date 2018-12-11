@@ -15,7 +15,12 @@ import {
 	updateBitBucketFile,
 	resetBitBucketFileForm
 } from '../../redux/modules/bitBucketRepo';
-import { strictValidObjectWithKeys, validFileName, validObjectWithParameterKeys } from '../../utils/commonutils';
+import {
+	strictValidObjectWithKeys,
+	validFileName,
+	validObjectWithParameterKeys,
+	strictValidArrayWithLength
+} from '../../utils/commonutils';
 import {
 	DEFAULT_ACCESSIBLE_ROOT_PATH,
 	REPO_PATH,
@@ -79,10 +84,17 @@ export default class Dashboard extends Component {
 	};
 	
   componentDidMount = async () => {
-    const { dispatch, bitBucketListFilters } = this.props;
+    const { dispatch, bitBucketListFilters, bitBucketList } = this.props;
     const params = validObjectWithParameterKeys(bitBucketListFilters, Object.keys(DEFAULT_BITBUCKET_LIST_FILTERS)) ?
 	    bitBucketListFilters : (bitBucketListFilters.toJSON() || DEFAULT_BITBUCKET_LIST_FILTERS);
-	  await dispatch(bitBucketListing(params));
+    
+    const areFiltersSameFlag = JSON.stringify(params) === JSON.stringify(bitBucketListFilters);
+    const needToSyncDataFlag = !strictValidArrayWithLength(bitBucketList) || !areFiltersSameFlag;
+    
+	  if (needToSyncDataFlag) {
+	  	await dispatch(bitBucketListing(params));
+	  }
+	  
 	  this.setState({ loading: false });
   };
 	

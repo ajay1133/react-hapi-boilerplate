@@ -1,12 +1,17 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { Grid, Message, Container } from  'semantic-ui-react'
-import { verifyToken, updatePassword } from '../../redux/modules/account'
-import ChangePassword from '../../components/ChangePassword'
-import { push } from 'react-router-redux'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { Grid, Message, Container, Loader } from  'semantic-ui-react';
+import { verifyToken, updatePassword } from '../../redux/modules/account';
+import ChangePassword from '../../components/ChangePassword';
+import { push } from 'react-router-redux';
+import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
 
 class Confirmation extends Component {
+  state = {
+    loading: true
+  };
+  
   static propTypes = {
     dispatch: PropTypes.func,
     isLoading: PropTypes.bool,
@@ -25,7 +30,7 @@ class Confirmation extends Component {
     this.savePassword = this.savePassword.bind(this);
   }
 
-  savePassword (details) {
+  savePassword = async (details) => {
     const { dispatch } = this.props;
     
     const accountDetail = {
@@ -33,44 +38,57 @@ class Confirmation extends Component {
       confirmPassword : details.confirmPassword,
       inviteToken: this.props.match.params.inviteToken
     };
-    
-    dispatch(updatePassword(accountDetail)).then(response => {
-      setTimeout(function() {
-        dispatch(push('/'));
-      }, 3000);
-    });
-  }
+	
+	  this.setState({ loading: true });
+    await dispatch(updatePassword(accountDetail));
+	  this.setState({ loading: false });
+   
+	  setTimeout(function() {
+		  dispatch(push('/'));
+	  }, DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
+  };
 
-  componentDidMount() {
+  componentDidMount = async () => {
     const { dispatch } = this.props;
-    dispatch(verifyToken(this.props.match.params.inviteToken));
-  }
-
-
+    await dispatch(verifyToken(this.props.match.params.inviteToken));
+	  this.setState({ loading: false });
+  };
+  
   render() {
-    const { tokenValid, confirmationErr, passUpdated } = this.props;
-
+    const { tokenValid, confirmationErr, passUpdated, isLoading } = this.props;
+    const { loading } = this.state;
+    
     return (
-    <Container>
-      <Grid centered  verticalAlign="middle">
-        <Grid.Column   mobile={16} tablet={8} computer={8}>
+      <Container>
+        <Grid centered verticalAlign="middle">
           {
-            passUpdated &&
-            <Message negative>
-              <Message.Header>Your password updated. Please login using new password.</Message.Header>
-            </Message>
+            loading &&
+            <Loader>Loading...</Loader>
           }
           {
-            tokenValid &&
-            <ChangePassword savePassword = {this.savePassword} />
+            !loading &&
+            <Grid.Column mobile={16} tablet={8} computer={8}>
+	            {
+		            passUpdated &&
+                <Message negative>
+                  <Message.Header>Your password is updated. Please login using your new password.</Message.Header>
+                </Message>
+	            }
+	            {
+		            tokenValid &&
+                <ChangePassword
+                  savePassword = {this.savePassword}
+                  isButtonLoading={isLoading}
+                />
+	            }
+	            {
+		            !tokenValid &&
+                <Message negative> <Message.Header> { confirmationErr } </Message.Header> </Message>
+	            }
+            </Grid.Column>
           }
-          {
-            !tokenValid &&
-            <Message negative> <Message.Header> { confirmationErr } </Message.Header> </Message>
-          }
-        </Grid.Column>
-      </Grid>
-    </Container>
+        </Grid>
+      </Container>
     );
   }
 }
