@@ -15,10 +15,11 @@ import { DEFAULT_HOME_PAGE_ROUTES } from '../../utils/constants';
   isLoading: state.get('auth').get('isLoad'),
   loginBusy: state.get('auth').get('isLogin'),
   loginError: state.get('auth').get('loginErr'),
+	passwordUpdated: state.get('account').get('passwordUpdated'),
 	passwordUpdatedMsg: state.get('account').get('passwordUpdatedMsg'),
 }))
 @reduxForm({
-  form: 'login',
+  form: 'loginForm',
 })
 export default class Login extends Component {
   static propTypes = {
@@ -27,6 +28,8 @@ export default class Login extends Component {
     isLoading: PropTypes.bool,
     loginBusy: PropTypes.bool,
     loginError: PropTypes.string,
+	  passwordUpdated: PropTypes.bool,
+	  passwordUpdatedMsg: PropTypes.string
   };
 
   static defaultProps = {
@@ -49,7 +52,7 @@ export default class Login extends Component {
   };
 
   render() {
-    const { handleSubmit, isLoading, loginBusy, loginError, user, passwordUpdatedMsg } = this.props;
+    const { handleSubmit, isLoading, loginBusy, loginError, user, passwordUpdated, passwordUpdatedMsg } = this.props;
     
     if (!isLoading && validObjectWithParameterKeys(user, ['id', 'role'])) {
 	    return <Redirect to = {DEFAULT_HOME_PAGE_ROUTES[user.role]} />;
@@ -58,7 +61,7 @@ export default class Login extends Component {
     return (
       <Segment className=" centered loginOuter">
         {
-          passwordUpdatedMsg &&
+	        passwordUpdated && passwordUpdatedMsg &&
           <Message>
             <span style={{ color: 'green' }}>{ passwordUpdatedMsg }</span>
           </Message>

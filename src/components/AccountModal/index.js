@@ -32,6 +32,7 @@ export default class AccountModal extends Component {
     const accountData = formData.toJS();
     
     await account(accountData);
+    
     if (!selectedUser) {
       dispatch(reset('accountForm'));
     }

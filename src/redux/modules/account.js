@@ -314,7 +314,6 @@ export const updatePassword = (accountDetails) => async (dispatch, getState, api
   try {
     let res = await api.put('/account/update/password', { data: accountDetails });
     dispatch({ type: UPDATE_PASSWORD_SUCCESS });
-	  dispatch(internals.resetMessage());
     return res;
   } catch (err) {
     dispatch({ type: UPDATE_PASSWORD_FAIL, error: err.message || typeCastToString(err) });

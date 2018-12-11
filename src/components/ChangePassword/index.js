@@ -9,7 +9,8 @@ class ChangePassword extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     handleSubmit: PropTypes.func,
-	  isButtonLoading: PropTypes.bool
+	  isButtonLoading: PropTypes.bool,
+	  submitting: PropTypes.bool
   };
 
   static defaultProps = {
@@ -20,17 +21,16 @@ class ChangePassword extends Component {
   constructor(props) {
     super(props);
     this.changePassword = this.changePassword.bind(this);
-  }
+  };
 
   changePassword(formData) {
     const { savePassword } = this.props;
     const account = formData.toJS();
     savePassword(account);
-  }
-
-
+  };
+  
   render() {
-    const { handleSubmit, isButtonLoading } = this.props;
+    const { handleSubmit, isButtonLoading, submitting } = this.props;
     
     return (
       <Segment className="mainLogin centered forgotNew">
@@ -64,7 +64,7 @@ class ChangePassword extends Component {
                   type="submit"
                   primary
                   disabled={ isButtonLoading }
-                  submitting={ isButtonLoading }
+                  submitting={ submitting }
                 >
                   Save
                 </Button>
