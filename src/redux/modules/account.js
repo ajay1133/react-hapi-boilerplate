@@ -163,7 +163,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
     let addFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 1 });
     addFileData.message = `Added: ${addFileData.path}`;
     await dispatch(updateBitBucketFile(addFileData));
-	  accountDetails.status = 1;
+	  accountDetails.status = 2;
     await api.post('/account', { data: accountDetails });
     dispatch(loadAccounts());
     dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!'});
