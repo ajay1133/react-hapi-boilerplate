@@ -6,12 +6,18 @@ import { Grid, Message, Loader, Tab } from 'semantic-ui-react';
 import { Button, Form } from 'semantic-ui-react';
 import { TextBox, TextArea } from '../../components/Form';
 import { required, email, normalizePhone, url, passwordValidator } from '../../utils/validations';
-import { strictValidObjectWithKeys } from '../../utils/commonutils';
+import { strictValidObjectWithKeys, typeCastToString } from '../../utils/commonutils';
 import { verifyUser } from '../../redux/modules/auth';
 import { updateUserProfile } from '../../redux/modules/account';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
 import _ from 'lodash';
 import '../../style/css/style.css';
+
+const tabs = [
+	'profileDetails',
+	'userServices',
+	'password'
+];
 
 const profileDetailsFormKeys = [
 	'title',
@@ -62,7 +68,8 @@ export default class Profile extends Component {
     loadErr: PropTypes.string,
     isLoad: PropTypes.bool,
     accountMsg: PropTypes.string,
-    accountErr: PropTypes.string
+    accountErr: PropTypes.string,
+    error: PropTypes.string
   };
   
   static defaultProps = {
@@ -77,7 +84,8 @@ export default class Profile extends Component {
     typeOfServicesArr: [],
     levelOfCareArr: [],
     treatmentFocusArr: [],
-	  userVerifiedFlag: false
+	  userVerifiedFlag: false,
+	  activeTab: 'profileDetails'
   };
 	
 	constructor(props) {
@@ -121,57 +129,63 @@ export default class Profile extends Component {
   };
   
   getProfileTabsSection = () => {
+  	const { handleSubmit } = this.props;
+  	
     return (
-      <Form.Group>
-        <Field
-          name="title"
-          placeholder="Title"
-          component={TextBox}
-          validate={required}
-        />
-        <Field
-          name="firstName"
-          placeholder="First Name"
-          component={TextBox}
-          validate={required}
-        />
-        <Field
-          name="lastName"
-          placeholder="Last Name"
-          component={TextBox}
-        />
-        <Field
-          name="email"
-          placeholder="Email"
-          component={TextBox}
-          validate={email}
-        />
-        <Field
-          name="phone"
-          placeholder="Phone Number"
-          component={TextBox}
-          normalize={ normalizePhone }
-        />
-        <Field
-          name="url"
-          placeholder="Website Url"
-          component={TextBox}
-          validate={url}
-        />
-        <Field
-          name="description"
-          placeholder="Description"
-          component={TextArea}
-        />
-      </Form.Group>
+	    <Form onSubmit={ handleSubmit(this.handleSubmit) }>
+	      <Form.Group>
+	        <Field
+	          name="title"
+	          placeholder="Title"
+	          component={TextBox}
+	          validate={required}
+	        />
+	        <Field
+	          name="firstName"
+	          placeholder="First Name"
+	          component={TextBox}
+	          validate={required}
+	        />
+	        <Field
+	          name="lastName"
+	          placeholder="Last Name"
+	          component={TextBox}
+	        />
+	        <Field
+	          name="email"
+	          placeholder="Email"
+	          component={TextBox}
+	          validate={email}
+	        />
+	        <Field
+	          name="phone"
+	          placeholder="Phone Number"
+	          component={TextBox}
+	          normalize={ normalizePhone }
+	        />
+	        <Field
+	          name="url"
+	          placeholder="Website Url"
+	          component={TextBox}
+	          validate={url}
+	        />
+	        <Field
+	          name="description"
+	          placeholder="Description"
+	          component={TextArea}
+	        />
+	      </Form.Group>
+		    <Button type="submit" primary>Update Profile</Button>
+	    </Form>
     );
   };
   
   getUserServicesSection = () => {
+  	const { handleSubmit } = this.props;
 	  const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = this.state;
 	  
     return (
-      <div>
+	    <Form onSubmit={ handleSubmit(this.handleSubmit) }>
         <Form.Group>
           <Field
             label='Treatment Type'
@@ -260,67 +274,75 @@ export default class Profile extends Component {
 				    );
 			    })
 		    }
-      </div>
+		    <Button type="submit" primary>Update Profile</Button>
+      </Form>
     );
   };
   
   getPasswordSection = () => {
+  	const { handleSubmit } = this.props;
   	const { userVerifiedFlag } = this.state;
   	
     return (
-      <Form.Group>
-	      {
-		      !userVerifiedFlag &&
-			    <Field
-				    name="currentPassword"
-				    placeholder="Verify Your Password"
-				    type="password"
-				    component={TextBox}
-				    validate={passwordValidator}
-			    />
-	      }
-	      {
-		      !userVerifiedFlag &&
-		      <Button type="button" primary onClick={() => this.handleVerifyUser()} style={{ float: 'right' }}>
-			      Verify
-		      </Button>
-	      }
-	      {
-		      userVerifiedFlag &&
-		      <Field
-			      name="password"
-			      placeholder="Enter New Password"
-			      type="password"
-			      component={TextBox}
-			      validate={passwordValidator}
-		      />
-	      }
-	      {
-		      userVerifiedFlag &&
-		      <Field
-			      name="confirmPassword"
-			      placeholder="Confirm New Password"
-			      type="password"
-			      component={TextBox}
-			      validate={passwordValidator}
-		      />
-	      }
-      </Form.Group>
+	    <Form onSubmit={ handleSubmit(this.handleSubmit) }>
+	      <Form.Group>
+		      {
+			      !userVerifiedFlag &&
+				    <Field
+					    name="currentPassword"
+					    placeholder="Verify Your Password"
+					    type="password"
+					    component={TextBox}
+				    />
+		      }
+		      {
+			      !userVerifiedFlag &&
+			      <Button type="submit" primary style={{ float: 'right' }}>
+				      Verify
+			      </Button>
+		      }
+		      {
+			      userVerifiedFlag &&
+			      <Field
+				      name="password"
+				      placeholder="Enter New Password"
+				      type="password"
+				      component={TextBox}
+				      validate={passwordValidator}
+			      />
+		      }
+		      {
+			      userVerifiedFlag &&
+			      <Field
+				      name="confirmPassword"
+				      placeholder="Confirm New Password"
+				      type="password"
+				      component={TextBox}
+				      validate={passwordValidator}
+			      />
+		      }
+		      {
+			      userVerifiedFlag &&
+			      <Button type="submit" primary style={{ float: 'right' }}>
+				      Change Password
+			      </Button>
+		      }
+	      </Form.Group>
+	    </Form>
     );
   };
   
   renderTabs = () => {
+  	const { activeTab } = this.state;
+	  const activeIndex = tabs.indexOf(activeTab) >= -1 ? tabs.indexOf(activeTab) : 0;
+	  
     const tabContent = {
 	    profileDetails: this.getProfileTabsSection(),
       userServices: this.getUserServicesSection(),
       password: this.getPasswordSection()
     };
     
-    const pane = (type) => {
-    	return (
-        <Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
-      );
-    };
+    const pane = type => <Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>;
     
     const panes = [
       {
@@ -328,7 +350,7 @@ export default class Profile extends Component {
         	key: 'profileDetails',
 	        icon: 'user',
 	        content: 'PROFILE DETAILS',
-	        onClick: () => this.handleResetVerification()
+	        onClick: () => this.handleTabClick('profileDetails')
         },
         render: () => pane('profileDetails')
       },
@@ -337,12 +359,17 @@ export default class Profile extends Component {
         	key: 'userServices',
 	        icon: 'sign language',
 	        content: 'USER SERVICES',
-	        onClick: () => this.handleResetVerification()
+	        onClick: () => this.handleTabClick('userServices')
         },
         render: () => pane('userServices')
       },
       {
-        menuItem: { key: 'password', icon: 'key', content: 'CHANGE PASSWORD' },
+        menuItem: {
+        	key: 'password',
+	        icon: 'key',
+	        content: 'CHANGE PASSWORD',
+	        onClick: () => this.handleTabClick('password')
+        },
         render: () => pane('password')
       },
     ];
@@ -351,62 +378,104 @@ export default class Profile extends Component {
       <Tab
         menu={{ secondary: true, pointing: true }}
         panes={ panes }
+        activeIndex={activeIndex}
       />
     );
   };
 	
-  handleResetVerification = () => {
-  	this.setState({ userVerifiedFlag: false });
-  	this.props.change('currentPassword', '');
+  handleTabClick = (activeTab) => {
+  	this.setState({ activeTab });
+  	
+  	if (activeTab === 'password') {
+		  this.setState({ userVerifiedFlag: false });
+		  this.props.change('currentPassword', '');
+	  }
   };
   
 	handleSubmit = async (data) => {
 	  const { dispatch } = this.props;
-	  const { userVerifiedFlag } = this.state;
-	  
-	  const dataObj = (strictValidObjectWithKeys(data.toJSON()) && data.toJSON()) || {};
-	  
-	  if (strictValidObjectWithKeys(dataObj)) {
-		  const formData = {
-			  profileDetails: _.pick(dataObj, profileDetailsFormKeys),
-			  userServices: _.pick(dataObj, userServicesFormKeys),
-			  password: _.pick(dataObj, passwordFormKeys)
-		  };
-		  
-		  if (userVerifiedFlag) {
-		    const validPasswordFlag = dataObj.password === dataObj.confirmPassword &&
-			    !passwordValidator(dataObj.password);
-		    
-		    if (!validPasswordFlag) {
-		      throw new SubmissionError({
-			      _error: passwordValidator(dataObj.password) || 'Password & Confirm Password do not match'
-		      });
-		    }
+	  const { userVerifiedFlag, activeTab } = this.state;
+		
+		this.setState({ loading: true });
+		this.props.change('_error', null);
+		
+		const dataObj = (strictValidObjectWithKeys(data.toJSON()) && data.toJSON()) || {};
+		
+	  try {
+		  if (strictValidObjectWithKeys(dataObj)) {
+			  let formData = {};
+			
+			  if (activeTab === 'password' && !userVerifiedFlag) {
+				  const res = await this.handleVerifyUser();
+				  if (!res) {
+					  throw new SubmissionError({
+						  _error: 'User verification failed'
+					  });
+				  }
+				  this.setState({ loading: false });
+				  return;
+			  } else if (activeTab === 'password' && userVerifiedFlag) {
+				  const validPasswordFlag = dataObj.password === dataObj.confirmPassword &&
+					  !passwordValidator(dataObj.password);
+				
+				  if (!validPasswordFlag) {
+					  throw new SubmissionError({
+						  _error: passwordValidator(dataObj.password) || 'Password & Confirm Password do not match'
+					  });
+				  }
+				
+				  formData = { password: _.pick(dataObj, passwordFormKeys) };
+			  } else if (activeTab === 'profileDetails') {
+				  formData = {
+					  profileDetails: _.pick(dataObj, profileDetailsFormKeys)
+				  };
+			  } else if (activeTab === 'userServices') {
+				  formData = {
+					  userServices: _.pick(dataObj, userServicesFormKeys)
+				  };
+			  }
+			
+			  this.setState({ loading: true });
+			  await dispatch(updateUserProfile(formData));
+			  this.handleTabClick(activeTab);
+			  this.setState({ loading: false });
+		  } else {
+			  throw new SubmissionError({ _error: 'Invalid data object' });
+		  }
+	  } catch (e) {
+		  if (!userVerifiedFlag) {
+		  	this.handleTabClick(activeTab);
+		  } else {
+		  	this.setState({ activeTab });
 		  }
 		  
-		  this.setState({ loading: true });
-		  await dispatch(updateUserProfile(formData));
-		  this.setState({
-			  loading: false,
-			  userVerifiedFlag: false
+	  	this.setState({ loading: false });
+		  
+		  throw new SubmissionError({
+			  _error: activeTab === 'password'
+				  ? (userVerifiedFlag ? (passwordValidator(dataObj.password) || 'Password & Confirm Password do not match')
+						  : 'User verification failed')
+				  : typeCastToString(e) || 'Error updating profile'
 		  });
 	  }
   };
 	
 	handleVerifyUser = async () => {
 		const { dispatch, currentPassword, user } = this.props;
-		const res = await dispatch(verifyUser(user.email, currentPassword));
 		
-		const areUsersSameFlag = strictValidObjectWithKeys(res) && strictValidObjectWithKeys(res.user) &&
-			res.user.id === user.id;
-		
-		this.setState({
-			userVerifiedFlag: areUsersSameFlag
-		})
+		try {
+			const res = await dispatch(verifyUser(user.email, currentPassword));
+			const areUsersSameFlag = strictValidObjectWithKeys(res) && strictValidObjectWithKeys(res.user) &&
+				res.user.id === user.id;
+			this.setState({ userVerifiedFlag: areUsersSameFlag });
+			return areUsersSameFlag;
+		} catch (e) {
+			return false;
+		}
 	};
 	
   render() {
-    const { isLoad, loadErr, accountMsg, handleSubmit } = this.props;
+    const { isLoad, loadErr, accountMsg, error } = this.props;
     const { loading, showMessageFlag } = this.state;
     
     const loadingCompleteFlag = !isLoad && !loading;
@@ -420,9 +489,9 @@ export default class Profile extends Component {
           </Message>
         }
         {
-          loadErr && showMessageFlag &&
+	        (loadErr || error) && showMessageFlag &&
           <Message onDismiss={this.messageDismiss}>
-            <span style={{ color: 'red' }}>{ loadErr }</span>
+            <span style={{ color: 'red' }}>{ loadErr || typeCastToString(error) }</span>
           </Message>
         }
         
@@ -432,17 +501,8 @@ export default class Profile extends Component {
           </div>
           <Grid.Row>
             <Grid.Column>
-              {
-              	!loadingCompleteFlag &&
-                <Loader active inline='centered'>Loading...</Loader>
-              }
-              {
-                loadingCompleteFlag &&
-                <Form onSubmit={ handleSubmit(this.handleSubmit) }>
-                  { this.renderTabs() }
-                  <Button type="submit" primary>Update Profile</Button>
-                </Form>
-              }
+              { !loadingCompleteFlag && <Loader active inline='centered'>Loading...</Loader> }
+              { loadingCompleteFlag && this.renderTabs() }
             </Grid.Column>
           </Grid.Row>
         </Grid>
