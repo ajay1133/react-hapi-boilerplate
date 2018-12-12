@@ -75,16 +75,15 @@ module.exports = {
   
   handler: (request, h) => {
     const { payload } = request;
+    
     const onError = (err) => {
       request.server.log(['error'], err);
       return boom.badRequest(err);
     };
-    
-    return accountService.createUser(payload)
-                         .then((data) => {
-                           return h.response(data);
-                         })
-                         .catch(onError);
+	  
+    return accountService
+      .createUser(payload)
+      .then((data) => h.response(data))
+      .catch(onError);
   }
-  
 };

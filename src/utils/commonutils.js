@@ -30,3 +30,6 @@ concatenateRegularExpressions(['^[_|0-9|a-z|A-Z]+.', validExtensionsList.join('|
 
 export const validObjectWithParameterKeys = (obj, parameterKeys = []) => strictValidObjectWithKeys(obj) &&
 strictValidArrayWithLength(parameterKeys) && !!Object.keys(obj).filter(k => parameterKeys.indexOf(k) > -1).length;
+
+export const typeCastToString = str =>
+(str && ((strictValidString(str) && str) || JSON.stringify(str) || str.toString())) || '';

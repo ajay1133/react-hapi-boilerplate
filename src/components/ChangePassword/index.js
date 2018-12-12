@@ -1,74 +1,95 @@
-import React, { Component } from 'react'
-import { Button, Form, Header, Grid, Segment } from 'semantic-ui-react'
-import PropTypes from 'prop-types'
-import { reduxForm } from 'redux-form/immutable'
-import { Input } from '../Form'
-import { required } from '../../utils/validations'
-
-
+import React, { Component } from 'react';
+import { Button, Form, Header, Grid, Segment, Message } from 'semantic-ui-react';
+import PropTypes from 'prop-types';
+import { Field, reduxForm, SubmissionError } from 'redux-form/immutable';
+import { passwordValidator } from '../../utils/validations';
+import { TextBox } from '../../components/Form';
 
 class ChangePassword extends Component {
-
   static propTypes = {
     dispatch: PropTypes.func,
     handleSubmit: PropTypes.func,
-    isLoading: PropTypes.bool
+	  isButtonLoading: PropTypes.bool,
+	  submitting: PropTypes.bool,
+    error: PropTypes.string
   };
 
   static defaultProps = {
     dispatch: null,
-    handleSubmit: null,
-    isLoading: false
+    handleSubmit: null
   };
 
   constructor(props) {
     super(props);
     this.changePassword = this.changePassword.bind(this);
-  }
+  };
 
-  changePassword(formData) {
+  changePassword = async (data) => {
     const { savePassword } = this.props;
-    const account = formData.toJS();
-    savePassword(account);
-  }
-
-
+    const formData = data.toJS();
+	  
+    const validPasswordFlag = formData.password === formData.confirmPassword &&
+	    !passwordValidator(formData.password);
+    
+	  if (!validPasswordFlag) {
+		  throw new SubmissionError({
+        _error: passwordValidator(formData.password) || 'Password & Confirm Password do not match' });
+	  }
+   
+	  await savePassword(formData);
+  };
+  
   render() {
-    const { handleSubmit } = this.props;
+    const { handleSubmit, isButtonLoading, submitting, error } = this.props;
+    
     return (
       <Segment className="mainLogin centered forgotNew">
-      <Form className="login-form" onSubmit={handleSubmit(this.changePassword)}>
-        <Header as='h3' className="side">Set Account Password</Header>
-        <Grid>
-          <Grid.Row>
-            <Grid.Column>
-            <Input
-              name="password"
-              placeholder="Enter New Password"
-              type="password"
-              size="small"
-              validate={[required]}
-
-            />
-            <Input
-                name="confirmPassword"
-                placeholder="Confirm Password"
-                type="password"
-                size="small"
-                validate={[required]}
-  
-              />
-            </Grid.Column>
-          </Grid.Row>
-          <Grid.Row>
-            <Grid.Column>
-              <Button className="ui large fluid button front centered forgotPwd" type="submit"  primary>
-                Save
-              </Button>
-            </Grid.Column>
-          </Grid.Row>
-        </Grid>
-      </Form>
+        <Form className="login-form" onSubmit={handleSubmit(this.changePassword)}>
+          <Header as='h3' className="side">
+            Set Your New Account Password
+          </Header>
+          <Grid>
+	          {
+		          error &&
+              <Grid.Row>
+                <Grid.Column>
+                  <Message negative> <Message.Header> { error } </Message.Header> </Message>
+                </Grid.Column>
+              </Grid.Row>
+	          }
+            <Grid.Row>
+              <Grid.Column>
+                <Field
+                  name="password"
+                  placeholder="Enter Password"
+                  type="password"
+                  component={TextBox}
+                  validate={passwordValidator}
+                />
+                <Field
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  type="password"
+                  component={TextBox}
+                  validate={passwordValidator}
+                />
+              </Grid.Column>
+            </Grid.Row>
+            <Grid.Row>
+              <Grid.Column>
+                <Button
+                  className="ui large fluid button front centered forgotPwd"
+                  type="submit"
+                  primary
+                  disabled={ isButtonLoading }
+                  submitting={ submitting }
+                >
+                  Save
+                </Button>
+              </Grid.Column>
+            </Grid.Row>
+          </Grid>
+        </Form>
       </Segment>
     );
   }

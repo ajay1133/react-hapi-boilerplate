@@ -21,8 +21,10 @@ module.exports = {
 
   handler: async (request, h) => {
     const payload = request.payload;
+    
     try {
       let userdata = await jwtHelper.verify(payload.inviteToken);
+	    
       if (userdata.email) {
         return h.response({ tokenValid: true });
       } else {
@@ -31,6 +33,8 @@ module.exports = {
     } catch(err) {
       if (err && err.message === 'jwt expired') {
         return Boom.badRequest("Link is expired");
+      } else {
+	      return Boom.badRequest(JSON.stringify(err));
       }
     }
   }

@@ -105,21 +105,10 @@ exports.getUser = async (userId) => {
        });
    }
    else {
-     User.update(userData, { where: { id } })
-         .then((data) => {
-//            if (existingUser.dataValues.email !== userData.email) {
-//              let name = userPayload.firstName + ' ' + userPayload.lastName;
-//
-//              let response = mailer.userRegistration({
-//                email: userPayload.email,
-//                inviteToken: existingUser.dataValues.inviteToken,
-//                name: name
-//              });
-//              console.log("Mail Response", response);
-//            }
-           resolve(data);
-         })
-         .catch('error');
+     User
+       .update(userData, { where: { id } })
+       .then((data) => resolve(data))
+       .catch('error');
    }
  });
 

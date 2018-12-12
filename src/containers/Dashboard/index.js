@@ -15,7 +15,12 @@ import {
 	updateBitBucketFile,
 	resetBitBucketFileForm
 } from '../../redux/modules/bitBucketRepo';
-import { strictValidObjectWithKeys, validFileName, validObjectWithParameterKeys } from '../../utils/commonutils';
+import {
+	strictValidObjectWithKeys,
+	validFileName,
+	validObjectWithParameterKeys,
+	strictValidArrayWithLength
+} from '../../utils/commonutils';
 import {
 	DEFAULT_ACCESSIBLE_ROOT_PATH,
 	REPO_PATH,
@@ -79,10 +84,17 @@ export default class Dashboard extends Component {
 	};
 	
   componentDidMount = async () => {
-    const { dispatch, bitBucketListFilters } = this.props;
+    const { dispatch, bitBucketListFilters, bitBucketList } = this.props;
     const params = validObjectWithParameterKeys(bitBucketListFilters, Object.keys(DEFAULT_BITBUCKET_LIST_FILTERS)) ?
 	    bitBucketListFilters : (bitBucketListFilters.toJSON() || DEFAULT_BITBUCKET_LIST_FILTERS);
-	  await dispatch(bitBucketListing(params));
+    
+    const areFiltersSameFlag = JSON.stringify(params) === JSON.stringify(bitBucketListFilters);
+    const needToSyncDataFlag = !strictValidArrayWithLength(bitBucketList) || !areFiltersSameFlag;
+    
+	  if (needToSyncDataFlag) {
+	  	await dispatch(bitBucketListing(params));
+	  }
+	  
 	  this.setState({ loading: false });
   };
 	
@@ -140,8 +152,9 @@ export default class Dashboard extends Component {
     const isAddingFileFlag = validObjectWithParameterKeys(formValues, ['fileName', 'filePath']);
 	  
     if (isAddingFileFlag && !validFileName(formValues.fileName, VALID_ACCESSIBLE_FILE_FORMATS)) {
-    	throw new SubmissionError({
-		    _error: 'Invalid File Name, a valid file must start with alphanumeric and have a \'.md\' extension' });
+    	throw new SubmissionError({ _error:
+		    'Invalid File Name, a valid file must start with \'_\' or alphanumeric character and have a \'.md\' extension'
+    	});
     }
 	
 	  const basePath = repoPath || REPO_PATH;
