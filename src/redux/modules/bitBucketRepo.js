@@ -252,6 +252,10 @@ export const resetBitBucketFileForm = () => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD_SUCCESS });
 };
 
+export const flush = () => async (dispatch) => {
+	dispatch({ type: FLUSH });
+};
+
 internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES) => {
 	return dispatch => setTimeout(() => {
 		dispatch({

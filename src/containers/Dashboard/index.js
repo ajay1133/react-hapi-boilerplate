@@ -152,8 +152,9 @@ export default class Dashboard extends Component {
     const isAddingFileFlag = validObjectWithParameterKeys(formValues, ['fileName', 'filePath']);
 	  
     if (isAddingFileFlag && !validFileName(formValues.fileName, VALID_ACCESSIBLE_FILE_FORMATS)) {
-    	throw new SubmissionError({
-		    _error: 'Invalid File Name, a valid file must start with alphanumeric and have a \'.md\' extension' });
+    	throw new SubmissionError({ _error:
+		    'Invalid File Name, a valid file must start with \'_\' or alphanumeric character and have a \'.md\' extension'
+    	});
     }
 	
 	  const basePath = repoPath || REPO_PATH;

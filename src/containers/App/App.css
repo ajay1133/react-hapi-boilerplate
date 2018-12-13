@@ -3,7 +3,9 @@
   margin-left:5px !important;
 }
 
-
+.mt-10{
+  margin-top:10px !important;
+}
 
 .ui.visible.thin.left.sidebar ~ .fixed, .ui.visible.thin.left.sidebar ~ .pusher {
   -webkit-transform: translate3d(300px, 0, 0) !important;
@@ -17,7 +19,7 @@
 }
 .fan-sidebar {
   background: #eeeeee;
-  height: '100vh';
+  height: 100vh;
 }
 .ui.thin.left.sidebar, .ui.thin.right.sidebar {
   width: 300px;

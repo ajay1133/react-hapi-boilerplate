@@ -1,16 +1,17 @@
 import React, { Component } from 'react';
-import { Button, Form, Header, Grid, Segment } from 'semantic-ui-react';
+import { Button, Form, Header, Grid, Segment, Message } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
-import { reduxForm } from 'redux-form/immutable';
-import { Input } from '../Form';
-import { required } from '../../utils/validations';
+import { Field, reduxForm, SubmissionError } from 'redux-form/immutable';
+import { passwordValidator } from '../../utils/validations';
+import { TextBox } from '../../components/Form';
 
 class ChangePassword extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     handleSubmit: PropTypes.func,
 	  isButtonLoading: PropTypes.bool,
-	  submitting: PropTypes.bool
+	  submitting: PropTypes.bool,
+    error: PropTypes.string
   };
 
   static defaultProps = {
@@ -23,14 +24,23 @@ class ChangePassword extends Component {
     this.changePassword = this.changePassword.bind(this);
   };
 
-  changePassword(formData) {
+  changePassword = async (data) => {
     const { savePassword } = this.props;
-    const account = formData.toJS();
-    savePassword(account);
+    const formData = data.toJS();
+	  
+    const validPasswordFlag = formData.password === formData.confirmPassword &&
+	    !passwordValidator(formData.password);
+    
+	  if (!validPasswordFlag) {
+		  throw new SubmissionError({
+        _error: passwordValidator(formData.password) || 'Password & Confirm Password do not match' });
+	  }
+   
+	  await savePassword(formData);
   };
   
   render() {
-    const { handleSubmit, isButtonLoading, submitting } = this.props;
+    const { handleSubmit, isButtonLoading, submitting, error } = this.props;
     
     return (
       <Segment className="mainLogin centered forgotNew">
@@ -39,22 +49,30 @@ class ChangePassword extends Component {
             Set Your New Account Password
           </Header>
           <Grid>
+	          {
+		          error &&
+              <Grid.Row>
+                <Grid.Column>
+                  <Message negative> <Message.Header> { error } </Message.Header> </Message>
+                </Grid.Column>
+              </Grid.Row>
+	          }
             <Grid.Row>
               <Grid.Column>
-              <Input
-                name="password"
-                placeholder="Enter New Password"
-                type="password"
-                size="small"
-                validate={[required]}
-              />
-              <Input
-                name="confirmPassword"
-                placeholder="Confirm Password"
-                type="password"
-                size="small"
-                validate={[required]}
-              />
+                <Field
+                  name="password"
+                  placeholder="Enter Password"
+                  type="password"
+                  component={TextBox}
+                  validate={passwordValidator}
+                />
+                <Field
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  type="password"
+                  component={TextBox}
+                  validate={passwordValidator}
+                />
               </Grid.Column>
             </Grid.Row>
             <Grid.Row>

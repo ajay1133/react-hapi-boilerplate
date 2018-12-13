@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { Grid, Message, Container, Loader } from  'semantic-ui-react';
 import { verifyToken, updatePassword } from '../../redux/modules/account';
 import ChangePassword from '../../components/ChangePassword';
+import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
 import { push } from 'react-router-redux';
 
 class Confirmation extends Component {
@@ -31,16 +32,18 @@ class Confirmation extends Component {
 
   savePassword = async (details) => {
     const { dispatch } = this.props;
-    
-    const accountDetail = {
-      password: details.password,
-      confirmPassword : details.confirmPassword,
-      inviteToken: this.props.match.params.inviteToken
-    };
 	
+    const accountDetail = {
+		  password: details.password,
+		  confirmPassword : details.confirmPassword,
+		  inviteToken: this.props.match.params.inviteToken
+	  };
+   
 	  this.setState({ loading: true });
     await dispatch(updatePassword(accountDetail));
-	  dispatch(push('/'));
+	  this.setState({ loading: false });
+	  
+    setTimeout(() => dispatch(push('/')), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
   };
 
   componentDidMount = async () => {
@@ -50,32 +53,39 @@ class Confirmation extends Component {
   };
   
   render() {
-    const { tokenValid, confirmationErr, isLoading } = this.props;
+    const { tokenValid, confirmationErr, passwordUpdated, isLoading } = this.props;
     const { loading } = this.state;
     
     return (
       <Container>
         <Grid centered verticalAlign="middle">
-          {
-            loading &&
-            <Loader>Loading...</Loader>
-          }
-          {
-            !loading &&
-            <Grid.Column mobile={16} tablet={8} computer={8}>
-	            {
-		            tokenValid &&
-                <ChangePassword
-                  savePassword = {this.savePassword}
-                  isButtonLoading = {isLoading}
-                />
-	            }
-	            {
-		            !tokenValid &&
-                <Message negative> <Message.Header> { confirmationErr } </Message.Header> </Message>
-	            }
-            </Grid.Column>
-          }
+          <Grid.Column mobile={16} tablet={8} computer={8}>
+	          {
+		          loading &&
+              <Loader active inline='centered'>Loading...</Loader>
+	          }
+            {
+	            !loading && passwordUpdated &&
+              <Message>
+                <span style={{ color: 'green' }}>Successfully updated account password</span>
+              </Message>
+            }
+            {
+	            !loading && passwordUpdated &&
+              <Loader active inline='centered'>Redirecting to login page.</Loader>
+            }
+            {
+              !loading && !passwordUpdated && tokenValid &&
+              <ChangePassword
+                savePassword = {this.savePassword}
+                isButtonLoading = {isLoading}
+              />
+            }
+            {
+              !loading && !passwordUpdated && !tokenValid &&
+              <Message negative> <Message.Header> { confirmationErr } </Message.Header> </Message>
+            }
+          </Grid.Column>
         </Grid>
       </Container>
     );
@@ -85,5 +95,6 @@ class Confirmation extends Component {
 export default connect(state => ({
   tokenValid: state.get('account').get('tokenValid'),
   confirmationErr: state.get('account').get('confirmationErr'),
+  passwordUpdated: state.get('account').get('passwordUpdated'),
   isLoading: state.get('account').get('isLoading'),
 }))(Confirmation);

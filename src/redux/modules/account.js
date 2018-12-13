@@ -25,6 +25,7 @@ const UPDATED_PROFILE = 'account/UPDATED_PROFILE';
 const SELECT_USER = 'account/SELECT_USER';
 
 const RESET_MESSAGE = 'account/RESET_MESSAGE';
+const FLUSH = 'account/FLUSH';
 
 const initialState = Immutable.fromJS({
   isLoad: false,
@@ -35,6 +36,8 @@ const initialState = Immutable.fromJS({
   columns: [],
   sort: {by: '', dir: 'asc'},
   selectedUser: undefined,
+	accountMsg: null,
+	passwordUpdated: false,
 	passwordUpdatedMsg: null
 });
 
@@ -126,7 +129,7 @@ export default function reducer(state = initialState, action) {
       
     case UPDATED_PROFILE:
       return state
-        .set('message', action.message);
+        .set('accountMsg', action.message);
 	
 	  case RESET_MESSAGE:
 		  return state
@@ -135,7 +138,11 @@ export default function reducer(state = initialState, action) {
 			  .set('loadErr', null)
 			  .set('confirmationErr', null)
 			  .set('accountErr', null);
-    
+	
+	  case FLUSH: {
+		  return initialState;
+	  }
+	  
     default:
       return state;
   }
@@ -272,7 +279,7 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 	dispatch({ type: ACCOUNT });
 	
 	try {
-		const { id } = getState().get('auth').get('user');
+		const { id, email } = getState().get('auth').get('user');
 		
 		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails)) {
 			formData.profileDetails.active = true;
@@ -286,7 +293,17 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			await api.put(`/account/${id}`, { data: formData.profileDetails });
 			await dispatch(load(true));
     }
-    
+		
+		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.password)) {
+		  const updatePasswordObj = {
+		    email,
+        password: formData.password.password
+      };
+		  
+			await dispatch(updatePassword(updatePasswordObj, true));
+			await dispatch(load(true));
+		}
+  
 		dispatch({ type: LOAD_SUCCESS });
 		dispatch({ type: UPDATED_PROFILE, message: 'Updated Successfully !!' });
 		dispatch(internals.resetMessage());
@@ -308,11 +325,12 @@ export const verifyToken = (inviteToken) => async (dispatch, getState, api) => {
   }
 };
 
-export const updatePassword = (accountDetails) => async (dispatch, getState, api) => {
+export const updatePassword = (accountDetails, withoutTokenFlag = false) => async (dispatch, getState, api) => {
   dispatch({ type: UPDATE_PASSWORD });
   
   try {
-    let res = await api.put('/account/update/password', { data: accountDetails });
+    const putUrl = !withoutTokenFlag ? '/account/update/password' : '/account/update/passwordWithoutToken';
+    let res = await api.put(putUrl, { data: accountDetails });
     dispatch({ type: UPDATE_PASSWORD_SUCCESS });
     return res;
   } catch (err) {
@@ -329,7 +347,11 @@ export const sortAccounts = (sortDir, sortCol) => async (dispatch, getState, api
 };
 
 export const selectUser = (user) => async (dispatch) => {
-  dispatch( { type: SELECT_USER, user });
+  dispatch({ type: SELECT_USER, user });
+};
+
+export const flush = () => async (dispatch) => {
+  dispatch({ type: FLUSH });
 };
 
 internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES) => {
