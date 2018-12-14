@@ -14,7 +14,7 @@ module.exports = [
   {
     path: `${prefix}`,
     method: 'POST',
-    config: require('./addService'),
+    config: require('./addServices'),
   },
   {
     path: `${prefix}/{id}`,
@@ -22,8 +22,8 @@ module.exports = [
     config: require('./updateService'),
   },
   {
-    path: `${prefix}/{id}`,
-    method: 'DELETE',
-    config: require('./deleteService'),
-  },
+    path: `${prefix}/delete`,
+    method: 'POST',
+    config: require('./deleteServices'),
+  }
 ];
