@@ -1,6 +1,9 @@
 import Immutable from 'immutable';
 import store from 'store2';
 import { push } from 'react-router-redux';
+import { flush as flushAccount } from './account';
+import { flush as flushBitBucketRepo } from './bitBucketRepo';
+import { typeCastToString } from '../../utils/commonutils';
 
 const LOAD = 'auth/LOAD';
 const LOAD_SUCCESS = 'auth/LOAD_SUCCESS';
@@ -13,9 +16,6 @@ const LOGIN_FAIL = 'auth/LOGIN_FAIL';
 const SIGNUP = 'auth/SIGNUP';
 const SIGNUP_SUCCESS = 'auth/SIGNUP_SUCCESS';
 const SIGNUP_FAIL = 'auth/SIGNUP_FAIL';
-
-
-const LOGOUT = 'auth/LOGOUT';
 
 const FLUSH = 'auth/FLUSH';
 
@@ -46,8 +46,7 @@ export default function reducer(state = initialState, action) {
         .set('isLoad', false)
         .set('loadErr', action.error)
         .set('user', null);
-
-
+    
     case LOGIN:
       return state
         .set('isLogin', true)
@@ -81,7 +80,6 @@ export default function reducer(state = initialState, action) {
         .set('signupError', action.error)
         .set('user', null);
 
-    case LOGOUT:
     case FLUSH: {
       return initialState;
     }
@@ -90,7 +88,6 @@ export default function reducer(state = initialState, action) {
       return state;
   }
 }
-
 
 export const load = (forced) => async (dispatch, getState, api) => {
   // dont call api if user data is in state
@@ -140,12 +137,24 @@ export const login = (email, password) => async (dispatch, getState, api) => {
   }
 };
 
+export const verifyUser = (email, password) => async (dispatch, getState, api) => {
+	dispatch({ type: LOGIN });
+	
+	try {
+		const res = await api.post('/sessions?jwt=1', { data: { email: email, password:  password} });
+    return res;
+	} catch (err) {
+		return typeCastToString(err);
+	}
+};
+
 export const logout = () => (dispatch, getState, api) => {
   store.remove('authToken');
   store.remove('refreshToken');
   
-  dispatch({ type: LOGOUT });
-  dispatch({ type: 'FLUSH' });
+  dispatch({ type: FLUSH });
+  dispatch(flushAccount());
+  dispatch(flushBitBucketRepo());
   
   dispatch(push('/'));
 };

@@ -1,7 +1,7 @@
 import Immutable from 'immutable';
 import {
 	strictValidObjectWithKeys,
-	strictValidString,
+	typeCastToString,
 	strictValidSplittableStringWithMinLength,
 	validObjectWithParameterKeys
 } from '../../utils/commonutils';
@@ -49,7 +49,7 @@ export default function reducer(state = initialState, action) {
 		case LOAD_FAIL:
 			return state
 				.set('isLoad', false)
-				.set('loadErr', (strictValidString(action.error) && action.error) || JSON.stringify(action.error));
+				.set('loadErr', typeCastToString(action.error));
 		
 		case BIT_BUCKET_LISTING:
 			return state
@@ -66,8 +66,8 @@ export default function reducer(state = initialState, action) {
 			
 		case RESET_MESSAGE:
 			return state
-				.set('message', action.message)
-				.set('loadErr', action.error);
+				.set('message', typeCastToString(action.message))
+				.set('loadErr', typeCastToString(action.error));
 			
 		case FLUSH: {
 			return initialState;
@@ -150,11 +150,12 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 		res = await api.post('/bitBucket/updateFile', { data });
 		
 		if (strictValidObjectWithKeys(res)) {
-			dispatch({ type: LOAD_FAIL, error: errorMsg[type] });
+			dispatch({ type: LOAD_FAIL, error: (type && type in errorMsg && errorMsg[type]) || '' });
 			dispatch(internals.resetMessage());
 			return;
 		}
-		dispatch({ type: LOAD_SUCCESS, message: successMsg[type] });
+		
+		dispatch({ type: LOAD_SUCCESS, message: (type && type in successMsg && successMsg[type]) || '' });
 		dispatch(internals.resetMessage());
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
@@ -249,6 +250,10 @@ export const resetBitBucketFileForm = () => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
 	dispatch({ type: BIT_BUCKET_VIEW, result: MD_META_INITIAL_VALUES });
 	dispatch({ type: LOAD_SUCCESS });
+};
+
+export const flush = () => async (dispatch) => {
+	dispatch({ type: FLUSH });
 };
 
 internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES) => {

@@ -34,6 +34,9 @@ body {
 .mt-30{
 	margin-top: 30px;
 }
+.mb-20{
+	margin-bottom: 20px !important;
+}
 .minWidth130{
 	min-width: 130px !important;
 }
@@ -275,6 +278,75 @@ span.statusPending, .statusDenied, .statusActive {
 }
 .ui.selection.dropdown .menu {
     border-top-width: 1px !important;
+}
+.updated {
+	margin-top: 20px !important;
+}
+.detailCard {
+	width: 100%;
+	padding: 15px;
+}
+.ui.card {
+	width: 100%;
+}
+.ui.secondary.pointing.menu {
+	border-bottom: 0px solid rgba(34, 36, 38, 0.15);
+	width: 50%;
+	box-shadow: 0px 0px 32px -9px #323232;
+	border-radius: 10px 10px 0px 0px;
+}
+.ui.form textarea {
+	border: navajowhite;
+	border-bottom: 1px solid #dadada;
+	font-size:13px !important;
+}
+.ui.secondary.pointing.menu .active.item {
+	border-color: #0761C6;
+	color: #0761C6;
+}
+.ui.secondary.pointing.menu .dropdown.item:hover, .ui.secondary.pointing.menu .link.item:hover, .ui.secondary.pointing.menu a.item:hover {
+	background-color: transparent;
+	color: #0761C6;
+}
+.editContent .ui.segment{
+	border-radius: 0;
+	border: 0;
+	box-shadow: 0px 0px 24px -9px #323232;
+	padding: 20px 20px 36px;
+}
+.ui.segment .fields .ui.button {
+	background: #e0e1e240 none;
+
+
+}
+.ui.form .field > label {
+	background: #32323214;
+	padding: 8px 14px;
+	display: -webkit-inline-box;
+	width: 100%;
+}
+.ui.button:hover {
+	background-color: #356afa !important;
+	color: #fff;
+}
+.ui.secondary.pointing.menu .item {
+	width: 33%;
+}
+.serviceListing .fields {
+	clear: both;
+	float: left;
+}
+.serviceListing .field {
+	width: 96%;
+}
+.serviceListing .fields {
+	width: 90%;
+}
+.fields.deleteContent {
+	width: 100%;
+}
+.deleteContent label {
+	width: 84%;
 }
 @media only screen and (max-width: 767px) {
 	.blueBg {

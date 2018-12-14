@@ -52,3 +52,5 @@ export const DEFAULT_HOME_PAGE_ROUTES = [];
 
 DEFAULT_HOME_PAGE_ROUTES[1] = '/accounts';
 DEFAULT_HOME_PAGE_ROUTES[2] = '/profile';
+
+export const DEFAULT_PASSWORD_MIN_LENGTH = 6;

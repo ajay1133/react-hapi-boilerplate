@@ -1,7 +1,7 @@
 /* eslint-disable */
 import './objectExtensions';
-import { VALID_ACCESSIBLE_FILE_FORMATS } from '../utils/constants';
-import { validFileName } from '../utils/commonutils';
+import { VALID_ACCESSIBLE_FILE_FORMATS, DEFAULT_PASSWORD_MIN_LENGTH } from '../utils/constants';
+import { strictValidString, validFileName } from '../utils/commonutils';
 
 const isEmpty = value => value === undefined || value === null || value === '';
 
@@ -162,6 +162,17 @@ export function createValidator(rules) {
 
 export function fileNameValidator(fileName) {
   if (!validFileName(fileName, VALID_ACCESSIBLE_FILE_FORMATS)) {
-	  return 'Invalid File Name, a valid file must start with alphanumeric and have a \'.md\' extension';
+	  return
+    'Invalid File Name, a valid file must start with \'_\' or alphanumeric character and have a \'.md\' extension';
   }
+}
+
+export function passwordValidator(password) {
+  const validPasswordFlag = strictValidString(password) && password.length >= DEFAULT_PASSWORD_MIN_LENGTH &&
+    new RegExp('^[a-z|A-Z|0-9|!|@|#|$|%|^|&|*|(|)]+$').test(password);
+  
+	if (!validPasswordFlag) {
+		return 'Invalid Password, a valid password can only contain alphanumeric and special characters and must be at' +
+      ` least ${DEFAULT_PASSWORD_MIN_LENGTH} characters long`;
+	}
 }

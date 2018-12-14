@@ -20,19 +20,28 @@ module.exports = {
   notes: 'Delete services',
   
   validate: {
-    params: {
-      id: joi.number()
-             .description('PK of Services')
+    payload: {
+      serviceIds: joi.array()
+                     .single()
+                     .items(
+                       joi.number()
+                          .description('PK of Services')
+                     )
     },
     options: { abortEarly: false },
   },
   
   handler: async (request, h) => {
-    const { params } = request;
-    const { id } = params;
+    const { payload } = request;
     
     try {
-      let data = await userService.deleteService(id);
+      let promisesList = [];
+      
+      payload.serviceIds.forEach(serviceId => {
+        promisesList.push(userService.deleteService(serviceId));
+      });
+      
+      const data = await Promise.all(promisesList);
       return h.response(data);
     } catch(err) {
       return boom.badRequest(err);

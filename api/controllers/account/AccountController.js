@@ -36,4 +36,9 @@ module.exports = [
     method: 'PUT',
     config: require('./accountUpdate'),
   },
+	{
+		path: `${prefix}/update/passwordWithoutToken`,
+		method: 'PUT',
+		config: require('./accountUpdatePasswordWithoutToken'),
+	},
 ];
