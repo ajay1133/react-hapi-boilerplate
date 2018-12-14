@@ -8,9 +8,9 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  auth: {
-    strategy: 'default'
-  },
+//  auth: {
+//    strategy: 'default'
+//  },
   tags: ['api', 'account'],
   description: 'Get all accounts',
   notes: 'Get all accounts',

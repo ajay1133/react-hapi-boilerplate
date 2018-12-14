@@ -1,30 +1,30 @@
 import React from 'react';
 import { Route, Switch } from 'react-router';
 import Loadable from 'react-loadable';
-import Loading from  './components/Loading';
+import Loading from  '../components/Loading';
 
 const Home = Loadable({
-  loader: () => import('./containers/Home'),
+    loader: () => import('../containers/Home'),
   loading: Loading
 });
 
 const Dashboard = Loadable({
-  loader: () => import('./containers/Dashboard'),
+    loader: () => import('../containers/Dashboard'),
   loading: Loading
 });
 
 const Accounts = Loadable({
-  loader: () => import('./containers/Accounts'),
+    loader: () => import('../containers/Accounts'),
   loading: Loading
 });
 
 const Profile = Loadable({
-	loader: () => import('./containers/Profile'),
-	loading: Loading
+    loader: () => import('../containers/Profile'),
+  loading: Loading
 });
 
 const Confirmation = Loadable({
-  loader: () => import('./containers/Confirmation'),
+    loader: () => import('../containers/Confirmation'),
   loading: Loading
 });
 
