@@ -2,13 +2,18 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import { Field, reduxForm, formValueSelector, SubmissionError } from 'redux-form/immutable';
-import {Grid, Message, Loader, Tab, Card, Header} from  'semantic-ui-react';
+import {Grid, Message, Loader, Tab, Header} from  'semantic-ui-react';
 import {Button, Form} from 'semantic-ui-react';
 import {TextBox, TextArea} from '../../components/Form';
 import { required, email, normalizePhone, url, passwordValidator } from '../../utils/validations';
-import { strictValidObjectWithKeys, typeCastToString } from '../../utils/commonutils';
+import {
+	strictValidObjectWithKeys,
+	typeCastToString,
+	strictValidArrayWithLength,
+	validObjectWithParameterKeys
+} from '../../utils/commonutils';
 import { verifyUser } from '../../redux/modules/auth';
-import {updateUserProfile} from '../../redux/modules/account';
+import { loadUserServices, updateUserProfile } from '../../redux/modules/account';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
 import _ from 'lodash';
 import '../../style/css/style.css';
@@ -29,13 +34,6 @@ const profileDetailsFormKeys = [
 	'description'
 ];
 
-const userServicesFormKeys = [
-	'treatmentType',
-	'typeOfServices',
-	'levelOfCare',
-	'treatmentFocus'
-];
-
 const passwordFormKeys = [
 	'password',
 	'confirmPassword'
@@ -44,17 +42,23 @@ const passwordFormKeys = [
 const selector = formValueSelector('profileForm');
 
 @connect(state => ({
-  initialValues: (strictValidObjectWithKeys(state.get('auth').get('user')) && state.get('auth').get('user')) || {},
+  initialValues: Object.assign(
+  	{},
+	  (strictValidObjectWithKeys(state.get('auth').get('user')) && state.get('auth').get('user')) || {},
+	  state.get('account').get('userServices') || {}
+  ),
 	user: state.get('auth').get('user'),
 	isLoad: state.get('auth').get('isLoad'),
 	loadErr: state.get('auth').get('loadErr'),
 	accountMsg: state.get('account').get('accountMsg'),
 	accountErr: state.get('account').get('accountErr'),
-	treatmentType: selector(state, 'treatmentType'),
-	typeOfServices: selector(state, 'typeOfServices'),
-	levelOfCare: selector(state, 'levelOfCare'),
-	treatmentFocus: selector(state, 'treatmentFocus'),
+	serviceTypes: state.get('account').get('serviceTypes'),
+	userServices: state.get('account').get('userServices'),
 	currentPassword: selector(state, 'currentPassword'),
+	serviceTypesValuesList: (
+		selector(state, 'serviceType') &&
+		strictValidObjectWithKeys(selector(state, 'serviceType')) &&
+		selector(state, 'serviceType').toJSON()) || []
 }))
 @reduxForm({
 	form: 'profileForm',
@@ -69,7 +73,10 @@ export default class Profile extends Component {
 		isLoad: PropTypes.bool,
 		accountMsg: PropTypes.string,
 		accountErr: PropTypes.string,
-		error: PropTypes.string
+		error: PropTypes.string,
+		serviceTypes: PropTypes.array,
+		userServices: PropTypes.array,
+		serviceTypesValuesList: PropTypes.array
 	};
 	
 	static defaultProps = {
@@ -78,14 +85,11 @@ export default class Profile extends Component {
 	};
 	
 	state = {
-		loading: false,
+		loading: true,
 		showMessageFlag: true,
-		treatmentTypeArr: [],
-		typeOfServicesArr: [],
-		levelOfCareArr: [],
-		treatmentFocusArr: [],
 		userVerifiedFlag: false,
-		activeTab: 'profileDetails'
+		activeTab: 'profileDetails',
+		serviceTypesFieldArray: []
 	};
 	
 	constructor(props) {
@@ -93,39 +97,58 @@ export default class Profile extends Component {
 		this.handleSubmit = this.handleSubmit.bind(this);
 	};
 	
+	componentDidMount = async () => {
+		const { dispatch } = this.props;
+		try {
+			const res = await dispatch(loadUserServices());
+			
+			if (strictValidObjectWithKeys(res)) {
+				const { userServices } = res;
+				const serviceTypesValuesList = [];
+				
+				userServices.forEach(service => {
+					const indexOfServiceType = service.serviceTypesId - 1;
+					if (!(indexOfServiceType in serviceTypesValuesList)) {
+						serviceTypesValuesList[indexOfServiceType] = [];
+					}
+					serviceTypesValuesList[indexOfServiceType].push(service.name);
+				});
+				
+				this.props.change('serviceType', serviceTypesValuesList);
+				this.setState({ serviceTypesFieldArray: serviceTypesValuesList });
+			}
+			
+			this.setState({ loading: false });
+		} catch (e) {
+			this.setState({ loading: false });
+		}
+	};
+	
 	messageDismiss = () => this.setState({showMessageFlag: false});
 	
-	addRemoveInput = (e, action, type, idx) => {
-		e.preventDefault();
+	addRemoveInput = (e, action, serviceTypeIndex, idx) => {
+		const { serviceTypes = [], serviceTypesValuesList } = this.props;
+		let { serviceTypesFieldArray } = this.state;
 		
-		const {treatmentType, typeOfServices, levelOfCare, treatmentFocus} = this.props;
-		const {treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr} = this.state;
-		
-		if (type === 1) {
-			(action === 'add' && treatmentType)
-				? treatmentTypeArr.push(treatmentType)
-				: treatmentTypeArr.splice(idx, 1);
-			this.setState({treatmentTypeArr});
-			this.props.change('treatmentType', '');
-		} else if (type === 2) {
-			(action === 'add' && typeOfServices)
-				? typeOfServicesArr.push(typeOfServices)
-				: typeOfServicesArr.splice(idx, 1);
-			this.setState({typeOfServicesArr});
-			this.props.change('typeOfServices', '');
-		} else if (type === 3) {
-			(action === 'add' && levelOfCare)
-				? levelOfCareArr.push(levelOfCare)
-				: levelOfCareArr.splice(idx, 1);
-			this.setState({levelOfCareArr});
-			this.props.change('levelOfCare', '');
-		} else if (type === 4) {
-			(action === 'add' && treatmentFocus)
-				? treatmentFocusArr.push(treatmentFocus)
-				: treatmentFocusArr.splice(idx, 1);
-			this.setState({treatmentFocusArr});
-			this.props.change('treatmentFocus', '');
+		if (!(serviceTypeIndex in serviceTypes)) {
+			return false;
 		}
+		
+		if (action === 'add') {
+			const newServiceToAdd = serviceTypesValuesList[serviceTypeIndex];
+			if (!(serviceTypeIndex in serviceTypesFieldArray)) {
+				serviceTypesFieldArray[serviceTypeIndex] = [];
+			}
+			serviceTypesFieldArray[serviceTypeIndex].push(newServiceToAdd);
+		} else if (action === 'remove') {
+			if (!(idx in serviceTypesFieldArray[serviceTypeIndex])) {
+				return false;
+			}
+			serviceTypesFieldArray[serviceTypeIndex].splice(idx, 1);
+		}
+		
+		this.setState({ serviceTypesFieldArray });
+		this.props.change('serviceType', []);
 	};
 
 	getProfileTabsSection = () => {
@@ -196,177 +219,128 @@ export default class Profile extends Component {
 	};
 	
 	getUserServicesSection = () => {
-  	const { handleSubmit } = this.props;
-		const {treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr} = this.state;
+  	const { serviceTypes = [] } = this.props;
+  	const { serviceTypesFieldArray } = this.state;
 		
+  	const renderServiceTypesSection = strictValidArrayWithLength(serviceTypes) &&
+		  serviceTypes.map((serviceType, idx) => {
+			  const secondLastOrLastIdx = (!(serviceTypes.length % 2) && idx >= serviceTypes.length - 2) ||
+				  (!!(serviceTypes.length % 2) && idx === serviceTypes.length - 1);
+			
+			  if (!validObjectWithParameterKeys(serviceType, ['name'])) {
+			  	return (
+			  		<Grid.Column></Grid.Column>
+				  );
+			  }
+			  
+			  const validServiceFlag = strictValidArrayWithLength(serviceTypesFieldArray) &&
+				  idx in serviceTypesFieldArray && strictValidArrayWithLength(serviceTypesFieldArray[idx]);
+			  
+			  return (
+				  <Grid.Column className={ secondLastOrLastIdx ? 'mb-20' : '' }>
+					  <Form.Group>
+						  <Field
+							  label={ serviceType.name }
+							  name={ `serviceType[${idx}]` }
+							  placeholder="add content"
+							  component={TextBox}
+						  />
+					  </Form.Group>
+					  <Button type="button" icon='add' onClick={(e) => this.addRemoveInput(e, 'add', idx)} />
+					  {
+						  validServiceFlag &&
+						  serviceTypesFieldArray[idx].map((v, k) => {
+							  return (
+								  <Form.Group className="deleteContent" key={k}>
+									  <label className="m-10">{v}</label>
+									  <Button type="button" icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', idx, k)}/>
+								  </Form.Group>
+							  );
+						  })
+					  }
+				  </Grid.Column>
+			  );
+	  });
+  	
 		return (
-	    <Form onSubmit={ handleSubmit(this.handleSubmit) }>
-		    <Grid>
-			    <Grid.Row columns={2} className="serviceListing">
-				    <Grid.Column className="mb-20">
-					    <Form.Group>
-						    <Field
-							    label='Treatment Type'
-							    name="treatmentType"
-							    placeholder="add content"
-							    component={TextBox}
-						    />
-					    </Form.Group>
-					    <Button
-						    icon='add'
-						    onClick={(e) => this.addRemoveInput(e, 'add', 1)}
-					    />
-					    {
-						    treatmentTypeArr && treatmentTypeArr.map((val, idx) => {
-							    return (
-								    <Form.Group className="deleteContent" key={idx}>
-									    <label className="m-10">{ val } </label>
-									    <Button icon='minus'
-									            onClick={(e) => this.addRemoveInput(e, 'remove', 1, idx)}/>
-								    </Form.Group>
-							    );
-						    })
-					    }
-				    </Grid.Column>
-				    <Grid.Column>
-					    <Form.Group>
-						    <Field
-							    label='Type of Services'
-							    name="typeOfServices"
-							    placeholder="add content"
-							    component={TextBox}
-						    />
-					
-					    </Form.Group>
-					    <Button
-						    icon='add'
-						    onClick={(e) => this.addRemoveInput(e, 'add', 2)}
-					    />
-					    {
-						    typeOfServicesArr && typeOfServicesArr.map((val, idx) => {
-							    return (
-								    <Form.Group key={idx}>
-									    <label className="m-10">{ val } </label>
-									    <Button icon='minus'
-									            onClick={(e) => this.addRemoveInput(e, 'remove', 2, idx)}/>
-								    </Form.Group>
-							    );
-						    })
-					    }
-				    </Grid.Column>
-				    <Grid.Column>
-					    <Form.Group>
-						    <Field
-							    label='Level of care'
-							    name="levelOfCare"
-							    placeholder="add content"
-							    component={TextBox}
-						    />
-					    </Form.Group>
-					    <Button
-						    icon='add'
-						    onClick={(e) => this.addRemoveInput(e, 'add', 3)}
-					    />
-					    {
-						    levelOfCareArr && levelOfCareArr.map((val, idx) => {
-							    return (
-								    <Form.Group key={idx}>
-									    <label className="m-10">{ val } </label>
-									    <Button icon='minus'
-									            onClick={(e) => this.addRemoveInput(e, 'remove', 3, idx)}/>
-								    </Form.Group>
-							    );
-						    })
-					    }
-				    </Grid.Column>
-				    <Grid.Column>
-					    <Form.Group>
-						    <Field
-							    label='Treatment Focus'
-							    name="treatmentFocus"
-							    placeholder="add content"
-							    component={TextBox}
-						    />
-					
-					    </Form.Group>
-					    <Button
-						    icon='add'
-						    onClick={(e) => this.addRemoveInput(e, 'add', 4)}
-					    />
-					    {
-						    treatmentFocusArr && treatmentFocusArr.map((val, idx) => {
-							    return (
-								    <Form.Group key={idx}>
-									    <label className="m-10">{ val } </label>
-									    <Button icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', 4, idx)}/>
-								    </Form.Group>
-							    );
-						    })
-					    }
-				    </Grid.Column>
-			    </Grid.Row>
-	      </Grid>
-		    <Button type="submit" primary className="updated">Update Services</Button>
-	    </Form>
+			<Grid>
+				<Grid.Column computer="10">
+					<Header size='medium'>User Services</Header>
+					<Grid>
+						{
+							!strictValidArrayWithLength(serviceTypes) &&
+							<Grid.Row columns={1} className="serviceListing">
+								<Grid.Column>
+									<span style={{ color: 'red' }}>No Service Types Found</span>
+								</Grid.Column>
+							</Grid.Row>
+						}
+						{
+							strictValidArrayWithLength(serviceTypes) &&
+							<Grid.Row columns={2} className="serviceListing">
+								{ renderServiceTypesSection }
+							</Grid.Row>
+						}
+					</Grid>
+				</Grid.Column>
+			</Grid>
 		);
 	};
 	
 	getPasswordSection = () => {
-  	const { handleSubmit } = this.props;
   	const { userVerifiedFlag } = this.state;
   	
 		return (
-	    <Form onSubmit={ handleSubmit(this.handleSubmit) }>
-		    <Form.Group>
-		      {
-			      !userVerifiedFlag &&
-				    <Field
-					    name="currentPassword"
-					    placeholder="Verify Your Password"
-					    type="password"
-					    component={TextBox}
-				    />
-		      }
-		      {
-			      !userVerifiedFlag &&
-			      <Button type="submit" primary style={{ float: 'right', backgroundColor: '#356afa' }}>
-				      Verify
-			      </Button>
-		      }
-		      {
-			      userVerifiedFlag &&
-			      <Field
-				      name="password"
-				      placeholder="Enter New Password"
-				      type="password"
-				      component={TextBox}
-				      validate={passwordValidator}
-			      />
-		      }
-		      {
-			      userVerifiedFlag &&
-			      <Field
-				      name="confirmPassword"
-				      placeholder="Confirm New Password"
-				      type="password"
-				      component={TextBox}
-				      validate={passwordValidator}
-			      />
-		      }
-		      {
-			      userVerifiedFlag &&
-			      <Button type="submit" primary style={{ float: 'right', backgroundColor: '#356afa' }}>
-				      Change Password
-			      </Button>
-		      }
-	      </Form.Group>
-	    </Form>
+			<Grid>
+				<Grid.Column computer="10">
+					<Header size='medium'>Password</Header>
+					<Grid>
+						<Grid.Row columns={ userVerifiedFlag ? 2 : 1 } className="serviceListing">
+							{
+								!userVerifiedFlag &&
+								<Grid.Column>
+									<Field
+										name="currentPassword"
+										placeholder="Verify Your Current Password"
+										type="password"
+										component={TextBox}
+									/>
+								</Grid.Column>
+							}
+							{
+								userVerifiedFlag &&
+								<Grid.Column>
+									<Field
+										name="password"
+										placeholder="Enter New Password"
+										type="password"
+										component={TextBox}
+										validate={passwordValidator}
+									/>
+								</Grid.Column>
+							}
+							{
+								userVerifiedFlag &&
+								<Grid.Column>
+									<Field
+										name="confirmPassword"
+										placeholder="Confirm New Password"
+										type="password"
+										component={TextBox}
+										validate={required}
+									/>
+								</Grid.Column>
+							}
+						</Grid.Row>
+					</Grid>
+				</Grid.Column>
+			</Grid>
 		);
 	};
 	
 	renderTabs = () => {
 		const { handleSubmit } = this.props;
-  	const { activeTab } = this.state;
+  	const { activeTab, userVerifiedFlag } = this.state;
 	  const activeIndex = tabs.indexOf(activeTab) >= -1 ? tabs.indexOf(activeTab) : 0;
 	  
 		const tabContent = {
@@ -392,21 +366,45 @@ export default class Profile extends Component {
 		);
   
 		const pane = (type) => {
-			if (type === 'profileDetails') {
-				return (
-					<Form onSubmit={ handleSubmit(this.handleSubmit) }>
+			let contentSection = <div></div>;
+			let buttonContent = null;
+			
+			switch (type) {
+				case 'profileDetails':
+					contentSection = (
 						<div className="editContent">
 							<Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
 							<Tab.Pane attached={ false }>{ descContent }</Tab.Pane>
 						</div>
-						<Button type="submit" primary className='updated'>Update Profile</Button>
-					</Form>
-				);
-			} else {
-				return (
-					<Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
-				);
+					);
+					buttonContent = 'Update Profile';
+					break;
+				
+				case 'userServices':
+					contentSection = (
+						<div className="editContent">
+							<Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
+						</div>
+					);
+					buttonContent = 'Update Services';
+					break;
+				
+				case 'password':
+					contentSection = (
+						<div className="editContent">
+							<Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
+						</div>
+					);
+					buttonContent = !userVerifiedFlag ? 'Verify Password' : 'Update Password';
+					break;
 			}
+			
+			return (
+				<Form onSubmit={ handleSubmit(this.handleSubmit) }>
+					{ contentSection }
+					<Button type="submit" primary className='updated'>{ buttonContent }</Button>
+				</Form>
+			);
 		};
 		
 		const panes = [
@@ -432,7 +430,7 @@ export default class Profile extends Component {
         menuItem: {
         	key: 'password',
 	        icon: 'key',
-	        content: 'CHANGE PASSWORD',
+	        content: 'PASSWORD',
 	        onClick: () => this.handleTabClick('password')
         },
 				render: () => pane('password')
@@ -459,7 +457,7 @@ export default class Profile extends Component {
   
 	handleSubmit = async(data) => {
 		const {dispatch} = this.props;
-	  const { userVerifiedFlag, activeTab } = this.state;
+	  const { userVerifiedFlag, activeTab, serviceTypesFieldArray } = this.state;
 		
 		this.setState({ loading: true });
 		this.props.change('_error', null);
@@ -496,10 +494,10 @@ export default class Profile extends Component {
 				  };
 			  } else if (activeTab === 'userServices') {
 				  formData = {
-					  userServices: _.pick(dataObj, userServicesFormKeys)
+					  userServices: serviceTypesFieldArray
 				  };
 			  }
-			
+			  
 			  this.setState({ loading: true });
 			  await dispatch(updateUserProfile(formData));
 			  this.handleTabClick(activeTab);

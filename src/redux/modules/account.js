@@ -2,7 +2,7 @@ import Immutable from 'immutable';
 import orderBy from 'lodash/orderBy';
 import { load } from './auth';
 import { updateBitBucketFile, deleteBitBucketFile } from './bitBucketRepo';
-import { strictValidObjectWithKeys, typeCastToString } from '../../utils/commonutils';
+import { strictValidObjectWithKeys, typeCastToString, strictValidArrayWithLength } from '../../utils/commonutils';
 import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
 
 const LOAD = 'account/LOAD';
@@ -24,6 +24,8 @@ const UPDATE_PASSWORD_FAIL = 'account/UPDATE_PASSWORD_FAIL';
 const UPDATED_PROFILE = 'account/UPDATED_PROFILE';
 const SELECT_USER = 'account/SELECT_USER';
 
+const LOAD_USER_SERVICES = 'account/LOAD_USER_SERVICES';
+
 const RESET_MESSAGE = 'account/RESET_MESSAGE';
 const FLUSH = 'account/FLUSH';
 
@@ -38,7 +40,9 @@ const initialState = Immutable.fromJS({
   selectedUser: undefined,
 	accountMsg: null,
 	passwordUpdated: false,
-	passwordUpdatedMsg: null
+	passwordUpdatedMsg: null,
+  serviceTypes: [],
+  userServices: []
 });
 
 const internals = {};
@@ -131,6 +135,11 @@ export default function reducer(state = initialState, action) {
       return state
         .set('accountMsg', action.message);
 	
+    case LOAD_USER_SERVICES:
+      return state
+        .set('serviceTypes', action.serviceTypes)
+        .set('userServices', action.userServices);
+      
 	  case RESET_MESSAGE:
 		  return state
 			  .set('accountMsg', null)
@@ -280,6 +289,8 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 	
 	try {
 		const { id, email } = getState().get('auth').get('user');
+		const userServices = getState().get('account').get('userServices');
+		const serviceTypes = getState().get('account').get('serviceTypes');
 		
 		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails)) {
 			formData.profileDetails.active = true;
@@ -292,9 +303,50 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			
 			await api.put(`/account/${id}`, { data: formData.profileDetails });
 			await dispatch(load(true));
-    }
-		
-		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.password)) {
+    } else if (strictValidObjectWithKeys(formData) && strictValidArrayWithLength(formData.userServices)) {
+			const toAddServicesList = [];
+			const toDeleteServicesList = [];
+			
+			formData.userServices.forEach((serviceList, indexOfServiceType) => {
+				const serviceTypesId = serviceTypes[indexOfServiceType].id;
+				
+				serviceList.forEach(service => {
+					let isPresentFlag = false;
+					userServices.forEach(serviceType => {
+						if (serviceType.name === service && serviceType.serviceTypesId === serviceTypesId) {
+							isPresentFlag = true;
+						}
+					});
+					if (!isPresentFlag) {
+						toAddServicesList.push({
+							service,
+							serviceTypesId
+						});
+					}
+				});
+			});
+			
+			userServices.forEach(service => {
+				let indexOfServiceType = -1;
+				
+				serviceTypes.forEach((serviceType, idx) => {
+					if (serviceType.id === service.serviceTypesId) {
+						indexOfServiceType = idx;
+					}
+				});
+				
+				if (formData.userServices[indexOfServiceType].indexOf(service.name) <= -1) {
+					toDeleteServicesList.push(service.id);
+				}
+			});
+			
+			if (strictValidArrayWithLength(toAddServicesList)) {
+				await api.post(`/services`, { data: { usersId: id, services: toAddServicesList } });
+			}
+			if (strictValidArrayWithLength(toDeleteServicesList)) {
+				await api.post(`/services/delete`, { data: { serviceIds: toDeleteServicesList } });
+			}
+		} else if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.password)) {
 		  const updatePasswordObj = {
 		    email,
         password: formData.password.password
@@ -336,6 +388,29 @@ export const updatePassword = (accountDetails, withoutTokenFlag = false) => asyn
   } catch (err) {
     dispatch({ type: UPDATE_PASSWORD_FAIL, error: err.message || typeCastToString(err) });
 	  dispatch(internals.resetMessage());
+  }
+};
+
+export const loadUserServices = () => async (dispatch, getState, api) => {
+	dispatch({ type: LOAD });
+	
+	try {
+	  const { id } = getState().get('auth').get('user');
+	  let serviceTypes = await api.get(`/serviceTypes`);
+		let userServices = await api.get(`/services/byUser/${id}`);
+		dispatch({ type: LOAD_SUCCESS });
+		dispatch({
+      type: LOAD_USER_SERVICES,
+      serviceTypes: (strictValidObjectWithKeys(serviceTypes) && serviceTypes.rows) || [],
+			userServices: (strictValidObjectWithKeys(userServices) && userServices.rows) || []
+		});
+		return {
+			serviceTypes: (strictValidObjectWithKeys(serviceTypes) && serviceTypes.rows) || [],
+			userServices: (strictValidObjectWithKeys(userServices) && userServices.rows) || []
+		};
+  } catch (error) {
+		dispatch({ type: LOAD_FAIL, error });
+		dispatch(internals.resetMessage());
   }
 };
 
