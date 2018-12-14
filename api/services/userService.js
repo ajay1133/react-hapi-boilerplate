@@ -57,6 +57,9 @@ exports.getAllServiceTypes = () => ServiceTypes.findAndCountAll({
 
 exports.createServiceTypes = (payload) => ServiceTypes.create(payload);
 
+exports.createBulkServiceTypes = (payload) => payload && Array.isArray(payload) && !!payload.length &&
+ServiceTypes.bulkCreate(payload);
+
 exports.updateServiceTypes = (payload, id) => ServiceTypes.update(payload, { where: { id } });
 
 exports.deleteServiceTypes = (id) => ServiceTypes.destroy({ where: { id } });
