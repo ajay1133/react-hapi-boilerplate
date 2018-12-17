@@ -293,14 +293,8 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		
 		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails)) {
-			formData.profileDetails.active = true;
-			
-			let updateFileData = Object.assign({}, internals.getFileContent(formData.profileDetails), { type: 2 });
-			updateFileData.message = `Updated: ${updateFileData.path}`;
-			
-			await dispatch(updateBitBucketFile(updateFileData));
-			delete formData.profileDetails.active;
-			
+			const fileContentObj = Object.assign({ active: true }, formData.profileDetails);
+			await dispatch(internals.updateBitBucketFile(fileContentObj));
 			await api.put(`/account/${id}`, { data: formData.profileDetails });
 			await dispatch(load(true));
     } else if (strictValidObjectWithKeys(formData) && strictValidArrayWithLength(formData.userServices)) {
@@ -340,11 +334,19 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 				}
 			});
 			
+			const toUpdateBitBucketFlag = strictValidArrayWithLength(toAddServicesList) ||
+				strictValidArrayWithLength(toDeleteServicesList);
+			
 			if (strictValidArrayWithLength(toAddServicesList)) {
 				await api.post(`/services`, { data: { usersId: id, services: toAddServicesList } });
 			}
 			if (strictValidArrayWithLength(toDeleteServicesList)) {
 				await api.post(`/services/delete`, { data: { serviceIds: toDeleteServicesList } });
+			}
+			
+			if (toUpdateBitBucketFlag) {
+				const fileContentObj = Object.assign({ active: true }, formData.profileDetails);
+				await dispatch(internals.updateBitBucketFile(fileContentObj));
 			}
 		} else if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.password)) {
 		  const updatePasswordObj = {
@@ -433,6 +435,15 @@ internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES
 	return dispatch => setTimeout(() => {
 		dispatch({ type: RESET_MESSAGE });
 	}, defaultTimeout || DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
+};
+
+internals.updateBitBucketFile = (fileContentObj) => {
+	return dispatch => async () => {
+		let updateFileData = Object.assign({}, internals.getFileContent(fileContentObj), { type: 2 });
+		updateFileData.message = `Updated: ${updateFileData.path}`;
+		
+		await dispatch(updateBitBucketFile(updateFileData));
+	};
 };
 
 internals.getFileContent = (accountDetails) => {

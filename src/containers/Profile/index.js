@@ -12,6 +12,7 @@ import {
 	strictValidArrayWithLength,
 	validObjectWithParameterKeys
 } from '../../utils/commonutils';
+import {DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES} from '../../utils/constants';
 import { verifyUser } from '../../redux/modules/auth';
 import { loadUserServices, updateUserProfile } from '../../redux/modules/account';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
@@ -89,7 +90,8 @@ export default class Profile extends Component {
 		showMessageFlag: true,
 		userVerifiedFlag: false,
 		activeTab: 'profileDetails',
-		serviceTypesFieldArray: []
+		serviceTypesFieldArray: [],
+		serviceErrorStr: null
 	};
 	
 	constructor(props) {
@@ -126,7 +128,7 @@ export default class Profile extends Component {
 	
 	messageDismiss = () => this.setState({showMessageFlag: false});
 	
-	addRemoveInput = (e, action, serviceTypeIndex, idx) => {
+	addRemoveInput = async (e, action, serviceTypeIndex, idx) => {
 		const { serviceTypes = [], serviceTypesValuesList } = this.props;
 		let { serviceTypesFieldArray } = this.state;
 		
@@ -134,12 +136,28 @@ export default class Profile extends Component {
 			return false;
 		}
 		
+		let serviceErrorStr = null;
+		
 		if (action === 'add') {
 			const newServiceToAdd = serviceTypesValuesList[serviceTypeIndex];
 			if (!(serviceTypeIndex in serviceTypesFieldArray)) {
 				serviceTypesFieldArray[serviceTypeIndex] = [];
 			}
-			serviceTypesFieldArray[serviceTypeIndex].push(newServiceToAdd);
+			
+			const servicesData = strictValidArrayWithLength(serviceTypesFieldArray) &&
+			serviceTypeIndex in serviceTypesFieldArray ? serviceTypesFieldArray[serviceTypeIndex] : [];
+			
+			const isValidNewServiceFlag = !!newServiceToAdd && !servicesData.filter(s => s === newServiceToAdd).length;
+			
+			if (isValidNewServiceFlag) {
+				serviceTypesFieldArray[serviceTypeIndex].push(newServiceToAdd);
+			} else {
+				if (!newServiceToAdd) {
+					serviceErrorStr = 'Service cannot be empty';
+				} else if (!!servicesData.filter(s => s === newServiceToAdd).length) {
+					serviceErrorStr = 'Service already exists';
+				}
+			}
 		} else if (action === 'remove') {
 			if (!(idx in serviceTypesFieldArray[serviceTypeIndex])) {
 				return false;
@@ -147,7 +165,12 @@ export default class Profile extends Component {
 			serviceTypesFieldArray[serviceTypeIndex].splice(idx, 1);
 		}
 		
-		this.setState({ serviceTypesFieldArray });
+		this.setState({
+			serviceTypesFieldArray,
+			serviceErrorStr
+		});
+		
+		setTimeout(() => this.setState({ serviceErrorStr: null }), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
 		this.props.change('serviceType', []);
 	};
 
@@ -220,7 +243,7 @@ export default class Profile extends Component {
 	
 	getUserServicesSection = () => {
   	const { serviceTypes = [] } = this.props;
-  	const { serviceTypesFieldArray } = this.state;
+  	const { serviceTypesFieldArray, serviceErrorStr } = this.state;
 		
   	const renderServiceTypesSection = strictValidArrayWithLength(serviceTypes) &&
 		  serviceTypes.map((serviceType, idx) => {
@@ -242,7 +265,7 @@ export default class Profile extends Component {
 						  <Field
 							  label={ serviceType.name }
 							  name={ `serviceType[${idx}]` }
-							  placeholder="add content"
+							  placeholder="Add Service"
 							  component={TextBox}
 						  />
 					  </Form.Group>
@@ -272,6 +295,14 @@ export default class Profile extends Component {
 							<Grid.Row columns={1} className="serviceListing">
 								<Grid.Column>
 									<span style={{ color: 'red' }}>No Service Types Found</span>
+								</Grid.Column>
+							</Grid.Row>
+						}
+						{
+							serviceErrorStr &&
+							<Grid.Row columns={1} className="serviceListing">
+								<Grid.Column>
+									<span style={{ color: 'red' }}>{ serviceErrorStr }</span>
 								</Grid.Column>
 							</Grid.Row>
 						}

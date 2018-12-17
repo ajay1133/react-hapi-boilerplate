@@ -1,7 +1,7 @@
 /* eslint-disable */
 import './objectExtensions';
 import { VALID_ACCESSIBLE_FILE_FORMATS, DEFAULT_PASSWORD_MIN_LENGTH } from '../utils/constants';
-import { strictValidString, validFileName } from '../utils/commonutils';
+import { strictValidString, validFileName, strictValidArrayWithLength } from '../utils/commonutils';
 
 const isEmpty = value => value === undefined || value === null || value === '';
 
