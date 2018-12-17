@@ -12,6 +12,7 @@ import {
 	strictValidArrayWithLength,
 	validObjectWithParameterKeys
 } from '../../utils/commonutils';
+import {DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES} from '../../utils/constants';
 import { verifyUser } from '../../redux/modules/auth';
 import { loadUserServices, updateUserProfile } from '../../redux/modules/account';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
@@ -168,6 +169,8 @@ export default class Profile extends Component {
 			serviceTypesFieldArray,
 			serviceErrorStr
 		});
+		
+		setTimeout(() => this.setState({ serviceErrorStr: null }), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
 		this.props.change('serviceType', []);
 	};
 
