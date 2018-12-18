@@ -33,3 +33,5 @@ strictValidArrayWithLength(parameterKeys) && !!Object.keys(obj).filter(k => para
 
 export const typeCastToString = str =>
 (str && ((strictValidString(str) && str) || JSON.stringify(str) || str.toString())) || '';
+
+export const getFileExtension = fn => fn.substring(fn.lastIndexOf('.'), fn.length);
