@@ -49,15 +49,28 @@ exports.createUser = async (userPayload) =>  {
  * Return all user accounts for management
  */
 exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
-  const { status } = query;
+  const { status, keyword } = query;
+  let conditionArr = [];
   
-  let condition = { role: 2 };
   if (status) {
-    condition.status = status;
+    conditionArr.push({ status });
+  }
+  
+  if (keyword) {
+    let keywordArr = [
+      { title: { $like: `%${keyword}%` } },
+      { description: { $like: `%${keyword}%` } }
+    ];
+    conditionArr.push({ $or: keywordArr });
   }
   
 	User
-    .findAndCountAll({ where: condition })
+    .findAndCountAll({
+      where: {
+        role: 2,
+        $and: conditionArr
+      }
+    })
     .then(resolve)
     .catch (reject);
 });

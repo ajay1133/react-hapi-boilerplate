@@ -19,6 +19,10 @@ module.exports = {
       status: joi.number()
                  .allow(['', null])
                  .description('1=Active, 2=Pending, 3=Denied'),
+      
+      keyword: joi.string()
+                 .allow(['', null])
+                 .description('Search keyword: Title, Description'),
     },
     options: { abortEarly: false },
   },
