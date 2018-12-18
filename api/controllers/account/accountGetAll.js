@@ -23,6 +23,14 @@ module.exports = {
       keyword: joi.string()
                  .allow(['', null])
                  .description('Search keyword: Title, Description'),
+  
+      Page: joi.number()
+               .default(1)
+               .description('page number to get list of Account'),
+  
+      Limit: joi.number()
+                .default(10)
+                .description('number of account per page'),
     },
     options: { abortEarly: false },
   },
