@@ -1,0 +1,4 @@
+{
+  "name": "S3FileUploader",
+  "main": "S3FileUploader.js"
+}
