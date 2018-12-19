@@ -3,7 +3,7 @@ const i18n = require('../helpers/i18nHelper');
 const Boom = require('boom');
 const db = require('../db');
 const cryptoHelper = require('../helpers/cryptoHelper');
-
+const constants = require('../constants');
 const User = db.models.User;
 
 /**
@@ -33,7 +33,7 @@ exports.authenticate = async (email, password) => {
   
   let userDetails = await User.findOne({
     where: {email: email },
-    attributes: ['id', 'email', 'hash', 'salt', 'firstName', 'lastName', 'role']
+    attributes: constants.USER_AUTHENTICATION_ATTRIBUTES
   });
   
   let user;

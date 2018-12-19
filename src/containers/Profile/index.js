@@ -2,17 +2,24 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import { Field, reduxForm, formValueSelector, SubmissionError } from 'redux-form/immutable';
-import {Grid, Message, Loader, Tab, Header, List} from  'semantic-ui-react';
-import {Button, Form} from 'semantic-ui-react';
+import {Grid, Message, Loader, Tab, Header, List, Button, Form, Image} from  'semantic-ui-react';
 import {TextBox, TextArea} from '../../components/Form';
 import { required, email, normalizePhone, url, passwordValidator } from '../../utils/validations';
 import {
 	strictValidObjectWithKeys,
 	typeCastToString,
 	strictValidArrayWithLength,
-	validObjectWithParameterKeys
+	validObjectWithParameterKeys,
+	getAbsoluteS3FileUrl,
+	validFileName
 } from '../../utils/commonutils';
-import {DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES} from '../../utils/constants';
+import {
+	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
+	USER_PROFILE_TABS,
+	USER_PROFILE_DETAILS_FORM_KEYS,
+	USER_PASSWORD_SECTION_FORM_KEYS,
+	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS
+} from '../../utils/constants';
 import { verifyUser } from '../../redux/modules/auth';
 import { loadUserServices, updateUserProfile } from '../../redux/modules/account';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
@@ -20,27 +27,6 @@ import S3FileUploader from '../../components/S3FileUploader';
 import config from '../../config';
 import _ from 'lodash';
 import '../../style/css/style.css';
-
-const tabs = [
-	'profileDetails',
-	'userServices',
-	'password'
-];
-
-const profileDetailsFormKeys = [
-	'title',
-	'firstName',
-	'lastName',
-	'email',
-	'phone',
-	'url',
-	'description'
-];
-
-const passwordFormKeys = [
-	'password',
-	'confirmPassword'
-];
 
 const selector = formValueSelector('profileForm');
 
@@ -77,8 +63,8 @@ export default class Profile extends Component {
 		accountMsg: PropTypes.string,
 		accountErr: PropTypes.string,
 		error: PropTypes.string,
-		serviceTypes: PropTypes.array,
-		userServices: PropTypes.array,
+		serviceTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
+		userServices: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
 		serviceTypesValuesList: PropTypes.array
 	};
 	
@@ -91,11 +77,12 @@ export default class Profile extends Component {
 		loading: true,
 		showMessageFlag: true,
 		userVerifiedFlag: false,
-		activeTab: 'profileDetails',
+		activeTab: USER_PROFILE_TABS[0] || null,
 		serviceTypesFieldArray: [],
 		serviceErrorStr: null,
 		uploadProfileImageUrl: null,
-		uploadProfileImageName: null
+		uploadProfileImageName: null,
+		uploadProfileImageError: null
 	};
 	
 	constructor(props) {
@@ -103,11 +90,13 @@ export default class Profile extends Component {
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.handleProfileImageFinishedUpload = this.handleProfileImageFinishedUpload.bind(this);
 		this.resetProfileImageOnComplete = this.resetProfileImageOnComplete.bind(this);
+		this.handleUserImageReset = this.handleUserImageReset.bind(this);
 	};
 	
 	componentDidMount = async () => {
-		const { dispatch } = this.props;
+		const { dispatch, user } = this.props;
 		try {
+			this.setState({ uploadProfileImageUrl: user.image });
 			const res = await dispatch(loadUserServices());
 			
 			if (strictValidObjectWithKeys(res)) {
@@ -181,9 +170,10 @@ export default class Profile extends Component {
 	};
 
 	getProfileTabsSection = () => {
-		const { uploadProfileImageName } = this.state;
+		const { dispatch } = this.props;
+		const { uploadProfileImageError, uploadProfileImageUrl, uploadProfileImageName } = this.state;
 		
-  	return (
+		return (
 		  <Grid>
 			  <Grid.Row>
 				  <Grid.Column computer="10">
@@ -243,28 +233,50 @@ export default class Profile extends Component {
 							  </Grid.Column>
 						  </Grid.Row>
 					  </Grid>
-					  <Grid>
-						  <Grid.Row>
-							  <Grid.Column>
-								  <S3FileUploader
-									  signingUrl={`${config.apiHost}/aws/uploadFile/profileImages`}
-									  onFileUpload={ this.handleProfileImageFinishedUpload }
-									  resetOnComplete={ this.resetProfileImageOnComplete }
-								  />
-								  {
-									  uploadProfileImageName &&
-									  <List divided relaxed celled>
-										  <List.Item>
-											  <List.Icon name="file" size="large" verticalAlign="middle" />
-											  <List.Content>
-												  <List.Description>{ uploadProfileImageName }</List.Description>
-											  </List.Content>
-										  </List.Item>
-									  </List>
-								  }
-							  </Grid.Column>
-						  </Grid.Row>
-					  </Grid>
+				  </Grid.Column>
+				  <Grid.Column computer="6">
+					  {
+					  	!!uploadProfileImageError &&
+						  <span style={{ color: 'red' }}>{ uploadProfileImageError }</span>
+					  }
+					  {
+						  !!uploadProfileImageUrl && !uploadProfileImageError &&
+						  <Image
+							  src={ getAbsoluteS3FileUrl(uploadProfileImageUrl) }
+						    size="small"
+						    rounded
+						    alt="image"
+						    wrapped
+						  />
+					  }
+					  {
+						  !!uploadProfileImageName && !uploadProfileImageError &&
+						  <List divided relaxed celled>
+							  <List.Item>
+								  <List.Icon name="file" size="large" verticalAlign="middle" />
+								  <List.Content>
+									  <List.Description>{ uploadProfileImageName }</List.Description>
+								  </List.Content>
+							  </List.Item>
+						  </List>
+					  }
+					  {
+						  !!uploadProfileImageUrl &&
+						  <S3FileUploader
+							  signingUrl={`${config.apiHost}/aws/uploadFile/profileImages`}
+							  onFileUpload={ this.handleProfileImageFinishedUpload }
+							  resetOnComplete={ this.resetProfileImageOnComplete }
+							  toShowContent={ ' Change Photo' }
+						  />
+					  }
+					  {
+						  !!uploadProfileImageName &&
+						  <Button type="submit" primary>Save Photo</Button>
+					  }
+					  {
+						  !!uploadProfileImageName &&
+						  <Button type="button" primary onClick={() => dispatch(this.handleUserImageReset())}>Cancel</Button>
+					  }
 				  </Grid.Column>
 			  </Grid.Row>
 		  </Grid>
@@ -329,7 +341,7 @@ export default class Profile extends Component {
 							</Grid.Row>
 						}
 						{
-							serviceErrorStr &&
+							!!serviceErrorStr &&
 							<Grid.Row columns={1} className="serviceListing">
 								<Grid.Column>
 									<span style={{ color: 'red' }}>{ serviceErrorStr }</span>
@@ -399,10 +411,19 @@ export default class Profile extends Component {
 		);
 	};
 	
+	handleUserImageReset = () => {
+		const { user } = this.props;
+		
+		this.setState({
+			uploadProfileImageName: null,
+			uploadProfileImageUrl: user.image
+		})
+	};
+	
 	renderTabs = () => {
 		const { handleSubmit } = this.props;
   	const { activeTab, userVerifiedFlag } = this.state;
-	  const activeIndex = tabs.indexOf(activeTab) >= -1 ? tabs.indexOf(activeTab) : 0;
+	  const activeIndex = USER_PROFILE_TABS.indexOf(activeTab) >= -1 ? USER_PROFILE_TABS.indexOf(activeTab) : 0;
 	  
 		const tabContent = {
 			profileDetails: this.getProfileTabsSection(),
@@ -459,7 +480,7 @@ export default class Profile extends Component {
 					buttonContent = !userVerifiedFlag ? 'Verify Password' : 'Update Password';
 					break;
 					
-				case 'default':
+				default:
 					contentSection = (<div></div>);
 					break;
 			}
@@ -524,13 +545,20 @@ export default class Profile extends Component {
 		const {dispatch} = this.props;
 	  const { userVerifiedFlag, activeTab, serviceTypesFieldArray, uploadProfileImageUrl } = this.state;
 		
-		this.setState({ loading: true });
 		this.props.change('_error', null);
 		
 		const dataObj = (strictValidObjectWithKeys(data.toJSON()) && data.toJSON()) || {};
 		
+		if (!validFileName(uploadProfileImageUrl, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS, '^[_|0-9|a-z|A-Z|//|-]+')) {
+			throw new SubmissionError({ _error:
+				'Invalid File Name, a valid image file should only have' +
+				'\'.jpg\', \'.jpeg\', \'.png\' or \'.gif\'  extension(s)'
+			});
+		}
+			
 	  try {
 		  if (strictValidObjectWithKeys(dataObj)) {
+			  this.setState({ loading: true });
 			  let formData = {};
 			
 			  if (activeTab === 'password' && !userVerifiedFlag) {
@@ -552,12 +580,12 @@ export default class Profile extends Component {
 					  });
 				  }
 				
-				  formData = { password: _.pick(dataObj, passwordFormKeys) };
+				  formData = { password: _.pick(dataObj, USER_PASSWORD_SECTION_FORM_KEYS) };
 			  } else if (activeTab === 'profileDetails') {
 				  formData = {
 					  profileDetails: uploadProfileImageUrl
-						  ? Object.assign({}, _.pick(dataObj, profileDetailsFormKeys), { image: uploadProfileImageUrl })
-						  : _.pick(dataObj, profileDetailsFormKeys)
+						  ? Object.assign({}, _.pick(dataObj, USER_PROFILE_DETAILS_FORM_KEYS), { image: uploadProfileImageUrl })
+						  : _.pick(dataObj, USER_PROFILE_DETAILS_FORM_KEYS)
 				  };
 			  } else if (activeTab === 'userServices') {
 				  formData = {
@@ -568,7 +596,10 @@ export default class Profile extends Component {
 			  this.setState({ loading: true });
 			  await dispatch(updateUserProfile(formData));
 			  this.handleTabClick(activeTab);
-			  this.setState({ loading: false });
+			  this.setState({
+				  loading: false,
+				  uploadProfileImageName: null
+			  });
 		  } else {
 			  throw new SubmissionError({ _error: 'Invalid data object' });
 		  }
@@ -604,9 +635,22 @@ export default class Profile extends Component {
 		}
 	};
 	
-	handleProfileImageFinishedUpload = async ({ s3Key }) => this.setState({ uploadProfileImageUrl: s3Key });
+	handleProfileImageFinishedUpload = async ({ name, s3Key }) => {
+		if (!validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
+			this.setState({ uploadProfileImageError: 'Invalid File Name, a valid image file should only have' +
+			'\'.jpg\', \'.jpeg\', \'.png\' or \'.gif\'  extension(s)' });
+			setTimeout(() => this.setState({ uploadProfileImageError: null }), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
+			return;
+		}
+		
+		this.setState({ uploadProfileImageUrl: s3Key });
+	};
 	
-	resetProfileImageOnComplete = async ({ name }) => this.setState({ uploadProfileImageName: name });
+	resetProfileImageOnComplete = async ({ name }) => {
+		if (validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
+			this.setState({ uploadProfileImageName: name });
+		}
+	};
 	
 	render() {
     const { isLoad, loadErr, accountMsg, error } = this.props;

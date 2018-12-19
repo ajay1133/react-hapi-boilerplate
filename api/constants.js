@@ -21,3 +21,21 @@ exports.DEFAULT_USER_ATTRIBUTES = [
 	'featuredVideo',
 	'status'
 ];
+
+exports.USER_AUTHENTICATION_ATTRIBUTES = [
+	'id',
+	'email',
+	'hash',
+	'salt',
+	'firstName',
+	'lastName',
+	'role'
+];
+
+exports.DEFAULT_USER_SERVICES_ATTRIBUTES = [
+	'id',
+	'usersId',
+	'serviceTypesId',
+	'name',
+	'status'
+];

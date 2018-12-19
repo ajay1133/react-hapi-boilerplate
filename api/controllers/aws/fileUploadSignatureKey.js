@@ -1,6 +1,7 @@
 const joi = require('joi');
 const boom = require('boom');
 const awsServices = require('../../services/awsServices');
+const config = require('config');
 
 module.exports = {
 	tags: ['api', 's3'],
@@ -25,18 +26,16 @@ module.exports = {
 	
 	handler: async (request, h) => {
 		const options = {
-			bucket: 'compass-development-storage',
-			getFileKeyDir: request.params.dirName
+			bucket: config.aws.s3.bucket,
+			getFileKeyDir: request.params.dirName,
+			ACL: 'public-read'
 		};
 		
-		let res = null;
-		
 		try {
-			res = await awsServices.createAwsObject(request, options);
+			const res = await awsServices.createAwsObject(request, options);
+			return h.response(res);
 		} catch (err) {
-			return boom.badRequest(err);
+			return boom.badRequest('Error uploading file');
 		}
-		console.log('res', res);
-		return h.response(res);
 	}
 };

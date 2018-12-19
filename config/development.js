@@ -18,6 +18,12 @@ module.exports = {
     password: db.bitBucket.password,
     basePath: db.bitBucket.basePath
   },
+	aws: {
+		s3: {
+			bucketWrite: 'compass-development-storage',
+			bucket: 'compass-development-storage'
+		}
+	},
   emailUrl:{
     host: ''
   },

@@ -3,7 +3,7 @@ const aws = require('aws-sdk');
 const db = require('../../config/db');
 const fs = require('fs');
 const internals = {};
-console.log('db', db);
+
 const s3Options = {
   accessKeyId: db.aws.key,
   secretAccessKey: db.aws.secret

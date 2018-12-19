@@ -1,17 +1,9 @@
 const db = require('../db');
-const { Services, ServiceTypes }  = db.models;
-
-// Services
-const defaultServiceAttributes = [
-  'id',
-  'usersId',
-  'serviceTypesId',
-  'name',
-  'status'
-];
+const constants = require('../constants');
+const { Services, ServiceTypes } = db.models;
 
 exports.getAllServices = () => Services.findAndCountAll({
-  attributes: defaultServiceAttributes,
+  attributes: constants.DEFAULT_USER_SERVICES_ATTRIBUTES,
   where: {
     status: 1
   }
@@ -27,7 +19,7 @@ exports.getServicesByUser = (param) => {
     }
   
     Services.findAndCountAll({
-      attributes: defaultServiceAttributes,
+      attributes: constants.DEFAULT_USER_SERVICES_ATTRIBUTES,
       where: condition
     }).then(resolve).catch(reject);
   });
@@ -79,7 +71,7 @@ exports.getServiceTypeAndServices = (query) => {
   
     ServiceTypes.findAndCountAll({
       include: {
-        attributes: defaultServiceAttributes,
+        attributes: constants.DEFAULT_USER_SERVICES_ATTRIBUTES,
         model: Services,
         where: {
           status: 1,

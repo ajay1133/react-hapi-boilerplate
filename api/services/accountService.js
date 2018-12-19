@@ -8,6 +8,7 @@ const Boom = require('boom');
 const User = db.models.User;
 const jwtHelper = require('../helpers/jwtHelper');
 const mailer = require('../mailer');
+const constants = require('../constants');
 
 /**
  * Create a user
@@ -66,6 +67,7 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
   
 	User
     .findAndCountAll({
+	    attributes: constants.DEFAULT_USER_ATTRIBUTES,
       where: {
         role: 2,
         $and: conditionArr
@@ -82,6 +84,7 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
 exports.getUser = async (userId) => {
   try {
     let userDetails = await User.findOne({
+      attributes: constants.DEFAULT_USER_ATTRIBUTES,
       where: { id: userId }
     });
     
