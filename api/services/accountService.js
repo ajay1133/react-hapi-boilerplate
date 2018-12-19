@@ -50,8 +50,14 @@ exports.createUser = async (userPayload) =>  {
  * Return all user accounts for management
  */
 exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
-  const { status, keyword } = query;
+  const { status, keyword, Page, Limit } = query;
   let conditionArr = [];
+  
+  let page = (!Page || Page < 1) ? 1 : Page;
+  let limit = Limit;
+  
+  let offset = page - 1;
+  offset *= limit;
   
   if (status) {
     conditionArr.push({ status });
@@ -71,7 +77,9 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
       where: {
         role: 2,
         $and: conditionArr
-      }
+      },
+      offset,
+      limit
     })
     .then(resolve)
     .catch (reject);
