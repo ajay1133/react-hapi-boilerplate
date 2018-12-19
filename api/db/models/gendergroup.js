@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const genderGroup = sequelize.define('genderGroup', {
+  const genderGroup = sequelize.define('genderGroups', {
     userId: DataTypes.INTEGER,
     gendertypeId: DataTypes.INTEGER
   }, {});
