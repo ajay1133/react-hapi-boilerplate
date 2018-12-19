@@ -43,6 +43,8 @@ export const MD_META_INITIAL_VALUES = {
 
 export const VALID_ACCESSIBLE_FILE_FORMATS = ['md'];
 
+export const VALID_ACCESSIBLE_IMAGE_FILE_FORMATS = ['jpg', 'jpeg', 'png', 'gif'];
+
 export const DEFAULT_BITBUCKET_LIST_FILTERS = {
 	path: DEFAULT_ACCESSIBLE_ROOT_PATH,
 	page: 1
@@ -54,3 +56,24 @@ DEFAULT_HOME_PAGE_ROUTES[1] = '/accounts';
 DEFAULT_HOME_PAGE_ROUTES[2] = '/profile';
 
 export const DEFAULT_PASSWORD_MIN_LENGTH = 6;
+
+export const USER_PROFILE_TABS = [
+	'profileDetails',
+	'userServices',
+	'password'
+];
+
+export const USER_PROFILE_DETAILS_FORM_KEYS = [
+	'title',
+	'firstName',
+	'lastName',
+	'email',
+	'phone',
+	'url',
+	'description'
+];
+
+export const USER_PASSWORD_SECTION_FORM_KEYS = [
+	'password',
+	'confirmPassword'
+];

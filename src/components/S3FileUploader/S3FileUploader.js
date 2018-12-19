@@ -10,7 +10,8 @@ export default class S3FileUploader extends React.Component {
       fileName: PropTypes.string,
       signingUrl: PropTypes.string.isRequired,
       onFileUpload: PropTypes.func.isRequired,
-      resetOnComplete: PropTypes.func
+      resetOnComplete: PropTypes.func,
+	    toShowContent: PropTypes.string
     };
   }
   
@@ -54,7 +55,7 @@ export default class S3FileUploader extends React.Component {
   };
   
   render () {
-    const { fileName, signingUrl, onFileUpload } = this.props;
+    const { fileName, signingUrl, onFileUpload, toShowContent } = this.props;
     const { files } = this.state;
     
     const style = {
@@ -62,10 +63,11 @@ export default class S3FileUploader extends React.Component {
       borderColor: '#000',
       borderStyle: 'dashed',
       borderRadius: '2px',
-      padding: '14px',
-      margin: '14px 0'
+      padding: '5px',
+      margin: '5px 0'
     };
     
+    const defaultContent = ' Drag & Drop or Select a file to upload';
     return (
       <div style={{ cursor: 'cross-hair' }}>
         <DropZone
@@ -75,7 +77,7 @@ export default class S3FileUploader extends React.Component {
         >
           <div className="text-center">
             <Icon size="big" name="cloud upload" />
-            Try dropping a file here, or click to select a file to upload.
+            { toShowContent || defaultContent }
           </div>
         </DropZone>
         {

@@ -2,7 +2,12 @@ import Immutable from 'immutable';
 import orderBy from 'lodash/orderBy';
 import { load } from './auth';
 import { updateBitBucketFile, deleteBitBucketFile } from './bitBucketRepo';
-import { strictValidObjectWithKeys, typeCastToString, strictValidArrayWithLength } from '../../utils/commonutils';
+import {
+	strictValidObjectWithKeys,
+	typeCastToString,
+	strictValidArrayWithLength,
+	getAbsoluteS3FileUrl
+} from '../../utils/commonutils';
 import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
 
 const LOAD = 'account/LOAD';
@@ -197,10 +202,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
   dispatch({ type: ACCOUNT });
   
   try {
-    let addFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 1 });
-    addFileData.message = `Added: ${addFileData.path}`;
-    
-    await dispatch(updateBitBucketFile(addFileData));
+    await(dispatch(internals.updateBitBucketFile(accountDetails, 1)));
 	  accountDetails.status = 2;
     
     await api.post('/account', { data: accountDetails });
@@ -263,11 +265,8 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
       if (accountDetails.status === 1) {
         accountDetails.active = true;
       }
-      
-      let updateFileData = Object.assign({}, internals.getFileContent(accountDetails), { type: 2 });
-      updateFileData.message = `Updated: ${updateFileData.path}`;
-      
-      await dispatch(updateBitBucketFile(updateFileData));
+	
+	    await(dispatch(internals.updateBitBucketFile(accountDetails, 2)));
     }
     
     delete accountDetails.active;
@@ -294,7 +293,7 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 		
 		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails)) {
 			const fileContentObj = Object.assign({ active: true }, formData.profileDetails);
-			await dispatch(internals.updateBitBucketFile(fileContentObj));
+			await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			await api.put(`/account/${id}`, { data: formData.profileDetails });
 			await dispatch(load(true));
     } else if (strictValidObjectWithKeys(formData) && strictValidArrayWithLength(formData.userServices)) {
@@ -346,7 +345,7 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			
 			if (toUpdateBitBucketFlag) {
 				const fileContentObj = Object.assign({ active: true }, formData.profileDetails);
-				await dispatch(internals.updateBitBucketFile(fileContentObj));
+				await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			}
 		} else if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.password)) {
 		  const updatePasswordObj = {
@@ -437,9 +436,14 @@ internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES
 	}, defaultTimeout || DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
 };
 
-internals.updateBitBucketFile = (fileContentObj) => {
+internals.updateBitBucketFile = (fileContentObj, type) => {
 	return dispatch => async () => {
-		let updateFileData = Object.assign({}, internals.getFileContent(fileContentObj), { type: 2 });
+		if (fileContentObj.image) {
+			debugger;
+			fileContentObj.image = getAbsoluteS3FileUrl(fileContentObj.image);
+		}
+		debugger;
+		let updateFileData = Object.assign({}, internals.getFileContent(fileContentObj), { type });
 		updateFileData.message = `Updated: ${updateFileData.path}`;
 		
 		await dispatch(updateBitBucketFile(updateFileData));
