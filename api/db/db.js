@@ -56,8 +56,19 @@ const db = new Sequelize(settings.database, settings.username, settings.password
 
 db.models = {};
 db.models.User = db.import('./models/User');
+
 db.models.ServiceTypes = db.import('./models/servicetypes');
 db.models.Services = db.import('./models/services');
+
+db.models.AgeGroup = db.import('./models/agegroup');
+db.models.AgeType = db.import('./models/agetype');
+
+db.models.GenderGroup = db.import('./models/gendergroup');
+db.models.GenderType = db.import('./models/gendertype');
+
+db.models.TreatmentFocus = db.import('./models/treatmentfocus');
+db.models.TreatmentFocusTypes = db.import('./models/treatmentfocustypes');
+
 
 // Associations
 const models = db.models;
