@@ -8,7 +8,7 @@ const defaultTreatmentFocusAttributes = [
   'treatmentfocustypeId'
 ];
 
-exports.getAllTreatmentFocuss = () => TreatmentFocus.findAndCountAll({
+exports.getAllTreatmentFocus = () => TreatmentFocus.findAndCountAll({
   attributes: defaultTreatmentFocusAttributes
 });
 
@@ -38,7 +38,7 @@ const defaultTreatmentFocusTypesAttributes = [
   'status'
 ];
 
-exports.getAllTreatmentFocusTypess = () => TreatmentFocusTypes.findAndCountAll({
+exports.getAllTreatmentFocusTypes = () => TreatmentFocusTypes.findAndCountAll({
   attributes: defaultTreatmentFocusTypesAttributes,
   where: {
     status: 1
@@ -47,7 +47,7 @@ exports.getAllTreatmentFocusTypess = () => TreatmentFocusTypes.findAndCountAll({
 
 exports.createTreatmentFocusTypes = (payload) => TreatmentFocusTypes.create(payload);
 
-exports.createBulkTreatmentFocusTypess = (payload) => payload && Array.isArray(payload) && !!payload.length &&
+exports.createBulkTreatmentFocusTypes = (payload) => payload && Array.isArray(payload) && !!payload.length &&
 TreatmentFocusTypes.bulkCreate(payload);
 
 exports.updateTreatmentFocusTypes = (payload, id) => TreatmentFocusTypes.update(payload, { where: { id } });
