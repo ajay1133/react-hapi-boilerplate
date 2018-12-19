@@ -5,7 +5,7 @@ const { GenderGroup, GenderType }  = db.models;
 const defaultGenderGroupAttributes = [
   'id',
   'userId',
-  'gendertypeId '
+  'gendertypeId'
 ];
 
 exports.getAllGenderGroups = () => GenderGroup.findAndCountAll({

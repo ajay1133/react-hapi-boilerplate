@@ -7,7 +7,7 @@ module.exports = [
     config: require('./listAllAgeTypes'),
   },
   {
-    path: `${prefix}/services`,
+    path: `${prefix}/ageGroup`,
     method: 'GET',
     config: require('./listAgeTypesAndAgeGroup'),
   },

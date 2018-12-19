@@ -1,6 +1,6 @@
 const joi = require('joi');
 const boom = require('boom');
-const ageService = require('../../services/ageService');
+const genderService = require('../../services/genderService');
 
 module.exports = {
   plugins: {
@@ -13,24 +13,24 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'ageGroup'],
+  tags: ['api', 'genderGroup'],
   
-  description: 'Update age Group',
+  description: 'Update gender Group',
   
-  notes: 'Update age Group',
+  notes: 'Update gender Group',
   
   validate: {
     params: {
       id: joi.number()
-             .description('PK of ageGroup')
+             .description('PK of genderGroup')
     },
     payload: {
       userId: joi.number()
                   .description('PK of Users')
                   .required(),
-      
-      agetypeId: joi.number()
-                         .description('PK of ageTypes')
+  
+      gendertypeId: joi.number()
+                         .description('PK of genderTypes')
                          .required()
     },
     options: { abortEarly: false },
@@ -41,7 +41,7 @@ module.exports = {
     const { id } = params;
     
     try {
-      let data = await ageService.updateAgeGroup(payload, id);
+      let data = await genderService.updateGenderGroup(payload, id);
       return h.response(data);
     } catch(err) {
       return boom.badRequest(err);

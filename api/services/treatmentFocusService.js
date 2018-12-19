@@ -5,7 +5,7 @@ const { TreatmentFocus, TreatmentFocusTypes }  = db.models;
 const defaultTreatmentFocusAttributes = [
   'id',
   'userId',
-  'treatmentfocustypeId '
+  'treatmentfocustypeId'
 ];
 
 exports.getAllTreatmentFocuss = () => TreatmentFocus.findAndCountAll({

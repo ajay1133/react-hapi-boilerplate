@@ -1,29 +1,29 @@
-const prefix = '/ageGroup';
+const prefix = '/genderGroup';
 
 module.exports = [
   {
     path: prefix,
     method: 'GET',
-    config: require('./listAllAgeGroup'),
+    config: require('./listAllGenderGroup'),
   },
   {
     path: `${prefix}/byUser/{userId}`,
     method: 'GET',
-    config: require('./listAllAgeGroupByUser'),
+    config: require('./listAllGenderGroupByUser'),
   },
   {
     path: `${prefix}`,
     method: 'POST',
-    config: require('./addAgeGroup'),
+    config: require('./addGenderGroup'),
   },
   {
     path: `${prefix}/{id}`,
     method: 'PUT',
-    config: require('./updateAgeGroup'),
+    config: require('./updateGenderGroup'),
   },
   {
     path: `${prefix}/delete`,
     method: 'POST',
-    config: require('./deleteAgeGroup'),
+    config: require('./deleteGenderGroup'),
   }
 ];

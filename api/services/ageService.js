@@ -5,7 +5,7 @@ const { AgeGroup, AgeType }  = db.models;
 const defaultAgeGroupAttributes = [
   'id',
   'userId',
-  'agetypeId '
+  'agetypeId'
 ];
 
 exports.getAllAgeGroups = () => AgeGroup.findAndCountAll({
