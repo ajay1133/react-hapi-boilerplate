@@ -64,10 +64,12 @@ export default class S3FileUploader extends React.Component {
       borderStyle: 'dashed',
       borderRadius: '2px',
       padding: '5px',
-      margin: '5px 0'
+	    width: '53%',
+	    margin: '15px auto',
     };
     
     const defaultContent = ' Drag & Drop or Select a file to upload';
+    
     return (
       <div style={{ cursor: 'cross-hair' }}>
         <DropZone
@@ -84,16 +86,14 @@ export default class S3FileUploader extends React.Component {
           !!files.length &&
           <List divided relaxed>
 	          {
-	            this.state.files.map(file => (
-                <FileUploader
-                  fileName={ fileName }
-                  key={ `img-${file.name}` }
-                  file={ file }
-                  onFileUpload={ onFileUpload }
-                  onUploadComplete={ this.uploadCompleted }
-                  signingUrl={ signingUrl }
-                />
-	            ))
+	            <FileUploader
+                fileName={ fileName }
+                key={ `img-${files[files.length - 1].name}` }
+                file={ files[files.length - 1] }
+                onFileUpload={ onFileUpload }
+                onUploadComplete={ this.uploadCompleted }
+                signingUrl={ signingUrl }
+		          />
 	          }
           </List>
         }

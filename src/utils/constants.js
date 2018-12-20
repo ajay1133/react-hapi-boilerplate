@@ -77,3 +77,5 @@ export const USER_PASSWORD_SECTION_FORM_KEYS = [
 	'password',
 	'confirmPassword'
 ];
+
+export const DEFAULT_USER_PROFILE_IMAGE_URL = 'images/default_User_Profile_Image.png';

@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import { Field, reduxForm, formValueSelector, SubmissionError } from 'redux-form/immutable';
-import {Grid, Message, Loader, Tab, Header, List, Button, Form, Image} from  'semantic-ui-react';
+import {Grid, Message, Loader, Tab, Header, Icon, Button, Form, Image} from  'semantic-ui-react';
 import {TextBox, TextArea} from '../../components/Form';
 import { required, email, normalizePhone, url, passwordValidator } from '../../utils/validations';
 import {
@@ -18,7 +18,8 @@ import {
 	USER_PROFILE_TABS,
 	USER_PROFILE_DETAILS_FORM_KEYS,
 	USER_PASSWORD_SECTION_FORM_KEYS,
-	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS
+	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS,
+	DEFAULT_USER_PROFILE_IMAGE_URL
 } from '../../utils/constants';
 import { verifyUser } from '../../redux/modules/auth';
 import { loadUserServices, updateUserProfile } from '../../redux/modules/account';
@@ -90,7 +91,6 @@ export default class Profile extends Component {
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.handleProfileImageFinishedUpload = this.handleProfileImageFinishedUpload.bind(this);
 		this.resetProfileImageOnComplete = this.resetProfileImageOnComplete.bind(this);
-		this.handleUserImageReset = this.handleUserImageReset.bind(this);
 	};
 	
 	componentDidMount = async () => {
@@ -170,12 +170,11 @@ export default class Profile extends Component {
 	};
 
 	getProfileTabsSection = () => {
-		const { dispatch } = this.props;
-		const { uploadProfileImageError, uploadProfileImageUrl, uploadProfileImageName } = this.state;
+		const { uploadProfileImageError, uploadProfileImageUrl } = this.state;
 		
 		return (
 		  <Grid>
-			  <Grid.Row>
+			  <Grid.Row stretched>
 				  <Grid.Column computer="10">
 					  <Header size='medium'>Profile Details</Header>
 					  <Grid>
@@ -236,47 +235,35 @@ export default class Profile extends Component {
 				  </Grid.Column>
 				  <Grid.Column computer="6">
 					  {
-					  	!!uploadProfileImageError &&
-						  <span style={{ color: 'red' }}>{ uploadProfileImageError }</span>
+						  !!uploadProfileImageError &&
+						  <Grid.Row columns="1">
+							  <Grid.Column>
+								  <span style={{ color: 'red' }}>{ uploadProfileImageError }</span>
+							  </Grid.Column>
+						  </Grid.Row>
 					  }
-					  {
-						  !!uploadProfileImageUrl && !uploadProfileImageError &&
-						  <Image
-							  src={ getAbsoluteS3FileUrl(uploadProfileImageUrl) }
-						    size="small"
-						    rounded
-						    alt="image"
-						    wrapped
-						  />
-					  }
-					  {
-						  !!uploadProfileImageName && !uploadProfileImageError &&
-						  <List divided relaxed celled>
-							  <List.Item>
-								  <List.Icon name="file" size="large" verticalAlign="middle" />
-								  <List.Content>
-									  <List.Description>{ uploadProfileImageName }</List.Description>
-								  </List.Content>
-							  </List.Item>
-						  </List>
-					  }
-					  {
-						  !!uploadProfileImageUrl &&
-						  <S3FileUploader
-							  signingUrl={`${config.apiHost}/aws/uploadFile/profileImages`}
-							  onFileUpload={ this.handleProfileImageFinishedUpload }
-							  resetOnComplete={ this.resetProfileImageOnComplete }
-							  toShowContent={ ' Change Photo' }
-						  />
-					  }
-					  {
-						  !!uploadProfileImageName &&
-						  <Button type="submit" primary>Save Photo</Button>
-					  }
-					  {
-						  !!uploadProfileImageName &&
-						  <Button type="button" primary onClick={() => dispatch(this.handleUserImageReset())}>Cancel</Button>
-					  }
+					  <Grid.Row>
+						  <Grid.Column>
+							  <Image
+								  src={ getAbsoluteS3FileUrl(uploadProfileImageUrl) || DEFAULT_USER_PROFILE_IMAGE_URL }
+								  size="small"
+								  rounded
+								  alt="image"
+								  fluid
+								  centered
+							  />
+						  </Grid.Column>
+					  </Grid.Row>
+					  <Grid.Row>
+						  <Grid.Column computer="4" className="profileUploader">
+							  <S3FileUploader
+								  signingUrl={`${config.apiHost}/aws/uploadFile/profileImages`}
+								  onFileUpload={ this.handleProfileImageFinishedUpload }
+								  resetOnComplete={ this.resetProfileImageOnComplete }
+								  toShowContent={ ' Change Photo' }
+							  />
+						  </Grid.Column>
+					  </Grid.Row>
 				  </Grid.Column>
 			  </Grid.Row>
 		  </Grid>
@@ -409,15 +396,6 @@ export default class Profile extends Component {
 				</Grid.Column>
 			</Grid>
 		);
-	};
-	
-	handleUserImageReset = () => {
-		const { user } = this.props;
-		
-		this.setState({
-			uploadProfileImageName: null,
-			uploadProfileImageUrl: user.image
-		})
 	};
 	
 	renderTabs = () => {
@@ -646,7 +624,7 @@ export default class Profile extends Component {
 		this.setState({ uploadProfileImageUrl: s3Key });
 	};
 	
-	resetProfileImageOnComplete = async ({ name }) => {
+	resetProfileImageOnComplete = ({ name }) => {
 		if (validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
 			this.setState({ uploadProfileImageName: name });
 		}
