@@ -4,26 +4,27 @@ const currentDate = new Date();
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.bulkInsert('genderTypes', [{
-        type: 'Co-Ed',
+    return queryInterface.bulkInsert('genderTypes', [
+      {
+        name: 'Co-Ed',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        type: 'Female',
+	      name: 'Female',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        type: 'Male',
+	      name: 'Male',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        type: 'LGBT Friendly',
+	      name: 'LGBT Friendly',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate

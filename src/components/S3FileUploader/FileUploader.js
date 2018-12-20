@@ -85,30 +85,30 @@ export default class FileUploader extends React.Component {
     const textClsName = completed ? 'text-success' : clsNormal;
     
     return (
-      <List.Item>
-        {
-          this.isImg(file.name) && <Image src={ file.preview } size="tiny" />
-        }
-        <List.Content>
-          <List.Header>{ file.name }</List.Header>
-          {
-            !err &&
-            (
-              <div>
-                <ProgressBar progressValue={ progress } />
-                <p className={ textClsName }>
-                  <strong>
-                    { completed ? 'Saving details' : status } { progress > 0 && progress < 100 ? `${progress}%` : '' }
-                  </strong>
-                </p>
-              </div>
-            )
-          }
-          {
-            err && <p className="text-danger">{ err }</p>
-          }
-        </List.Content>
-      </List.Item>
+      <div className="text-center">
+        <List.Item>
+          <List.Content>
+            <List.Header>{ file.name }</List.Header>
+            {
+              !err &&
+              (
+                <div>
+                  <ProgressBar progressValue={ progress } />
+                  <p className={ textClsName }>
+                    <strong>
+                      { completed ? 'Saving details' : status }
+                      { progress > 0 && progress < 100 ? `${progress}%` : '' }
+                    </strong>
+                  </p>
+                </div>
+              )
+            }
+            {
+              err && <p className="text-danger">{ err }</p>
+            }
+          </List.Content>
+        </List.Item>
+      </div>
     );
   }
 }
