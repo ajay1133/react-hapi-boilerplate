@@ -436,18 +436,15 @@ internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES
 	}, defaultTimeout || DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
 };
 
-internals.updateBitBucketFile = (fileContentObj, type) => {
-	return dispatch => async () => {
-		if (fileContentObj.image) {
-			debugger;
-			fileContentObj.image = getAbsoluteS3FileUrl(fileContentObj.image);
-		}
-		debugger;
-		let updateFileData = Object.assign({}, internals.getFileContent(fileContentObj), { type });
-		updateFileData.message = `Updated: ${updateFileData.path}`;
-		
-		await dispatch(updateBitBucketFile(updateFileData));
-	};
+internals.updateBitBucketFile = (fileContentObj, type) => async (dispatch, getState, api) => {
+	if (fileContentObj.image) {
+		fileContentObj.image = getAbsoluteS3FileUrl(fileContentObj.image);
+	}
+	
+	let updateFileData = Object.assign({}, internals.getFileContent(fileContentObj), { type });
+	updateFileData.message = `Updated: ${updateFileData.path}`;
+	
+	await dispatch(updateBitBucketFile(updateFileData));
 };
 
 internals.getFileContent = (accountDetails) => {
