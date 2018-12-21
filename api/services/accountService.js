@@ -1,5 +1,6 @@
 const assert = require('assert');
 const sequelize = require('sequelize');
+const config = require('config');
 const i18n = require('../helpers/i18nHelper');
 const db = require('../db');
 const cryptoHelper = require('../helpers/cryptoHelper');
@@ -7,7 +8,7 @@ const logger = require('../helpers/logHelper');
 const Boom = require('boom');
 const User = db.models.User;
 const jwtHelper = require('../helpers/jwtHelper');
-const mailer = require('../mailer');
+const { userRegistration } = require('../mailer');
 const constants = require('../constants');
 
 /**
@@ -40,6 +41,14 @@ exports.createUser = async (userPayload) =>  {
     }
     
     const result = await User.create(userData);
+    // User Registration Email
+    const url = config.BasePath.host;
+    const subject = ' Welcome to Compass';
+    const model = {
+      inviteLink: `${url}/accept/invitation/${userData.inviteToken}`,
+      name: userPayload.firstName + ' ' + userPayload.lastName,
+    };
+    await userRegistration(userPayload.email, subject, model);
     return result;
   } catch(err) {
     return err;
