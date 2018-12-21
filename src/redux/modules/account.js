@@ -202,7 +202,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
   dispatch({ type: ACCOUNT });
   
   try {
-    await(dispatch(internals.updateBitBucketFile(accountDetails, 1)));
+//    await(dispatch(internals.updateBitBucketFile(accountDetails, 1)));
 	  accountDetails.status = 2;
     
     await api.post('/account', { data: accountDetails });
