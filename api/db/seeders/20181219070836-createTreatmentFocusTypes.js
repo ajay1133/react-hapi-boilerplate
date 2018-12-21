@@ -5,7 +5,7 @@ const currentDate = new Date();
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.bulkInsert('treatmentFocusTypes', [{
-        name: 'Self Pay fee',
+        name: 'Self Pay Fee',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate

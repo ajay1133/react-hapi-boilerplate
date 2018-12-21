@@ -5,6 +5,7 @@ import RichEditor from './RichEditor';
 import TextArea from './TextArea';
 import TextBox from './TextBox';
 import DropDown from './Dropdown';
+import CheckBox from './CheckBox';
 
 export {
   ErrorText,
@@ -13,5 +14,6 @@ export {
   RichEditor,
   TextArea,
   TextBox,
-  DropDown
+  DropDown,
+	CheckBox
 };

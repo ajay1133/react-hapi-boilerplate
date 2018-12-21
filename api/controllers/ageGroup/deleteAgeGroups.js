@@ -1,6 +1,6 @@
 const joi = require('joi');
 const boom = require('boom');
-const genderService = require('../../services/genderService');
+const userService = require('../../services/ageService');
 
 module.exports = {
   plugins: {
@@ -13,19 +13,19 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'genderGroup'],
+  tags: ['api', 'ageGroup'],
   
-  description: 'Delete gender Group',
+  description: 'Delete age Groups',
   
-  notes: 'Delete gender Group',
+  notes: 'Delete age Groups',
   
   validate: {
     payload: {
-      genderGroupIds: joi.array()
+      ids: joi.array()
                      .single()
                      .items(
                        joi.number()
-                          .description('PK of gender Group')
+                          .description('PK of age Group')
                      )
     },
     options: { abortEarly: false },
@@ -33,13 +33,13 @@ module.exports = {
   
   handler: async (request, h) => {
     const { payload } = request;
-    const { genderGroupIds } = payload;
+    const { ids } = payload;
     
     try {
       let promisesList = [];
-  
-      genderGroupIds.forEach(genderGroupId => {
-        promisesList.push(genderService.deleteGenderGroup(genderGroupId));
+      
+      ids.forEach(ageGroupId => {
+        promisesList.push(userService.deleteAgeGroup(ageGroupId));
       });
       
       const data = await Promise.all(promisesList);

@@ -6,7 +6,8 @@ import {
 	strictValidObjectWithKeys,
 	typeCastToString,
 	strictValidArrayWithLength,
-	getAbsoluteS3FileUrl
+	getAbsoluteS3FileUrl,
+	strictValidString
 } from '../../utils/commonutils';
 import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
 
@@ -29,7 +30,7 @@ const UPDATE_PASSWORD_FAIL = 'account/UPDATE_PASSWORD_FAIL';
 const UPDATED_PROFILE = 'account/UPDATED_PROFILE';
 const SELECT_USER = 'account/SELECT_USER';
 
-const LOAD_USER_SERVICES = 'account/LOAD_USER_SERVICES';
+const LOAD_USER_PROFILE_RELATED_DATA = 'account/LOAD_USER_PROFILE_RELATED_DATA';
 
 const RESET_MESSAGE = 'account/RESET_MESSAGE';
 const FLUSH = 'account/FLUSH';
@@ -47,7 +48,14 @@ const initialState = Immutable.fromJS({
 	passwordUpdated: false,
 	passwordUpdatedMsg: null,
   serviceTypes: [],
-  userServices: []
+  userServices: [],
+	genderTypes: [],
+	userDetails: {},
+	userGenderGroups: [],
+	ageTypes: [],
+	userAgeGroups: [],
+	treatmentFocusTypes: [],
+	userTreatmentFocusGroups: []
 });
 
 const internals = {};
@@ -140,10 +148,17 @@ export default function reducer(state = initialState, action) {
       return state
         .set('accountMsg', action.message);
 	
-    case LOAD_USER_SERVICES:
+    case LOAD_USER_PROFILE_RELATED_DATA:
       return state
         .set('serviceTypes', action.serviceTypes)
-        .set('userServices', action.userServices);
+        .set('userServices', action.userServices)
+        .set('genderTypes', action.genderTypes)
+        .set('userGenderGroups', action.userGenderGroups)
+        .set('ageTypes', action.ageTypes)
+        .set('userAgeGroups', action.userAgeGroups)
+        .set('treatmentFocusTypes', action.treatmentFocusTypes)
+        .set('userTreatmentFocusGroups', action.userTreatmentFocusGroups)
+        .set('userDetails', action.userDetails);
       
 	  case RESET_MESSAGE:
 		  return state
@@ -356,7 +371,13 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			await dispatch(updatePassword(updatePasswordObj, true));
 			await dispatch(load(true));
 		}
-  
+		
+		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.otherDetails)) {
+			await Promise.all(Object.keys(formData.otherDetails).map(detail =>
+				dispatch(internals.addAndDeleteMultipleTypes(formData.otherDetails[detail], detail))
+			));
+		}
+		
 		dispatch({ type: LOAD_SUCCESS });
 		dispatch({ type: UPDATED_PROFILE, message: 'Updated Successfully !!' });
 		dispatch(internals.resetMessage());
@@ -392,23 +413,63 @@ export const updatePassword = (accountDetails, withoutTokenFlag = false) => asyn
   }
 };
 
-export const loadUserServices = () => async (dispatch, getState, api) => {
+export const loadUserProfileRelatedData = () => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
 	
 	try {
 	  const { id } = getState().get('auth').get('user');
-	  let serviceTypes = await api.get(`/serviceTypes`);
-		let userServices = await api.get(`/services/byUser/${id}`);
+	  
+	  const serviceTypes = await api.get(`/serviceTypes`);
+		const userServices = await api.get(`/services/byUser/${id}`);
+		const genderTypes = await api.get(`/genderTypes`);
+		const userGenderGroups = await api.get(`/genderGroup/byUser/${id}`);
+		const ageTypes = await api.get(`/ageTypes`);
+		const userAgeGroups = await api.get(`/ageGroup/byUser/${id}`);
+		const treatmentFocusTypes = await api.get(`/treatmentFocusTypes`);
+		const userTreatmentFocusGroups = await api.get(`/treatmentFocusGroup/byUser/${id}`);
+		
 		dispatch({ type: LOAD_SUCCESS });
-		dispatch({
-      type: LOAD_USER_SERVICES,
-      serviceTypes: (strictValidObjectWithKeys(serviceTypes) && serviceTypes.rows) || [],
-			userServices: (strictValidObjectWithKeys(userServices) && userServices.rows) || []
-		});
-		return {
+		
+		const userDetailsObj = {
 			serviceTypes: (strictValidObjectWithKeys(serviceTypes) && serviceTypes.rows) || [],
-			userServices: (strictValidObjectWithKeys(userServices) && userServices.rows) || []
+			userServices: (strictValidObjectWithKeys(userServices) && userServices.rows) || [],
+			genderTypes: (strictValidObjectWithKeys(genderTypes) && genderTypes.rows) || [],
+			userGenderGroups: (strictValidObjectWithKeys(userGenderGroups) && userGenderGroups.rows) || [],
+			ageTypes: (strictValidObjectWithKeys(ageTypes) && ageTypes.rows) || [],
+			userAgeGroups: (strictValidObjectWithKeys(userAgeGroups) && userAgeGroups.rows) || [],
+			treatmentFocusTypes: (strictValidObjectWithKeys(treatmentFocusTypes) && treatmentFocusTypes.rows) || [],
+			userTreatmentFocusGroups:
+			  (strictValidObjectWithKeys(userTreatmentFocusGroups) && userTreatmentFocusGroups.rows) || []
 		};
+		
+		const serviceType = [];
+		
+		userDetailsObj.userServices.forEach(service => {
+			const indexOfServiceType = service.serviceTypesId - 1;
+			if (!(indexOfServiceType in serviceType)) {
+				serviceType[indexOfServiceType] = [];
+			}
+			serviceType[indexOfServiceType].push(service.name);
+		});
+		
+		const genderType = userDetailsObj.genderTypes
+			.map(v => !!userDetailsObj.userGenderGroups.filter(g => v.status && g.gendertypeId === v.id).length);
+		const ageType = userDetailsObj.ageTypes
+			.map(v => !!userDetailsObj.userAgeGroups.filter(g => v.status && g.agetypeId === v.id).length);
+		const treatmentFocusType = userDetailsObj.treatmentFocusTypes
+			.map(v =>
+				!!userDetailsObj.userTreatmentFocusGroups.filter(g => v.status && g.treatmentfocustypeId === v.id).length
+			);
+		
+		userDetailsObj.userDetails = Object.assign({}, {
+			serviceType,
+			genderType,
+			ageType,
+			treatmentFocusType
+		});
+		
+		dispatch(Object.assign({}, { type: LOAD_USER_PROFILE_RELATED_DATA }, userDetailsObj));
+		return userDetailsObj.userDetails;
   } catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 		dispatch(internals.resetMessage());
@@ -445,6 +506,44 @@ internals.updateBitBucketFile = (fileContentObj, type) => async (dispatch, getSt
 	updateFileData.message = `Updated: ${updateFileData.path}`;
 	
 	await dispatch(updateBitBucketFile(updateFileData));
+};
+
+internals.addAndDeleteMultipleTypes = (formTypeValuesList, type) => async (dispatch, getState, api) => {
+	try {
+	  const addList = [];
+	  const deleteList = [];
+	  const { id } = getState().get('auth').get('user') || {};
+		const typesList = getState().get('account').get(`${type}s`) || [];
+		const isValidDataFlag = strictValidString(type) && strictValidArrayWithLength(typesList);
+		
+		if (isValidDataFlag) {
+			const currentTypeValuesList = getState().get('account').get('userDetails')[type] || [];
+			const urlFragment = type.substr(0, type.length - 4) + 'Group';
+			
+			formTypeValuesList.forEach((formTypeValue, idx) => {
+				const typeId = (strictValidObjectWithKeys(typesList[idx]) && typesList[idx].id) || -1;
+				if (typeId >= -1) {
+					if (formTypeValue && !currentTypeValuesList[idx]) {
+						addList.push(typeId);
+					} else if (!formTypeValue && currentTypeValuesList[idx]) {
+						deleteList.push(typeId);
+					}
+				}
+			});
+			
+			if (strictValidArrayWithLength(addList)) {
+				await api.post(`/${urlFragment}`, { data: { userId: id, ids: addList } });
+			}
+			if (strictValidArrayWithLength(deleteList)) {
+				await api.post(`/${urlFragment}/delete`, { data: { ids: deleteList } });
+			}
+			
+			return true;
+		}
+	} catch (err) {
+		console.log(err);
+		return false;
+	}
 };
 
 internals.getFileContent = (accountDetails) => {

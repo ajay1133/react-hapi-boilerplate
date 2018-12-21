@@ -34,7 +34,7 @@ exports.deleteTreatmentFocus = (id) => TreatmentFocus.destroy({ where: { id } })
 // Service Types
 const defaultTreatmentFocusTypesAttributes = [
   'id',
-  'type',
+  'name',
   'status'
 ];
 
