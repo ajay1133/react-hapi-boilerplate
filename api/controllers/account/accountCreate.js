@@ -14,7 +14,7 @@ module.exports = {
   },
   auth: {
     strategy: 'default',
-    scope: ['admin']
+//    scope: ['admin']
   },
   tags: ['api', 'account'],
   description: 'Create user',
@@ -34,6 +34,7 @@ module.exports = {
                     .required(),
       
       lastName: joi.string()
+                   .default('')
                    .max(100)
                    .description('Last Name of User'),
       

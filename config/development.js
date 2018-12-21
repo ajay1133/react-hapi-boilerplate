@@ -36,3 +36,4 @@ module.exports = {
   },
   debugLog : 1, //Set 0 to disable and 1 to enable error logg
 };
+

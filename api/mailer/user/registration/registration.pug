@@ -1,0 +1,8 @@
+extends ../../layouts/default
+
+block content
+    h2 Account Confirmation Email
+    br
+    p Hi #{model.name}
+    p You are invited to join Compass Recovery Network. Click on below link to change your password.
+    a(href=model.inviteLink, title='Change Password', style='text-decoration:none;') Change Password
