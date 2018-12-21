@@ -1,4 +1,7 @@
+const userRegistration = require('./user/registration');
+const forgotPassword = require('./user/forgotPassword');
+
 module.exports = {
-  userRegistration: require('./user/registration'),
-  forgotPassword: require('./user/forgotPassword')
+  userRegistration,
+  forgotPassword
 };
