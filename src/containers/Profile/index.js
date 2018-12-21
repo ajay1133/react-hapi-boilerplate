@@ -624,9 +624,27 @@ export default class Profile extends Component {
 		this.setState({ uploadProfileImageUrl: s3Key });
 	};
 	
-	resetProfileImageOnComplete = ({ name }) => {
-		if (validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
-			this.setState({ uploadProfileImageName: name });
+	resetProfileImageOnComplete = async ({ name }) => {
+		const { dispatch } = this.props;
+		const { activeTab, uploadProfileImageUrl } = this.state;
+		
+		try {
+			if (validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
+				this.setState({ loading: true });
+				const formData = {
+					profileDetails: { image: uploadProfileImageUrl }
+				};
+				await dispatch(updateUserProfile(formData));
+				this.handleTabClick(activeTab);
+				this.setState({
+					loading: false,
+					uploadProfileImageName: name
+				});
+			}
+		} catch (err) {
+			throw new SubmissionError({
+				_error: typeCastToString(err) || 'Error updating profile image'
+			});
 		}
 	};
 	
