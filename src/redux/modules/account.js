@@ -7,9 +7,14 @@ import {
 	typeCastToString,
 	strictValidArrayWithLength,
 	getAbsoluteS3FileUrl,
-	strictValidString
+	strictValidString,
+	validObjectWithParameterKeys
 } from '../../utils/commonutils';
-import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
+import {
+	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
+	MD_FILE_META_DATA_KEYS,
+	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS
+} from '../../utils/constants';
 
 const LOAD = 'account/LOAD';
 const LOAD_SUCCESS = 'account/LOAD_SUCCESS';
@@ -183,7 +188,7 @@ export const loadAccounts = (params) => async (dispatch, getState, api) => {
   try {
     const res = await api.get('/account/all', { params });
     
-    if (strictValidObjectWithKeys(res) && res.message) {
+    if (validObjectWithParameterKeys(res, ['message'])) {
       dispatch({ type: LOAD_FAIL, error: res.message });
       return;
     }
@@ -217,13 +222,15 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
   dispatch({ type: ACCOUNT });
   
   try {
-    await(dispatch(internals.updateBitBucketFile(accountDetails, 1)));
 	  accountDetails.status = 2;
+    const res = await api.post('/account', { data: accountDetails });
     
-    await api.post('/account', { data: accountDetails });
-    dispatch(loadAccounts());
-    dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!' });
-	  dispatch(internals.resetMessage());
+    if (validObjectWithParameterKeys(res, ['id'])) {
+	    await dispatch(internals.updateBitBucketFile(res, 1));
+	    dispatch(loadAccounts());
+	    dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!' });
+	    dispatch(internals.resetMessage());
+    }
 	  
     return accountDetails;
   } catch (err) {
@@ -247,14 +254,11 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
     delete accountDetails.id;
     
     if (accountDetails.isDeleted) {
-      users.filter((user) => {
-        return user.id !== id;
-      });
+      users = users.filter(user => user.id !== id);
       
       // Delete file on BitBucket
-      const { firstName, lastName } = accountDetails;
       const deleteFileData = {
-        files: `/content/profile/${(firstName+lastName).trim()}.md`
+        files: `/content/profile/${(id).trim()}.md`
       };
       
       deleteFileData.message = `Deleted: ${deleteFileData.files}`;
@@ -263,16 +267,6 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
       users.map((user) => {
         if (user.id === id) {
           Object.assign(user, accountDetails);
-            user.title = accountDetails.title;
-            user.firstName = accountDetails.firstName;
-            user.lastName = accountDetails.lastName;
-            user.email = accountDetails.email;
-            user.phone = accountDetails.phone;
-            user.url = accountDetails.url;
-            user.description = accountDetails.description;
-            user.image = accountDetails.image;
-            user.featuredVideo = accountDetails.featuredVideo;
-            user.status = accountDetails.status;
         }
         return user;
       });
@@ -281,7 +275,7 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
         accountDetails.active = true;
       }
 	
-	    await(dispatch(internals.updateBitBucketFile(accountDetails, 2)));
+	    await dispatch(internals.updateBitBucketFile(Object.assign({ id }, accountDetails), 2));
     }
     
     delete accountDetails.active;
@@ -307,7 +301,7 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		
 		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails)) {
-			const fileContentObj = Object.assign({ active: true }, formData.profileDetails);
+			const fileContentObj = Object.assign({ active: true }, formData.profileDetails, { id });
 			await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			await api.put(`/account/${id}`, { data: formData.profileDetails });
 			await dispatch(load(true));
@@ -359,7 +353,7 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			}
 			
 			if (toUpdateBitBucketFlag) {
-				const fileContentObj = Object.assign({ active: true }, formData.profileDetails);
+				const fileContentObj = Object.assign({ active: true }, { id }, formData.userServices);
 				await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			}
 		} else if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.password)) {
@@ -462,14 +456,14 @@ export const loadUserProfileRelatedData = () => async (dispatch, getState, api) 
 			);
 		
 		userDetailsObj.userDetails = Object.assign({}, {
-			serviceType,
+			serviceType: [],
 			genderType,
 			ageType,
 			treatmentFocusType
 		});
 		
 		dispatch(Object.assign({}, { type: LOAD_USER_PROFILE_RELATED_DATA }, userDetailsObj));
-		return userDetailsObj.userDetails;
+		return { serviceType };
   } catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 		dispatch(internals.resetMessage());
@@ -497,15 +491,78 @@ internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES
 	}, defaultTimeout || DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
 };
 
-internals.updateBitBucketFile = (fileContentObj, type) => async (dispatch, getState, api) => {
+internals.updateBitBucketFile = (fileContentObj, type) => async (dispatch) => {
 	if (fileContentObj.image) {
 		fileContentObj.image = getAbsoluteS3FileUrl(fileContentObj.image);
 	}
 	
-	let updateFileData = Object.assign({}, internals.getFileContent(fileContentObj), { type });
+	const mdFileData = await dispatch(internals.getFileContent(fileContentObj));
+	let updateFileData = Object.assign({}, mdFileData, { type });
 	updateFileData.message = `Updated: ${updateFileData.path}`;
 	
 	await dispatch(updateBitBucketFile(updateFileData));
+};
+
+internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
+	let path = null;
+	let content = '';
+	
+	if (validObjectWithParameterKeys(fileContentObj, ['id'])) {
+		const serviceTypes = getState().get('account').get('serviceTypes');
+		const { id, serviceType = [] } = fileContentObj;
+		path = `/content/profile/${id}.md`;
+		
+		const extraMetaDataKeys = Object.keys(fileContentObj)
+			.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
+		const validMetaDataKeys = Object.keys(fileContentObj).filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
+		
+		content = '---\n';
+		
+		validMetaDataKeys.forEach(k => {
+			content += internals.addKeyValuePairAsString(k, fileContentObj[k], '\n');
+		});
+		
+		extraMetaDataKeys.forEach(k => {
+			content += internals.addKeyValuePairAsString(k, fileContentObj[k], '\n');
+		});
+		
+		content += '---\n';
+		
+		if (strictValidArrayWithLength(serviceType)) {
+			serviceType.forEach((serviceValuesList, idx) => {
+				content += `- ##### ${serviceTypes[idx].name.toUpperCase()}\n`;
+				serviceValuesList.forEach(serviceValue => {
+					content += `\n* ${serviceValue}`;
+					content += '\n>\n';
+				})
+			});
+		}
+	}
+	
+	return {
+		path,
+		content
+	};
+};
+
+internals.addKeyValuePairAsString = (k, v, append) => {
+	let str = '';
+	
+	if (!!v) {
+		if (['string', 'number', 'boolean'].indexOf(typeof v) > - 1) {
+			str = `${k} : ${v.toString()}`;
+			str += append ? `${append}` : '';
+		} else if (strictValidArrayWithLength(v)) {
+			str = `${k} : [${v.join(', ')}]`;
+		} else {
+			str = `${k} : [${JSON.stringify(v)}]`;
+		}
+	} else {
+		str = `${k} : `;
+	}
+	
+	str += append ? `${append}` : '';
+	return str;
 };
 
 internals.addAndDeleteMultipleTypes = (formTypeValuesList, type) => async (dispatch, getState, api) => {
@@ -544,82 +601,4 @@ internals.addAndDeleteMultipleTypes = (formTypeValuesList, type) => async (dispa
 		console.log(err);
 		return false;
 	}
-};
-
-internals.getFileContent = (accountDetails) => {
-  const {
-    firstName = '',
-    lastName = '',
-    title = '',
-    image = '',
-    featuredVideo = '',
-    phone = '',
-    address = '',
-    active = false,
-    description = '',
-    services = []
-  } = accountDetails;
-  
-  const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = services;
-  const path = `/content/profile/${(firstName+lastName).trim()}.md`;
-  
-  let content = `---
-title: "${title}"
-featured_video: "${featuredVideo}"
-image: ${image}
-contact: ${phone}
-address: "${address}"
-active: ${active}
-description: "${description}"
----
-
-
-`;
-  if (treatmentTypeArr) {
-    content += '- ##### TREATMENT TYPE\n';
-    treatmentTypeArr.map((val) => content += `\n* ${val}`);
-    content += `
-
->
-
-`;
-  }
-  
-  if (typeOfServicesArr) {
-    content += '- ##### TYPE OF SERVICES\n';
-    typeOfServicesArr.map((val) => content += `\n* ${val}`);
-    content += `
-
->
-
-`;
-  }
-  
-  if (levelOfCareArr) {
-    content += '- ##### LEVEL OF CARE\n';
-    levelOfCareArr.map((val) => content += `\n* ${val}`);
-    content += `
-
->
-
-`;
-  }
-  
-  if (treatmentFocusArr) {
-    content += '- ##### TREATMENT FOCUS\n';
-    treatmentFocusArr.map((val) => content += `\n* ${val}`);
-    content += `
-
->
-
-`;
-  }
-  
-  content += '<div class="row w100">' +
-             '<h5 class="w100">TREATMENT FOCUS</h5>' +
-              '<div class="clearfix"></div>' +
-                '<p>Self Pay fee,  Financing Available,Private Insurance ,  State Financial Aid,Scholarships </p>' +
-              '</div>';
-  
-  return { path, content } ;
 };

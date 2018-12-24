@@ -40,7 +40,7 @@ export const validObjectWithParameterKeys = (obj, parameterKeys = []) => strictV
 strictValidArrayWithLength(parameterKeys) && !!Object.keys(obj).filter(k => parameterKeys.indexOf(k) > -1).length;
 
 export const typeCastToString = str =>
-(str && ((strictValidString(str) && str) || JSON.stringify(str) || str.toString())) || '';
+(!!str && ((strictValidString(str) && str) || str.toString() || JSON.stringify(str))) || '';
 
 export const getFileExtension = fn => fn.substring(fn.lastIndexOf('.'), fn.length);
 

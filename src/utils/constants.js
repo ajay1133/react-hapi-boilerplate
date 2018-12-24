@@ -18,9 +18,36 @@ export const REPO_PATH = 'content/blog';
 
 export const DEFAULT_ACCESSIBLE_ROOT_PATH = `/${ROOT_BRANCH}/${REPO_PATH}`;
 
-export const MD_FILE_META_DATA_KEYS = ['title', 'image', 'description', 'draft'];
+export const MD_FILE_META_DATA_KEYS = [
+	'email',
+	'firstName',
+	'lastName',
+	'title',
+	'address',
+	'phone',
+	'url',
+	'description',
+	'image',
+	'featuredVideo',
+	'draft'
+];
 
-export const KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS = ['fileName', 'filePath', 'content'];
+export const KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS = [
+	'id',
+	'fileName',
+	'filePath',
+	'content',
+	'serviceType',
+	'hash',
+	'salt',
+	'role',
+	'status',
+	'isDeleted',
+	'inviteToken',
+	'inviteStatus',
+	'updatedAt',
+	'createdAt'
+];
 
 export const MD_FILE_DRAFT_OPTIONS_LIST = [
 	{
