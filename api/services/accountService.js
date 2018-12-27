@@ -116,6 +116,26 @@ exports.getUser = async (userId) => {
 };
 
 /**
+ * Get User on basis of user id
+ * @param userId
+ */
+exports.getUserByEmail = async (email) => {
+	try {
+		let userDetails = await User.findOne({
+			where: { email }
+		});
+		
+		if (userDetails) {
+			return userDetails.toJSON();
+		} else {
+			return Boom.internal('User Not Found');
+		}
+	} catch(err) {
+		return err;
+	}
+};
+
+/**
  * Update User
  * @param userPayload { email, password, firstName, lastName } etc
  */

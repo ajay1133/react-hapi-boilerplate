@@ -101,7 +101,7 @@ export default class Accounts extends Component {
       lastName: selectedUser.lastName,
       email: selectedUser.email,
       phone: selectedUser.phone,
-      url: selectedUser.url,
+      website: selectedUser.website,
       description: selectedUser.description,
       image: selectedUser.image,
       featuredVideo: selectedUser.featuredVideo
@@ -300,6 +300,14 @@ export default class Accounts extends Component {
                         />
                       ))
 					          }
+	                  {
+		                  !strictValidArrayWithLength(items) &&
+		                  <Table.Row>
+			                  <Table.Cell colSpan="100%" style={{ color: 'red', textAlign: 'center' }}>
+				                  No users found
+			                  </Table.Cell>
+		                  </Table.Row>
+	                  }
                   </Table.Body>
                 </Table>
 			          {

@@ -27,7 +27,7 @@ export const MD_FILE_META_DATA_KEYS = [
 	'title',
 	'address',
 	'phone',
-	'url',
+	'website',
 	'description',
 	'image',
 	'featuredVideo',
@@ -99,7 +99,7 @@ export const USER_PROFILE_DETAILS_FORM_KEYS = [
 	'lastName',
 	'email',
 	'phone',
-	'url',
+	'website',
 	'description'
 ];
 
@@ -109,3 +109,7 @@ export const USER_PASSWORD_SECTION_FORM_KEYS = [
 ];
 
 export const DEFAULT_USER_PROFILE_IMAGE_URL = 'images/default_User_Profile_Image.png';
+
+export const VALID_BEGIN_FILE_NAME = '^[_|0-9|a-z|A-Z]+';
+
+export const IMAGE_FILE_NAME_BEGIN_REG_EXP = '^[_|0-9|a-z|A-Z|//|-]+';

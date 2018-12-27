@@ -1,4 +1,5 @@
 import config from '../config';
+import { VALID_BEGIN_FILE_NAME } from './constants';
 
 export const strictValidArrayWithLength = arr => arr && Array.isArray(arr) && !!arr.length;
 
@@ -33,7 +34,7 @@ export const validFileName = (fileName, validExtensionsList = [], startingRegExp
 fileName && Array.isArray(validExtensionsList) &&
 !!validExtensionsList.length &&
 concatenateRegularExpressions([
-	(strictValidString(startingRegExp) && startingRegExp) || '^[_|0-9|a-z|A-Z]+',
+	(strictValidString(startingRegExp) && startingRegExp) || VALID_BEGIN_FILE_NAME,
 	validExtensionsList.map(v => (strictValidString(v) && `.${v}`) || '').join('|'),
 	'$'
 ]).test(fileName);

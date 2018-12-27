@@ -128,7 +128,7 @@ export default function reducer(state = initialState, action) {
     case VERIFY_TOKEN_SUCCESS:
       return state
         .set('tokenValid', action.res.tokenValid )
-        .set('confirmationErr', null);
+        .set('confirmationErr', action.res.tokenValid ? null : 'Invalid Token');
 
     case VERIFY_TOKEN_FAIL:
       return state
@@ -405,7 +405,7 @@ export const verifyToken = (inviteToken) => async (dispatch, getState, api) => {
   
   try {
     let res = await api.post('/account/verify/token', { data: {inviteToken} });
-    dispatch({ type: VERIFY_TOKEN_SUCCESS, res: res });
+    dispatch({ type: VERIFY_TOKEN_SUCCESS, res });
     return res;
   } catch (err) {
     dispatch({ type: VERIFY_TOKEN_FAIL, error: err.message || typeCastToString(err) });

@@ -43,7 +43,7 @@ module.exports = {
                 .allow(['', null])
                 .description('Phone of User'),
       
-      url: joi.string()
+      website: joi.string()
               .allow(['', null])
               .description('Url of User'),
       

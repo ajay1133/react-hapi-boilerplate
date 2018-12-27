@@ -19,7 +19,8 @@ import {
 	USER_PROFILE_DETAILS_FORM_KEYS,
 	USER_PASSWORD_SECTION_FORM_KEYS,
 	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS,
-	DEFAULT_USER_PROFILE_IMAGE_URL
+	DEFAULT_USER_PROFILE_IMAGE_URL,
+	IMAGE_FILE_NAME_BEGIN_REG_EXP
 } from '../../utils/constants';
 import { verifyUser } from '../../redux/modules/auth';
 import { loadUserProfileRelatedData, updateUserProfile } from '../../redux/modules/account';
@@ -224,6 +225,7 @@ export default class Profile extends Component {
 									  placeholder="Email"
 									  component={TextBox}
 									  validate={email}
+								    readOnly
 								  />
 							  </Grid.Column>
 						  </Grid.Row>
@@ -238,7 +240,7 @@ export default class Profile extends Component {
 							  </Grid.Column>
 							  <Grid.Column computer="8">
 								  <Field
-									  name="url"
+									  name="website"
 									  placeholder="Website Url"
 									  component={TextBox}
 									  validate={url}
@@ -603,13 +605,17 @@ export default class Profile extends Component {
 		const {
 			dispatch, genderTypesValuesList, ageTypesValuesList, treatmentFocusTypesValuesList
 		} = this.props;
-	  const { userVerifiedFlag, activeTab, serviceTypesFieldArray, uploadProfileImageUrl } = this.state;
+	  const {
+	  	userVerifiedFlag, activeTab, serviceTypesFieldArray, uploadProfileImageName, uploadProfileImageUrl
+	  } = this.state;
 		
 		this.props.change('_error', null);
 		
 		const dataObj = (strictValidObjectWithKeys(data.toJSON()) && data.toJSON()) || {};
 		
-		if (!validFileName(uploadProfileImageUrl, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS, '^[_|0-9|a-z|A-Z|//|-]+')) {
+		const inValidImageFileFlag = uploadProfileImageName && uploadProfileImageUrl &&
+			!validFileName(uploadProfileImageUrl, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS, IMAGE_FILE_NAME_BEGIN_REG_EXP);
+		if (inValidImageFileFlag) {
 			throw new SubmissionError({ _error:
 				'Invalid File Name, a valid image file should only have' +
 				'\'.jpg\', \'.jpeg\', \'.png\' or \'.gif\'  extension(s)'
