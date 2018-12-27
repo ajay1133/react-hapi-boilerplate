@@ -13,19 +13,21 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'treatmentFocus'],
+  tags: ['api', 'treatmentFocusGroups'],
   
-  description: 'Delete treatment Focus',
+  description: 'Delete treatment Focus Groups',
   
-  notes: 'Delete treatment Focus',
+  notes: 'Delete treatment Focus Groups',
   
   validate: {
     payload: {
-      treatmentFocusIds: joi.array()
+	    userId: joi.number(),
+      
+      typeIds: joi.array()
                      .single()
                      .items(
                        joi.number()
-                          .description('PK of treatment Focus')
+                          .description('PK of Treatment Focus Type id')
                      )
     },
     options: { abortEarly: false },
@@ -33,13 +35,13 @@ module.exports = {
   
   handler: async (request, h) => {
     const { payload } = request;
-    const { treatmentFocusIds } = payload;
+    const { userId, typeIds } = payload;
     
     try {
       let promisesList = [];
-  
-      treatmentFocusIds.forEach(treatmentFocusId => {
-        promisesList.push(treatmentFocusService.deleteTreatmentFocus(treatmentFocusId));
+	
+	    typeIds.forEach(treatmentfocustypeId => {
+        promisesList.push(treatmentFocusService.deleteTreatmentFocusByTypeId(treatmentfocustypeId));
       });
       
       const data = await Promise.all(promisesList);

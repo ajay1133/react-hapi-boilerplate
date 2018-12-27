@@ -15,39 +15,38 @@ module.exports = {
   
   tags: ['api', 'genderGroup'],
   
-  description: 'Create gender group',
+  description: 'Create gender groups',
   
-  notes: 'Create gender group',
+  notes: 'Create gender groups',
   
   validate: {
     payload: {
       userId: joi.number()
                  .required()
                  .description('PK of Users'),
-      
-      gender: joi.array()
-                   .single()
-                   .items(
-                     joi.object()
-                       .keys({
-                         gendertypeId: joi.number()
-                                            .required()
-                                            .description('PK of genderTypes')
-                       })
-                   )
+	
+	    ids: joi.array()
+	                    .single()
+	                    .items(
+		                    joi.number()
+		                       .description('PK of gender Group')
+	                    )
     },
     options: { abortEarly: false },
   },
   
   handler: async (request, h) => {
     const { payload } = request;
-    const { userId, gender } = payload;
+    const { userId, ids } = payload;
     
     try {
       let promisesList = [];
-  
-      gender.forEach((serviceObj) => {
-	      promisesList.push(genderService.createGenderGroup({ userId, gendertypeId: serviceObj.gendertypeId }));
+	
+	    ids.forEach(gendertypeId => {
+	      promisesList.push(genderService.createGenderGroup({
+          userId,
+          gendertypeId
+	      }));
       });
       
       const data = await Promise.all(promisesList);

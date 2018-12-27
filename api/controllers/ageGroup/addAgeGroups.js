@@ -15,39 +15,38 @@ module.exports = {
   
   tags: ['api', 'ageGroup'],
   
-  description: 'Create age group',
+  description: 'Create age groups',
   
-  notes: 'Create age group',
+  notes: 'Create age groups',
   
   validate: {
     payload: {
       userId: joi.number()
                  .required()
                  .description('PK of Users'),
-      
-      age: joi.array()
-                   .single()
-                   .items(
-                     joi.object()
-                       .keys({
-                         agetypeId: joi.number()
-                                            .required()
-                                            .description('PK of ageTypes')
-                       })
-                   )
+	
+	    ids: joi.array()
+	                    .single()
+	                    .items(
+		                    joi.number()
+		                       .description('PK of age Group')
+	                    )
     },
     options: { abortEarly: false },
   },
   
   handler: async (request, h) => {
     const { payload } = request;
-    const { userId, age } = payload;
+    const { userId, ids } = payload;
     
     try {
       let promisesList = [];
-      
-      age.forEach((serviceObj) => {
-	      promisesList.push(ageService.createAgeGroup({ userId, agetypeId: serviceObj.agetypeId }));
+	
+	    ids.forEach(agetypeId => {
+	      promisesList.push(ageService.createAgeGroup({
+          userId,
+          agetypeId
+	      }));
       });
       
       const data = await Promise.all(promisesList);

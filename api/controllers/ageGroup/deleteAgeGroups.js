@@ -15,17 +15,19 @@ module.exports = {
   
   tags: ['api', 'ageGroup'],
   
-  description: 'Delete age Group',
+  description: 'Delete age Groups',
   
-  notes: 'Delete age Group',
+  notes: 'Delete age Groups',
   
   validate: {
     payload: {
-      ageGroupIds: joi.array()
+	    userId: joi.number(),
+	
+	    typeIds: joi.array()
                      .single()
                      .items(
                        joi.number()
-                          .description('PK of age Group')
+                          .description('PK of ageType Id')
                      )
     },
     options: { abortEarly: false },
@@ -33,13 +35,13 @@ module.exports = {
   
   handler: async (request, h) => {
     const { payload } = request;
-    const { ageGroupIds } = payload;
+    const { userId, typeIds } = payload;
     
     try {
       let promisesList = [];
-      
-      ageGroupIds.forEach(ageGroupId => {
-        promisesList.push(userService.deleteAgeGroup(ageGroupId));
+	
+	    typeIds.forEach(agetypeId => {
+        promisesList.push(userService.deleteAgeGroupByTypeId(userId, agetypeId));
       });
       
       const data = await Promise.all(promisesList);

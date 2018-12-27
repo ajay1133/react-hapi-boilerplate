@@ -59,13 +59,12 @@ exports.createUser = async (userPayload) =>  {
  * Return all user accounts for management
  */
 exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
-  const { status, keyword, Page, Limit } = query;
+  let { status, keyword, page, limit, order } = query;
   let conditionArr = [];
   
-  let page = (!Page || Page < 1) ? 1 : Page;
-  let limit = Limit;
-  
+  page = page && page > 1 ? page : 1;
   let offset = page - 1;
+  limit = (limit && parseInt(limit)) || 0;
   offset *= limit;
   
   if (status) {
@@ -88,7 +87,8 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
         $and: conditionArr
       },
       offset,
-      limit
+      limit,
+      order: JSON.parse(order)
     })
     .then(resolve)
     .catch (reject);
@@ -113,6 +113,26 @@ exports.getUser = async (userId) => {
   } catch(err) {
     return err;
   }
+};
+
+/**
+ * Get User on basis of user id
+ * @param userId
+ */
+exports.getUserByEmail = async (email) => {
+	try {
+		let userDetails = await User.findOne({
+			where: { email }
+		});
+		
+		if (userDetails) {
+			return userDetails.toJSON();
+		} else {
+			return Boom.internal('User Not Found');
+		}
+	} catch(err) {
+		return err;
+	}
 };
 
 /**

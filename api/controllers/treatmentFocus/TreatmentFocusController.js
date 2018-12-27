@@ -1,4 +1,4 @@
-const prefix = '/treatmentFocus';
+const prefix = '/treatmentFocusGroup';
 
 module.exports = [
   {

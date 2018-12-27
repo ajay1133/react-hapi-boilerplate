@@ -1,4 +1,5 @@
 import config from '../config';
+import { VALID_BEGIN_FILE_NAME } from './constants';
 
 export const strictValidArrayWithLength = arr => arr && Array.isArray(arr) && !!arr.length;
 
@@ -9,8 +10,11 @@ export const strictValidObjectWithKeys = obj => strictValidObject(obj) && Object
 
 export const strictValidString = str => !!str && typeof str === 'string';
 
+export const strictValidArrayWithMinLength = (arr, minLength) => strictValidArrayWithLength(arr) &&
+arr.length >= minLength;
+
 export const strictValidSplittableStringWithMinLength = (str, delimeter, minLength) => strictValidString(str) &&
-Array.isArray(str.split(delimeter)) && str.split(delimeter).length >= minLength;
+strictValidArrayWithMinLength(str.split(delimeter), minLength);
 
 export const concatenateRegularExpressions = (regExpList = []) => {
 	let regExp = new RegExp();
@@ -18,7 +22,6 @@ export const concatenateRegularExpressions = (regExpList = []) => {
 	if (strictValidArrayWithLength(regExpList)) {
 		try {
 			regExp = new RegExp(regExpList.join(''));
-			console.log(regExp);
 		} catch (error) {
 			console.log('Error generating regular expression');
 		}
@@ -31,7 +34,7 @@ export const validFileName = (fileName, validExtensionsList = [], startingRegExp
 fileName && Array.isArray(validExtensionsList) &&
 !!validExtensionsList.length &&
 concatenateRegularExpressions([
-	(strictValidString(startingRegExp) && startingRegExp) || '^[_|0-9|a-z|A-Z]+',
+	(strictValidString(startingRegExp) && startingRegExp) || VALID_BEGIN_FILE_NAME,
 	validExtensionsList.map(v => (strictValidString(v) && `.${v}`) || '').join('|'),
 	'$'
 ]).test(fileName);
@@ -40,7 +43,7 @@ export const validObjectWithParameterKeys = (obj, parameterKeys = []) => strictV
 strictValidArrayWithLength(parameterKeys) && !!Object.keys(obj).filter(k => parameterKeys.indexOf(k) > -1).length;
 
 export const typeCastToString = str =>
-(str && ((strictValidString(str) && str) || JSON.stringify(str) || str.toString())) || '';
+(!!str && ((strictValidString(str) && str) || str.toString() || JSON.stringify(str))) || '';
 
 export const getFileExtension = fn => fn.substring(fn.lastIndexOf('.'), fn.length);
 

@@ -2,8 +2,8 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import { Field, reduxForm, formValueSelector, SubmissionError } from 'redux-form/immutable';
-import {Grid, Message, Loader, Tab, Header, Icon, Button, Form, Image} from  'semantic-ui-react';
-import {TextBox, TextArea} from '../../components/Form';
+import {Grid, Message, Loader, Tab, Header, Button, Form, Image} from  'semantic-ui-react';
+import {TextBox, TextArea, CheckBox} from '../../components/Form';
 import { required, email, normalizePhone, url, passwordValidator } from '../../utils/validations';
 import {
 	strictValidObjectWithKeys,
@@ -19,10 +19,11 @@ import {
 	USER_PROFILE_DETAILS_FORM_KEYS,
 	USER_PASSWORD_SECTION_FORM_KEYS,
 	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS,
-	DEFAULT_USER_PROFILE_IMAGE_URL
+	DEFAULT_USER_PROFILE_IMAGE_URL,
+	IMAGE_FILE_NAME_BEGIN_REG_EXP
 } from '../../utils/constants';
 import { verifyUser } from '../../redux/modules/auth';
-import { loadUserServices, updateUserProfile } from '../../redux/modules/account';
+import { loadUserProfileRelatedData, updateUserProfile } from '../../redux/modules/account';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
 import S3FileUploader from '../../components/S3FileUploader';
 import config from '../../config';
@@ -34,8 +35,8 @@ const selector = formValueSelector('profileForm');
 @connect(state => ({
   initialValues: Object.assign(
   	{},
-	  (strictValidObjectWithKeys(state.get('auth').get('user')) && state.get('auth').get('user')) || {},
-	  state.get('account').get('userServices') || {}
+	  (validObjectWithParameterKeys(state.get('auth').get('user'), ['id']) && state.get('auth').get('user')) || {},
+	  state.get('account').get('userDetails') || {}
   ),
 	user: state.get('auth').get('user'),
 	isLoad: state.get('auth').get('isLoad'),
@@ -44,11 +45,29 @@ const selector = formValueSelector('profileForm');
 	accountErr: state.get('account').get('accountErr'),
 	serviceTypes: state.get('account').get('serviceTypes'),
 	userServices: state.get('account').get('userServices'),
+	genderTypes: state.get('account').get('genderTypes'),
+	userGenderGroups: state.get('account').get('userGenderGroups'),
+	ageTypes: state.get('account').get('ageTypes'),
+	userAgeGroups: state.get('account').get('userAgeGroups'),
+	treatmentFocusTypes: state.get('account').get('treatmentFocusTypes'),
+	userTreatmentFocusGroups: state.get('account').get('userTreatmentFocusGroups'),
 	currentPassword: selector(state, 'currentPassword'),
 	serviceTypesValuesList: (
 		selector(state, 'serviceType') &&
 		strictValidObjectWithKeys(selector(state, 'serviceType')) &&
-		selector(state, 'serviceType').toJSON()) || []
+		selector(state, 'serviceType').toJSON()) || [],
+	genderTypesValuesList: (
+		selector(state, 'genderType') &&
+		strictValidObjectWithKeys(selector(state, 'genderType')) &&
+		selector(state, 'genderType').toJSON()) || [],
+	ageTypesValuesList: (
+		selector(state, 'ageType') &&
+		strictValidObjectWithKeys(selector(state, 'ageType')) &&
+		selector(state, 'ageType').toJSON()) || [],
+	treatmentFocusTypesValuesList: (
+		selector(state, 'treatmentFocusType') &&
+		strictValidObjectWithKeys(selector(state, 'treatmentFocusType')) &&
+		selector(state, 'treatmentFocusType').toJSON()) || []
 }))
 @reduxForm({
 	form: 'profileForm',
@@ -66,7 +85,16 @@ export default class Profile extends Component {
 		error: PropTypes.string,
 		serviceTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
 		userServices: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		serviceTypesValuesList: PropTypes.array
+		genderTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
+		userGenderGroups: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
+		ageTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
+		userAgeGroups: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
+		treatmentFocusTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
+		userTreatmentFocusGroups: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
+		serviceTypesValuesList: PropTypes.array,
+		genderTypesValuesList: PropTypes.array,
+		ageTypesValuesList: PropTypes.array,
+		treatmentFocusTypesValuesList: PropTypes.array,
 	};
 	
 	static defaultProps = {
@@ -97,24 +125,10 @@ export default class Profile extends Component {
 		const { dispatch, user } = this.props;
 		try {
 			this.setState({ uploadProfileImageUrl: user.image });
-			const res = await dispatch(loadUserServices());
-			
-			if (strictValidObjectWithKeys(res)) {
-				const { userServices } = res;
-				const serviceTypesValuesList = [];
-				
-				userServices.forEach(service => {
-					const indexOfServiceType = service.serviceTypesId - 1;
-					if (!(indexOfServiceType in serviceTypesValuesList)) {
-						serviceTypesValuesList[indexOfServiceType] = [];
-					}
-					serviceTypesValuesList[indexOfServiceType].push(service.name);
-				});
-				
-				this.props.change('serviceType', serviceTypesValuesList);
-				this.setState({ serviceTypesFieldArray: serviceTypesValuesList });
+			const res = await dispatch(loadUserProfileRelatedData());
+			if (strictValidObjectWithKeys(res) && strictValidArrayWithLength(res.serviceType)) {
+				this.setState({ serviceTypesFieldArray: res.serviceType });
 			}
-			
 			this.setState({ loading: false });
 		} catch (e) {
 			this.setState({ loading: false });
@@ -170,11 +184,12 @@ export default class Profile extends Component {
 	};
 
 	getProfileTabsSection = () => {
+		const { genderTypes = [], ageTypes = [], treatmentFocusTypes = [] } = this.props;
 		const { uploadProfileImageError, uploadProfileImageUrl } = this.state;
 		
 		return (
 		  <Grid>
-			  <Grid.Row stretched>
+			  <Grid.Row>
 				  <Grid.Column computer="10">
 					  <Header size='medium'>Profile Details</Header>
 					  <Grid>
@@ -210,6 +225,7 @@ export default class Profile extends Component {
 									  placeholder="Email"
 									  component={TextBox}
 									  validate={email}
+								    readOnly
 								  />
 							  </Grid.Column>
 						  </Grid.Row>
@@ -224,11 +240,77 @@ export default class Profile extends Component {
 							  </Grid.Column>
 							  <Grid.Column computer="8">
 								  <Field
-									  name="url"
+									  name="website"
 									  placeholder="Website Url"
 									  component={TextBox}
 									  validate={url}
 								  />
+							  </Grid.Column>
+						  </Grid.Row>
+						  <Grid.Row celled="internally">
+							  <Grid.Column width="16" className="mb-10">
+								  <h4>Gender :</h4>
+							  </Grid.Column>
+							  <Grid.Column width="16">
+								  <Grid columns="3">
+									  <Grid.Row className="newServices">
+										  {
+											  genderTypes.map((genderType, idx) => (
+												  <Grid.Column>
+													  <Field
+														  name={ `genderType[${idx}]` }
+														  component={CheckBox}
+														  label={ genderType.name }
+													  />
+												  </Grid.Column>
+											  ))
+										  }
+									  </Grid.Row>
+								  </Grid>
+							  </Grid.Column>
+						  </Grid.Row>
+						  <Grid.Row>
+							  <Grid.Column width="16" className="mb-10">
+								  <h4>Age :</h4>
+							  </Grid.Column>
+							  <Grid.Column width="16">
+								  <Grid columns="3">
+									  <Grid.Row className="newServices">
+										  {
+											  ageTypes.map((ageType, idx) => (
+											    <Grid.Column>
+													  <Field
+														  name={ `ageType[${idx}]` }
+														  component={CheckBox}
+														  label={ ageType.name }
+													  />
+												  </Grid.Column>
+											  ))
+										  }
+									  </Grid.Row>
+								  </Grid>
+							  </Grid.Column>
+						  </Grid.Row>
+						  <Grid.Row>
+							  <Grid.Column width="16" className="mb-10">
+								  <h4>Insurance :</h4>
+							  </Grid.Column>
+							  <Grid.Column width="16">
+								  <Grid columns="3">
+									  <Grid.Row className="newServices">
+										  {
+											  treatmentFocusTypes.map((treatmentFocusType, idx) => (
+												  <Grid.Column>
+													  <Field
+														  name={ `treatmentFocusType[${idx}]` }
+														  component={CheckBox}
+														  label={ treatmentFocusType.name }
+													  />
+												  </Grid.Column>
+											  ))
+										  }
+									  </Grid.Row>
+								  </Grid>
 							  </Grid.Column>
 						  </Grid.Row>
 					  </Grid>
@@ -246,7 +328,7 @@ export default class Profile extends Component {
 						  <Grid.Column>
 							  <Image
 								  src={ getAbsoluteS3FileUrl(uploadProfileImageUrl) || DEFAULT_USER_PROFILE_IMAGE_URL }
-								  size="small"
+								  size="medium"
 								  rounded
 								  alt="image"
 								  fluid
@@ -520,14 +602,20 @@ export default class Profile extends Component {
   };
   
 	handleSubmit = async(data) => {
-		const {dispatch} = this.props;
-	  const { userVerifiedFlag, activeTab, serviceTypesFieldArray, uploadProfileImageUrl } = this.state;
+		const {
+			dispatch, genderTypesValuesList, ageTypesValuesList, treatmentFocusTypesValuesList
+		} = this.props;
+	  const {
+	  	userVerifiedFlag, activeTab, serviceTypesFieldArray, uploadProfileImageName, uploadProfileImageUrl
+	  } = this.state;
 		
 		this.props.change('_error', null);
 		
 		const dataObj = (strictValidObjectWithKeys(data.toJSON()) && data.toJSON()) || {};
 		
-		if (!validFileName(uploadProfileImageUrl, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS, '^[_|0-9|a-z|A-Z|//|-]+')) {
+		const inValidImageFileFlag = uploadProfileImageName && uploadProfileImageUrl &&
+			!validFileName(uploadProfileImageUrl, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS, IMAGE_FILE_NAME_BEGIN_REG_EXP);
+		if (inValidImageFileFlag) {
 			throw new SubmissionError({ _error:
 				'Invalid File Name, a valid image file should only have' +
 				'\'.jpg\', \'.jpeg\', \'.png\' or \'.gif\'  extension(s)'
@@ -563,7 +651,12 @@ export default class Profile extends Component {
 				  formData = {
 					  profileDetails: uploadProfileImageUrl
 						  ? Object.assign({}, _.pick(dataObj, USER_PROFILE_DETAILS_FORM_KEYS), { image: uploadProfileImageUrl })
-						  : _.pick(dataObj, USER_PROFILE_DETAILS_FORM_KEYS)
+						  : _.pick(dataObj, USER_PROFILE_DETAILS_FORM_KEYS),
+					  otherDetails: {
+					  	genderType: genderTypesValuesList,
+						  ageType: ageTypesValuesList,
+						  treatmentFocusType: treatmentFocusTypesValuesList
+					  }
 				  };
 			  } else if (activeTab === 'userServices') {
 				  formData = {

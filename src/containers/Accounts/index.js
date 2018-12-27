@@ -1,13 +1,17 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Table, Grid, Header, Message, Confirm, Icon, Segment, List, Form } from  'semantic-ui-react';
+import { Table, Grid, Header, Message, Confirm, Icon, Segment, List, Form, Loader } from  'semantic-ui-react';
 import { Field, reduxForm } from 'redux-form/immutable';
 import { DropDown } from '../../components/Form';
-import { loadAccounts, saveAccount, updateAccount, sortAccounts, selectUser } from '../../redux/modules/account';
+import { loadAccounts, saveAccount, updateAccount, selectUser } from '../../redux/modules/account';
 import AccountModal  from '../../components/AccountModal';
 import Pagination from '../../components/Pagination';
-import { strictValidArrayWithLength } from '../../utils/commonutils';
+import {
+  strictValidArrayWithLength,
+  validObjectWithParameterKeys,
+  strictValidArrayWithMinLength
+} from '../../utils/commonutils';
 import { OFFSET } from '../../utils/constants';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
 import '../../style/css/style.css';
@@ -39,8 +43,12 @@ const TableRow = ({row, editAccount, typeAction}) => (
 
 @connect(state => ({
   items: state.get('account').get('items'),
+	itemsFilters: (
+	  validObjectWithParameterKeys(state.get('account').get('itemsFilters'), ['page']) &&
+    state.get('account').get('itemsFilters')
+  ) || state.get('account').get('itemsFilters').toJSON() || {},
+	itemsCount: state.get('account').get('itemsCount'),
   loadErr: state.get('account').get('loadErr'),
-  itemsCount: state.get('account').get('itemsCount'),
   accountErr: state.get('account').get('accountErr'),
   message: state.get('bitBucketRepo').get('message') || state.get('account').get('accountMsg'),
   isLoad: state.get('bitBucketRepo').get('isLoad')
@@ -61,33 +69,28 @@ export default class Accounts extends Component {
   };
   
   state = {
-    currentPage: 1,
-    sortDir: 'asc',
-    sortCol: 'firstName',
+    loading: true,
     selectedUser: null,
     openConfirmBox: false,
     type: null,
-    showMessageFlag: true,
-    status: ''
+    showMessageFlag: true
   };
   
   constructor(props) {
     super(props);
-    
     this.account = this.account.bind(this);
     this.editAccount = this.editAccount.bind(this);
     this.typeAction = this.typeAction.bind(this);
     this.closeConfirmBox = this.closeConfirmBox.bind(this);
   };
   
-  componentDidMount() {
-    const { dispatch } = this.props;
-    const { status } = this.state;
-    
-    dispatch(loadAccounts({ status }));
+  componentDidMount = async () => {
+	  const { dispatch, itemsFilters } = this.props;
+	  await dispatch(loadAccounts(itemsFilters));
+	  this.setState({ loading: false });
   };
   
-  handleConfirm = () => {
+  handleConfirm = async () => {
     const { selectedUser, type } = this.state;
     const { dispatch } = this.props;
     
@@ -98,7 +101,7 @@ export default class Accounts extends Component {
       lastName: selectedUser.lastName,
       email: selectedUser.email,
       phone: selectedUser.phone,
-      url: selectedUser.url,
+      website: selectedUser.website,
       description: selectedUser.description,
       image: selectedUser.image,
       featuredVideo: selectedUser.featuredVideo
@@ -112,65 +115,95 @@ export default class Accounts extends Component {
       accountDetail.status = 3;
     }
     
-    dispatch(updateAccount(accountDetail, false))
-      .then(response => this.setState({ openConfirmBox: false, selectedUser: null }));
+    this.setState({ loading: true });
+    await dispatch(updateAccount(accountDetail, false));
+	  this.setState({
+      loading: false,
+      openConfirmBox: false,
+      selectedUser: null
+	  });
   };
   
-  editAccount = row => {
+  editAccount = async row => {
     const { dispatch } = this.props;
-    dispatch(selectUser(row));
-    this.setState({ selectedUser: row })
+	  this.setState({ loading: true });
+    await dispatch(selectUser(row));
+    this.setState({
+      loading: false,
+      selectedUser: row
+    });
   };
   
-  typeAction = (type, row) => {
-    this.setState({ openConfirmBox: true, type, selectedUser: row })
-  };
+  typeAction = (type, row) => this.setState({ openConfirmBox: true, type, selectedUser: row });
   
   account = async details => {
     const { dispatch } = this.props;
     delete details.events;
-    
     Object.keys(details).filter(key => !details[key]).forEach(key => delete details[key]);
-	
+	  this.setState({ loading: true });
 	  const response = (details.id)
 		  ? await dispatch(updateAccount(details, true))
 		  : await dispatch(saveAccount(details));
-	  
+	  this.setState({ loading: false });
 	  return response;
   };
   
-  handleSort = clickedColumn => {
-    const { dispatch } = this.props;
-    const { sortDir } = this.state;
-    
-    dispatch(sortAccounts(sortDir === 'asc' ? 'desc' : 'asc',clickedColumn));
-    this.setState({ sortDir : sortDir === 'asc' ? 'desc' : 'asc', sortCol : clickedColumn });
+  handleSort = async sortCol => {
+	  const { itemsFilters } = this.props;
+	  const { dispatch } = this.props;
+	  this.setState({ loading: true });
+	  const initialColumnOrderList = validObjectWithParameterKeys(itemsFilters, ['order']) &&
+      strictValidArrayWithLength(itemsFilters.order) && itemsFilters.order.filter(v => v[0] === sortCol);
+	  const sortDir = strictValidArrayWithLength(initialColumnOrderList) &&
+      strictValidArrayWithMinLength(initialColumnOrderList[0], 2) ? initialColumnOrderList[0][1] || 'ASC' : 'ASC';
+	  const newSortDir = sortDir.toUpperCase() === 'ASC' ? 'DESC' : 'ASC';
+	  const newOrderByList = [[sortCol, newSortDir]];
+	  dispatch(loadAccounts(Object.assign(itemsFilters, { order: newOrderByList })));
+	  this.setState({ loading: false });
   };
   
-  handleStatus = (e, status) => {
-    e.preventDefault();
+  handleStatus = async (e, status) => {
+    let { itemsFilters } = this.props;
     const { dispatch } = this.props;
-    this.setState({ status });
-    dispatch(loadAccounts({ status }));
+	  this.setState({ loading: true });
+	  itemsFilters.page = 1;
+    dispatch(loadAccounts(Object.assign(itemsFilters, { status })));
+	  this.setState({ loading: false });
   };
-  
+	
+	handleNavigatePage = (page) => {
+		const { itemsFilters } = this.props;
+		const { dispatch } = this.props;
+		this.setState({ loading: true });
+		dispatch(loadAccounts(Object.assign(itemsFilters, { page })));
+		this.setState({ loading: false });
+  };
+	
+	getSortClass = sortCol => {
+	  let { itemsFilters } = this.props;
+	  let sortClass = 'sortAsc';
+	  let sortIconClass = 'down';
+	  if (validObjectWithParameterKeys(itemsFilters, ['order'])) {
+		  const colSortList = strictValidArrayWithLength(itemsFilters.order) &&
+        itemsFilters.order.filter(v => v[0] === sortCol);
+		  if (strictValidArrayWithLength(colSortList) && strictValidArrayWithMinLength(colSortList[0], 2)) {
+			  sortClass = colSortList[0][1].toUpperCase() === 'ASC' ? 'active sortAsc' : 'active sortDesc';
+			  sortIconClass = colSortList[0][1].toUpperCase() === 'ASC' ? 'down' : 'up';
+		  }
+    }
+    return {
+	    sortClass,
+	    sortIconClass
+    }
+  };
+	
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
   closeConfirmBox = () => this.setState({ openConfirmBox: false, selectedUser: null });
   
   render() {
-    const { items, loadErr, accountErr, itemsCount, message } = this.props;
-    const { sortCol, sortDir, selectedUser, showMessageFlag, openConfirmBox, currentPage, type } = this.state;
-    const sortDirClass = sortDir === 'asc' ? 'active sortAsc' : 'active sortDesc';
-    const sortIconClass = sortDir === 'asc' ? 'down' : 'up';
-    
-    let users = [];
-    
-    if (strictValidArrayWithLength(items)) {
-      let begin = (this.state.currentPage - 1) * OFFSET;
-      let end = OFFSET * this.state.currentPage;
-      users = items.slice(begin, end);
-    }
+    const { items, itemsFilters, itemsCount, loadErr, accountErr, message } = this.props;
+    const { loading, selectedUser, showMessageFlag, openConfirmBox, type } = this.state;
 	
 	  return (
       <AuthenticatedUser>
@@ -186,115 +219,128 @@ export default class Accounts extends Component {
             <span style={{ color: 'red' }}>{ loadErr || accountErr }</span>
           </Message>
 			  }
-        <Grid>
-          <div className="ui left floated column innerAdjust">
-            <h3 className="mainHeading"> Accounts</h3>
-          </div>
-          <Grid.Row>
-            <Grid.Column computer={12}>
-              <List horizontal floated='right'>
-                <List.Item>
-                  <span className="statusPending"/>
-                  <List.Content floated='right'> Pending </List.Content>
-                </List.Item>
-                <List.Item>
-                  <span className="statusDenied"/>
-                  <List.Content floated='right'> Denied </List.Content>
-                </List.Item>
-                <List.Item>
-                  <span className="statusActive"/>
-                  <List.Content floated='right'> Active </List.Content>
-                </List.Item>
-                <List.Item>
-                  <List.Content floated='right'>
-                    <Form className="mt-10">
-                      <Field
-                        className="minWidth130"
-                        name="status"
-                        component={ DropDown }
-                        options={ statusDropDownArr }
-                        inline={ true }
-                        fluid={ true }
-                        search={ true }
-                        selectOnBlur={ true }
-                        placeholder="Please select"
-                        onChange={(e, v) => this.handleStatus(e, v)}
-                      />
-                    </Form>
-                  </List.Content>
-                </List.Item>
-              </List>
-            </Grid.Column>
-          </Grid.Row>
-          <Grid.Row>
-            <Grid.Column  computer={12}>
-              <Table celled>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.HeaderCell className={`${sortCol === 'firstName' ? sortDirClass : 'sortAsc'}` }>
-                      <a onClick={() => this.handleSort('firstName') }>Name
-                        <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
-                      </a>
-                    </Table.HeaderCell>
-                    <Table.HeaderCell className={`${sortCol === 'email' ? sortDirClass : 'sortAsc'}` }>
-                      <a onClick={() => this.handleSort('email') }>Email
-                        <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
-                      </a>
-                    </Table.HeaderCell>
-                    <Table.HeaderCell className={`${sortCol==='phone' ? sortDirClass : 'sortAsc'}` }>
-                      <a onClick={() => this.handleSort('phone') }>Phone
-                        <i className={`sort amount ${sortIconClass} icon ml-05`}></i>
-                      </a>
-                    </Table.HeaderCell>
-                    <Table.HeaderCell>Action</Table.HeaderCell>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-						      {
-							      strictValidArrayWithLength(users) &&
-							      users.map(row => {
-								      return (
+	      {
+		      loading &&
+          <Loader active inline='centered'>Loading...</Loader>
+	      }
+        {
+          !loading &&
+          <Grid>
+            <div className="ui left floated column innerAdjust">
+              <h3 className="mainHeading"> Accounts</h3>
+            </div>
+            <Grid.Row>
+              <Grid.Column computer={12}>
+                <List horizontal floated='right'>
+                  <List.Item>
+                    <span className="statusPending"/>
+                    <List.Content floated='right'> Pending </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <span className="statusDenied"/>
+                    <List.Content floated='right'> Denied </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <span className="statusActive"/>
+                    <List.Content floated='right'> Active </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <List.Content floated='right'>
+                      <Form className="mt-10">
+                        <Field
+                          className="minWidth130"
+                          name="status"
+                          component={ DropDown }
+                          options={ statusDropDownArr }
+                          inline={ true }
+                          fluid={ true }
+                          search={ true }
+                          selectOnBlur={ true }
+                          placeholder="Please select"
+                          onChange={(e, v) => this.handleStatus(e, v)}
+                        />
+                      </Form>
+                    </List.Content>
+                  </List.Item>
+                </List>
+              </Grid.Column>
+            </Grid.Row>
+            <Grid.Row>
+              <Grid.Column  computer={12}>
+                <Table celled>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.HeaderCell className={`${this.getSortClass('firstName').sortClass}` }>
+                        <a onClick={() => this.handleSort('firstName') }>Name
+                          <i className={`sort amount ${this.getSortClass('firstName').sortIconClass} icon ml-05`}></i>
+                        </a>
+                      </Table.HeaderCell>
+                      <Table.HeaderCell className={`${this.getSortClass('email').sortClass}` }>
+                        <a onClick={() => this.handleSort('email') }>Email
+                          <i className={`sort amount ${this.getSortClass('email').sortIconClass} icon ml-05`}></i>
+                        </a>
+                      </Table.HeaderCell>
+                      <Table.HeaderCell className={`${this.getSortClass('phone').sortClass}` }>
+                        <a onClick={() => this.handleSort('phone') }>Phone
+                          <i className={`sort amount ${this.getSortClass('phone').sortIconClass} icon ml-05`}></i>
+                        </a>
+                      </Table.HeaderCell>
+                      <Table.HeaderCell>Action</Table.HeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
+					          {
+						          strictValidArrayWithLength(items) &&
+						          items.map(user => (
                         <TableRow
-                          key={row.id}
-                          row={row}
+                          key={user.id}
+                          row={user}
                           editAccount={this.editAccount}
                           typeAction={this.typeAction}
                         />
-								      );
-							      })
-						      }
-                </Table.Body>
-              </Table>
-              {
-                strictValidArrayWithLength(items) &&
-                <Pagination
-                  totalEntries={itemsCount}
-                  offset={OFFSET}
-                  currentPage={currentPage}
-                  navigate={(page) => this.setState({ currentPage: page })}
+                      ))
+					          }
+	                  {
+		                  !strictValidArrayWithLength(items) &&
+		                  <Table.Row>
+			                  <Table.Cell colSpan="100%" style={{ color: 'red', textAlign: 'center' }}>
+				                  No users found
+			                  </Table.Cell>
+		                  </Table.Row>
+	                  }
+                  </Table.Body>
+                </Table>
+			          {
+				          strictValidArrayWithLength(items) &&
+                  <Pagination
+                    totalEntries={itemsCount}
+                    offset={OFFSET}
+                    currentPage={itemsFilters.page}
+                    navigate={(page) => this.handleNavigatePage(page)}
+                  />
+			          }
+              </Grid.Column>
+              <Grid.Column computer={4}>
+                <Confirm
+                  content={`Are you sure you want to ${type} this user ?`}
+                  confirmButton="Confirm"
+                  open={openConfirmBox}
+                  onCancel={this.closeConfirmBox}
+                  onConfirm={this.handleConfirm}
                 />
-              }
-            </Grid.Column>
-            <Grid.Column computer={4}>
-              <Confirm
-                content={`Are you sure you want to ${type} this user ?`}
-                confirmButton="Confirm"
-                open={openConfirmBox}
-                onCancel={this.closeConfirmBox}
-                onConfirm={this.handleConfirm}
-              />
-              <Header as='h4' attached='top' className="Primary">
-					      { selectedUser ? 'Edit Profile' : 'Add New Profile' }
-              </Header>
-              <Segment attached>
-                <AccountModal
-                  account = {this.account}
-                  selectedUser = {selectedUser}
-                />
-              </Segment>
-            </Grid.Column>
-          </Grid.Row>
-        </Grid>
+                <Header as='h4' attached='top' className="Primary">
+				          { selectedUser ? 'Edit Profile' : 'Add New Profile' }
+                </Header>
+                <Segment attached>
+                  <AccountModal
+                    account = {this.account}
+                    selectedUser = {selectedUser}
+                  />
+                </Segment>
+              </Grid.Column>
+            </Grid.Row>
+          </Grid>
+        }
       </AuthenticatedUser>
 	  );
   }

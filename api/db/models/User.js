@@ -13,7 +13,7 @@ module.exports = (sequelize) => {
       title                 : { type: Sequelize.TEXT, allowNull: true },
       address               : { type: Sequelize.TEXT, allowNull: true },
       phone                 : { type: Sequelize.STRING, allowNull: true },
-      url                   : { type: Sequelize.STRING, allowNull: true },
+      website                   : { type: Sequelize.STRING, allowNull: true },
       description           : { type: Sequelize.TEXT, allowNull: true },
       image                 : { type: Sequelize.STRING, allowNull: true },
       featuredVideo         : { type: Sequelize.TEXT, allowNull: true },

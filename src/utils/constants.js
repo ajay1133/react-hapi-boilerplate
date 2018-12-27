@@ -16,11 +16,41 @@ export const ROOT_BRANCH = 'master';
 
 export const REPO_PATH = 'content/blog';
 
+export const USER_PROFILE_PATH = 'content/profile';
+
 export const DEFAULT_ACCESSIBLE_ROOT_PATH = `/${ROOT_BRANCH}/${REPO_PATH}`;
 
-export const MD_FILE_META_DATA_KEYS = ['title', 'image', 'description', 'draft'];
+export const MD_FILE_META_DATA_KEYS = [
+	'email',
+	'firstName',
+	'lastName',
+	'title',
+	'address',
+	'phone',
+	'website',
+	'description',
+	'image',
+	'featuredVideo',
+	'draft'
+];
 
-export const KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS = ['fileName', 'filePath', 'content'];
+export const KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS = [
+	'id',
+	'fileName',
+	'filePath',
+	'content',
+	'serviceType',
+	'hash',
+	'salt',
+	'role',
+	'status',
+	'isDeleted',
+	'inviteToken',
+	'inviteStatus',
+	'updatedAt',
+	'createdAt',
+	'otherDetails'
+];
 
 export const MD_FILE_DRAFT_OPTIONS_LIST = [
 	{
@@ -69,7 +99,7 @@ export const USER_PROFILE_DETAILS_FORM_KEYS = [
 	'lastName',
 	'email',
 	'phone',
-	'url',
+	'website',
 	'description'
 ];
 
@@ -79,3 +109,7 @@ export const USER_PASSWORD_SECTION_FORM_KEYS = [
 ];
 
 export const DEFAULT_USER_PROFILE_IMAGE_URL = 'images/default_User_Profile_Image.png';
+
+export const VALID_BEGIN_FILE_NAME = '^[_|0-9|a-z|A-Z]+';
+
+export const IMAGE_FILE_NAME_BEGIN_REG_EXP = '^[_|0-9|a-z|A-Z|//|-]+';

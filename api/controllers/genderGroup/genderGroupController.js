@@ -14,7 +14,7 @@ module.exports = [
   {
     path: `${prefix}`,
     method: 'POST',
-    config: require('./addGenderGroup'),
+    config: require('./addGenderGroups'),
   },
   {
     path: `${prefix}/{id}`,
@@ -24,6 +24,6 @@ module.exports = [
   {
     path: `${prefix}/delete`,
     method: 'POST',
-    config: require('./deleteGenderGroup'),
+    config: require('./deleteGenderGroups'),
   }
 ];

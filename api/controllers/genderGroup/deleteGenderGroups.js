@@ -21,11 +21,13 @@ module.exports = {
   
   validate: {
     payload: {
-      genderGroupIds: joi.array()
+      userId: joi.number(),
+      
+      typeIds: joi.array()
                      .single()
                      .items(
                        joi.number()
-                          .description('PK of gender Group')
+                          .description('PK of genderType Id')
                      )
     },
     options: { abortEarly: false },
@@ -33,13 +35,13 @@ module.exports = {
   
   handler: async (request, h) => {
     const { payload } = request;
-    const { genderGroupIds } = payload;
+    const { userId, typeIds } = payload;
     
     try {
       let promisesList = [];
-  
-      genderGroupIds.forEach(genderGroupId => {
-        promisesList.push(genderService.deleteGenderGroup(genderGroupId));
+	
+	    typeIds.forEach(gendertypeId => {
+        promisesList.push(genderService.deleteGenderGroupByTypeId(userId, gendertypeId));
       });
       
       const data = await Promise.all(promisesList);

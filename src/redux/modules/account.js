@@ -1,14 +1,21 @@
 import Immutable from 'immutable';
-import orderBy from 'lodash/orderBy';
 import { load } from './auth';
 import { updateBitBucketFile, deleteBitBucketFile } from './bitBucketRepo';
 import {
 	strictValidObjectWithKeys,
 	typeCastToString,
 	strictValidArrayWithLength,
-	getAbsoluteS3FileUrl
+	getAbsoluteS3FileUrl,
+	strictValidString,
+	validObjectWithParameterKeys
 } from '../../utils/commonutils';
-import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
+import {
+	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
+	MD_FILE_META_DATA_KEYS,
+	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS,
+	USER_PROFILE_PATH,
+	OFFSET
+} from '../../utils/constants';
 
 const LOAD = 'account/LOAD';
 const LOAD_SUCCESS = 'account/LOAD_SUCCESS';
@@ -29,7 +36,7 @@ const UPDATE_PASSWORD_FAIL = 'account/UPDATE_PASSWORD_FAIL';
 const UPDATED_PROFILE = 'account/UPDATED_PROFILE';
 const SELECT_USER = 'account/SELECT_USER';
 
-const LOAD_USER_SERVICES = 'account/LOAD_USER_SERVICES';
+const LOAD_USER_PROFILE_RELATED_DATA = 'account/LOAD_USER_PROFILE_RELATED_DATA';
 
 const RESET_MESSAGE = 'account/RESET_MESSAGE';
 const FLUSH = 'account/FLUSH';
@@ -40,14 +47,27 @@ const initialState = Immutable.fromJS({
   loading: false,
   items: [],
   itemsCount: 0,
+	itemsFilters: {
+  	status: '',
+		keyword: '',
+		page: 1,
+		limit: OFFSET,
+		order: [['firstName', 'ASC']]
+	},
   columns: [],
-  sort: {by: '', dir: 'asc'},
   selectedUser: undefined,
 	accountMsg: null,
 	passwordUpdated: false,
 	passwordUpdatedMsg: null,
   serviceTypes: [],
-  userServices: []
+  userServices: [],
+	genderTypes: [],
+	userDetails: {},
+	userGenderGroups: [],
+	ageTypes: [],
+	userAgeGroups: [],
+	treatmentFocusTypes: [],
+	userTreatmentFocusGroups: []
 });
 
 const internals = {};
@@ -64,7 +84,9 @@ export default function reducer(state = initialState, action) {
         .set('isLoad', false)
         .set('loadErr', null)
         .set('items', action.items || state.items)
-        .set('itemsCount', action.count || state.itemsCount);
+        .set('itemsCount', action.count || state.itemsCount)
+	      .set('itemsFilters',
+		      (strictValidObjectWithKeys(action.itemsFilters) && action.itemsFilters) || state.itemsFilters);
 
     case LOAD_FAIL:
       return state
@@ -106,7 +128,7 @@ export default function reducer(state = initialState, action) {
     case VERIFY_TOKEN_SUCCESS:
       return state
         .set('tokenValid', action.res.tokenValid )
-        .set('confirmationErr', null);
+        .set('confirmationErr', action.res.tokenValid ? null : 'Invalid Token');
 
     case VERIFY_TOKEN_FAIL:
       return state
@@ -140,10 +162,17 @@ export default function reducer(state = initialState, action) {
       return state
         .set('accountMsg', action.message);
 	
-    case LOAD_USER_SERVICES:
+    case LOAD_USER_PROFILE_RELATED_DATA:
       return state
         .set('serviceTypes', action.serviceTypes)
-        .set('userServices', action.userServices);
+        .set('userServices', action.userServices)
+        .set('genderTypes', action.genderTypes)
+        .set('userGenderGroups', action.userGenderGroups)
+        .set('ageTypes', action.ageTypes)
+        .set('userAgeGroups', action.userAgeGroups)
+        .set('treatmentFocusTypes', action.treatmentFocusTypes)
+        .set('userTreatmentFocusGroups', action.userTreatmentFocusGroups)
+        .set('userDetails', action.userDetails);
       
 	  case RESET_MESSAGE:
 		  return state
@@ -162,33 +191,40 @@ export default function reducer(state = initialState, action) {
   }
 }
 
-export const loadAccounts = (params) => async (dispatch, getState, api) => {
+export const loadAccounts = (filters) => async (dispatch, getState, api) => {
   dispatch({ type: LOAD });
   
   try {
-    const res = await api.get('/account/all', { params });
+  	const itemsFilters = (strictValidObjectWithKeys(filters) && filters) ||
+		  getState().get('account').get('itemsFilters');
+  	if (strictValidArrayWithLength(itemsFilters.order)) {
+  	  itemsFilters.order = JSON.stringify(itemsFilters.order);
+	  }
+    const res = await api.get('/account/all', { params: itemsFilters });
     
-    if (strictValidObjectWithKeys(res) && res.message) {
+    if (validObjectWithParameterKeys(res, ['message'])) {
       dispatch({ type: LOAD_FAIL, error: res.message });
       return;
     }
-    
-    let sortedList = orderBy(res.rows,['firstName'], ['asc']);
-    
-    sortedList.forEach((list, index) => {
-      let events = orderBy(list.events, ['event_participants.updatedAt'], ['desc']);
-      sortedList[index].events = events;
-    });
-    
-    dispatch({ type: LOAD_SUCCESS, items: sortedList, count: res.count });
-    return sortedList;
+	
+	  if (validObjectWithParameterKeys(res, ['rows', 'count'])) {
+		  if (itemsFilters.order) {
+			  itemsFilters.order = JSON.parse(itemsFilters.order);
+		  }
+		  dispatch({
+			  type: LOAD_SUCCESS,
+			  items: res.rows,
+			  count: res.count,
+			  itemsFilters
+		  });
+		  return res.rows;
+	  }
+	  return getState().get('account').get('items');
   } catch (error) {
     let errorMessage = error.message || typeCastToString(error);
-    
-    if (strictValidObjectWithKeys(error) && error.statusCode === 403) {
+    if (validObjectWithParameterKeys(error, ['statusCode']) && error.statusCode === 403) {
       errorMessage = "You are not authorized to access this page";
     }
-    
     dispatch({ type: LOAD_FAIL, error: errorMessage });
 	  dispatch(internals.resetMessage());
   }
@@ -202,13 +238,15 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
   dispatch({ type: ACCOUNT });
   
   try {
-    await(dispatch(internals.updateBitBucketFile(accountDetails, 1)));
 	  accountDetails.status = 2;
+    const res = await api.post('/account', { data: accountDetails });
     
-    await api.post('/account', { data: accountDetails });
-    dispatch(loadAccounts());
-    dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!' });
-	  dispatch(internals.resetMessage());
+    if (validObjectWithParameterKeys(res, ['id'])) {
+	    await dispatch(internals.updateBitBucketFile(res, 1));
+	    dispatch(loadAccounts());
+	    dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!' });
+	    dispatch(internals.resetMessage());
+    }
 	  
     return accountDetails;
   } catch (err) {
@@ -232,14 +270,11 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
     delete accountDetails.id;
     
     if (accountDetails.isDeleted) {
-      users.filter((user) => {
-        return user.id !== id;
-      });
+      users = users.filter(user => user.id !== id);
       
       // Delete file on BitBucket
-      const { firstName, lastName } = accountDetails;
       const deleteFileData = {
-        files: `/content/profile/${(firstName+lastName).trim()}.md`
+        files: `/content/profile/${(id).trim()}.md`
       };
       
       deleteFileData.message = `Deleted: ${deleteFileData.files}`;
@@ -248,16 +283,6 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
       users.map((user) => {
         if (user.id === id) {
           Object.assign(user, accountDetails);
-            user.title = accountDetails.title;
-            user.firstName = accountDetails.firstName;
-            user.lastName = accountDetails.lastName;
-            user.email = accountDetails.email;
-            user.phone = accountDetails.phone;
-            user.url = accountDetails.url;
-            user.description = accountDetails.description;
-            user.image = accountDetails.image;
-            user.featuredVideo = accountDetails.featuredVideo;
-            user.status = accountDetails.status;
         }
         return user;
       });
@@ -266,7 +291,7 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
         accountDetails.active = true;
       }
 	
-	    await(dispatch(internals.updateBitBucketFile(accountDetails, 2)));
+	    await dispatch(internals.updateBitBucketFile(Object.assign({ id }, accountDetails), 2));
     }
     
     delete accountDetails.active;
@@ -291,10 +316,19 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 		const userServices = getState().get('account').get('userServices');
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		
-		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails)) {
-			const fileContentObj = Object.assign({ active: true }, formData.profileDetails);
+		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails) &&
+			strictValidObjectWithKeys(formData.otherDetails)) {
+			const fileContentObj = Object.assign(
+				{ active: true },
+				formData.profileDetails,
+				{ otherDetails: formData.otherDetails },
+				{ id }
+			);
 			await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			await api.put(`/account/${id}`, { data: formData.profileDetails });
+			await Promise.all(Object.keys(formData.otherDetails).map(detail =>
+				dispatch(internals.addAndDeleteMultipleTypes(formData.otherDetails[detail], detail))
+			));
 			await dispatch(load(true));
     } else if (strictValidObjectWithKeys(formData) && strictValidArrayWithLength(formData.userServices)) {
 			const toAddServicesList = [];
@@ -344,7 +378,7 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			}
 			
 			if (toUpdateBitBucketFlag) {
-				const fileContentObj = Object.assign({ active: true }, formData.profileDetails);
+				const fileContentObj = Object.assign({ active: true }, { id }, formData.userServices);
 				await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			}
 		} else if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.password)) {
@@ -356,7 +390,7 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			await dispatch(updatePassword(updatePasswordObj, true));
 			await dispatch(load(true));
 		}
-  
+		
 		dispatch({ type: LOAD_SUCCESS });
 		dispatch({ type: UPDATED_PROFILE, message: 'Updated Successfully !!' });
 		dispatch(internals.resetMessage());
@@ -371,7 +405,7 @@ export const verifyToken = (inviteToken) => async (dispatch, getState, api) => {
   
   try {
     let res = await api.post('/account/verify/token', { data: {inviteToken} });
-    dispatch({ type: VERIFY_TOKEN_SUCCESS, res: res });
+    dispatch({ type: VERIFY_TOKEN_SUCCESS, res });
     return res;
   } catch (err) {
     dispatch({ type: VERIFY_TOKEN_FAIL, error: err.message || typeCastToString(err) });
@@ -392,34 +426,67 @@ export const updatePassword = (accountDetails, withoutTokenFlag = false) => asyn
   }
 };
 
-export const loadUserServices = () => async (dispatch, getState, api) => {
+export const loadUserProfileRelatedData = () => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
 	
 	try {
 	  const { id } = getState().get('auth').get('user');
-	  let serviceTypes = await api.get(`/serviceTypes`);
-		let userServices = await api.get(`/services/byUser/${id}`);
+	  
+	  const serviceTypes = await api.get(`/serviceTypes`);
+		const userServices = await api.get(`/services/byUser/${id}`);
+		const genderTypes = await api.get(`/genderTypes`);
+		const userGenderGroups = await api.get(`/genderGroup/byUser/${id}`);
+		const ageTypes = await api.get(`/ageTypes`);
+		const userAgeGroups = await api.get(`/ageGroup/byUser/${id}`);
+		const treatmentFocusTypes = await api.get(`/treatmentFocusTypes`);
+		const userTreatmentFocusGroups = await api.get(`/treatmentFocusGroup/byUser/${id}`);
+		
 		dispatch({ type: LOAD_SUCCESS });
-		dispatch({
-      type: LOAD_USER_SERVICES,
-      serviceTypes: (strictValidObjectWithKeys(serviceTypes) && serviceTypes.rows) || [],
-			userServices: (strictValidObjectWithKeys(userServices) && userServices.rows) || []
-		});
-		return {
+		
+		const userDetailsObj = {
 			serviceTypes: (strictValidObjectWithKeys(serviceTypes) && serviceTypes.rows) || [],
-			userServices: (strictValidObjectWithKeys(userServices) && userServices.rows) || []
+			userServices: (strictValidObjectWithKeys(userServices) && userServices.rows) || [],
+			genderTypes: (strictValidObjectWithKeys(genderTypes) && genderTypes.rows) || [],
+			userGenderGroups: (strictValidObjectWithKeys(userGenderGroups) && userGenderGroups.rows) || [],
+			ageTypes: (strictValidObjectWithKeys(ageTypes) && ageTypes.rows) || [],
+			userAgeGroups: (strictValidObjectWithKeys(userAgeGroups) && userAgeGroups.rows) || [],
+			treatmentFocusTypes: (strictValidObjectWithKeys(treatmentFocusTypes) && treatmentFocusTypes.rows) || [],
+			userTreatmentFocusGroups:
+			  (strictValidObjectWithKeys(userTreatmentFocusGroups) && userTreatmentFocusGroups.rows) || []
 		};
+		
+		const serviceType = [];
+		
+		userDetailsObj.userServices.forEach(service => {
+			const indexOfServiceType = service.serviceTypesId - 1;
+			if (!(indexOfServiceType in serviceType)) {
+				serviceType[indexOfServiceType] = [];
+			}
+			serviceType[indexOfServiceType].push(service.name);
+		});
+		
+		const genderType = userDetailsObj.genderTypes
+			.map(v => !!userDetailsObj.userGenderGroups.filter(g => v.status && g.gendertypeId === v.id).length);
+		const ageType = userDetailsObj.ageTypes
+			.map(v => !!userDetailsObj.userAgeGroups.filter(g => v.status && g.agetypeId === v.id).length);
+		const treatmentFocusType = userDetailsObj.treatmentFocusTypes
+			.map(v =>
+				!!userDetailsObj.userTreatmentFocusGroups.filter(g => v.status && g.treatmentfocustypeId === v.id).length
+			);
+		
+		userDetailsObj.userDetails = Object.assign({}, {
+			serviceType: [],
+			genderType,
+			ageType,
+			treatmentFocusType
+		});
+		
+		dispatch(Object.assign({}, { type: LOAD_USER_PROFILE_RELATED_DATA }, userDetailsObj));
+		return { serviceType };
   } catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 		dispatch(internals.resetMessage());
   }
-};
-
-export const sortAccounts = (sortDir, sortCol) => async (dispatch, getState, api) => {
-  const items = getState().get('account').get('items');
-  const sortedList = orderBy(items,[`${sortCol}`],[`${sortDir}`]);
-  
-  dispatch({ type: LOAD_SUCCESS, items: sortedList, count: sortedList.length });
 };
 
 export const selectUser = (user) => async (dispatch) => {
@@ -436,91 +503,164 @@ internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES
 	}, defaultTimeout || DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
 };
 
-internals.updateBitBucketFile = (fileContentObj, type) => async (dispatch, getState, api) => {
+internals.updateBitBucketFile = (fileContentObj, type) => async (dispatch) => {
 	if (fileContentObj.image) {
 		fileContentObj.image = getAbsoluteS3FileUrl(fileContentObj.image);
 	}
 	
-	let updateFileData = Object.assign({}, internals.getFileContent(fileContentObj), { type });
+	const mdFileData = await dispatch(internals.getFileContent(fileContentObj));
+	let updateFileData = Object.assign({}, mdFileData, { type });
 	updateFileData.message = `Updated: ${updateFileData.path}`;
 	
 	await dispatch(updateBitBucketFile(updateFileData));
 };
 
-internals.getFileContent = (accountDetails) => {
-  const {
-    firstName = '',
-    lastName = '',
-    title = '',
-    image = '',
-    featuredVideo = '',
-    phone = '',
-    address = '',
-    active = false,
-    description = '',
-    services = []
-  } = accountDetails;
-  
-  const { treatmentTypeArr, typeOfServicesArr, levelOfCareArr, treatmentFocusArr } = services;
-  const path = `/content/profile/${(firstName+lastName).trim()}.md`;
-  
-  let content = `---
-title: "${title}"
-featured_video: "${featuredVideo}"
-image: ${image}
-contact: ${phone}
-address: "${address}"
-active: ${active}
-description: "${description}"
----
+internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
+	let path = null;
+	let content = '';
+	
+	if (validObjectWithParameterKeys(fileContentObj, ['id'])) {
+		const dataObj = Object.assign({}, getState().get('auth').get('user'), fileContentObj);
+		
+		const { id, userServices, otherDetails } = dataObj;
+		const serviceTypes = getState().get('account').get('serviceTypes');
+		const genderTypes = getState().get('account').get('genderTypes');
+		const ageTypes = getState().get('account').get('ageTypes');
+		const treatmentFocusTypes = getState().get('account').get('treatmentFocusTypes');
+		const userGenderGroups = getState().get('account').get('userGenderGroups');
+		const userAgeGroups = getState().get('account').get('userAgeGroups');
+		const userTreatmentFocusGroups = getState().get('account').get('userTreatmentFocusGroups');
+		const userServicesValues = (strictValidArrayWithLength(userServices) && userServices) || [];
+		const userGenderValues = await dispatch(internals.getTypeArrayValues('genderType', otherDetails)) ||
+			userGenderGroups.map(g => Object.assign(
+				g,
+				{ checked: true },
+				strictValidArrayWithLength(genderTypes.filter(t => t.id === g.gendertypeId))
+					? genderTypes.filter(t => t.id === g.gendertypeId)[0] : {}
+			));
+		const userAgeValues = await dispatch(internals.getTypeArrayValues('ageType', otherDetails)) ||
+			userAgeGroups.map(g => Object.assign(
+				g,
+				{ checked: true },
+				strictValidArrayWithLength(ageTypes.filter(t => t.id === g.agetypeId))
+					? ageTypes.filter(t => t.id === g.agetypeId)[0] : {}
+			));
+		const userTreatmentFocusValues = await dispatch(internals.getTypeArrayValues('treatmentFocusType', otherDetails)) ||
+			userTreatmentFocusGroups.map(g => Object.assign(
+				g,
+				{ checked: true },
+				strictValidArrayWithLength(treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId))
+					? treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId)[0] : {}
+			));
+		
+		path = `${USER_PROFILE_PATH}/${id}.md`;
+		
+		const extraMetaDataKeys = Object.keys(dataObj)
+			.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
+		const validMetaDataKeys = Object.keys(dataObj).filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
+		
+		content = '---\n';
+		
+		validMetaDataKeys.forEach(k => {
+			content += internals.addKeyValuePairAsString(k, dataObj[k], '\n');
+		});
+		
+		extraMetaDataKeys.forEach(k => {
+			content += internals.addKeyValuePairAsString(k, dataObj[k], '\n');
+		});
+		
+		content += internals.addKeyValuePairAsString(
+			'gender',
+			`[${userGenderValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
+			'\n'
+		);
+		content += internals.addKeyValuePairAsString(
+			'age',
+			`[${userAgeValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
+			'\n'
+		);
+		content += '---\n\n\n\n';
+		
+		if (strictValidArrayWithLength(serviceTypes)) {
+			serviceTypes.forEach((service, idx) => {
+				const serviceHeading = (validObjectWithParameterKeys(service, ['name']) && service.name) || '';
+				content += `- ##### ${serviceHeading.toUpperCase()}\n\n`;
+				userServicesValues.filter(v => v.serviceTypesId === service.id).forEach(userService => {
+					content += (validObjectWithParameterKeys(userService, ['name']) && `\n* ${userService.name}`) || `\n*`;
+				});
+				content += idx === serviceTypes.length - 1 ? '\n\n' : '\n\n>\n\n';
+			});
+		}
+		
+		content += `<div class="row w100"><h5 class="w100">TREATMENT FOCUS</h5><div class="clearfix"></div>`;
+		content += `<p>${userTreatmentFocusValues.filter(v => v.checked).map(v => v.name).join(', ')}</p></div>`;
+	}
+	
+	return {
+		path,
+		content
+	};
+};
 
+internals.addKeyValuePairAsString = (k, v, append) => {
+	let str = '';
+	
+	if (!!v) {
+		if (['string', 'number', 'boolean'].indexOf(typeof v) > - 1) {
+			str = `${k}: ${v.toString()}`;
+		} else if (strictValidArrayWithLength(v)) {
+			str = `${k}: [${v.join(', ')}]`;
+		} else {
+			str = `${k}: [${JSON.stringify(v)}]`;
+		}
+	} else {
+		str = `${k}: `;
+	}
+	
+	str += strictValidString(append) ? `${append}` : '';
+	return str;
+};
 
-`;
-  if (treatmentTypeArr) {
-    content += '- ##### TREATMENT TYPE\n';
-    treatmentTypeArr.map((val) => content += `\n* ${val}`);
-    content += `
+internals.getTypeArrayValues = (type, dataObj) => async (dispatch, getState) => (
+	validObjectWithParameterKeys(dataObj, [type]) &&
+	strictValidArrayWithLength(dataObj[type]) &&
+	dataObj[type].map((v, k) => Object.assign(
+		{ checked: v },
+		getState().get('account').get(`${type}s`)[k]
+	))
+) || null;
 
->
-
-`;
-  }
-  
-  if (typeOfServicesArr) {
-    content += '- ##### TYPE OF SERVICES\n';
-    typeOfServicesArr.map((val) => content += `\n* ${val}`);
-    content += `
-
->
-
-`;
-  }
-  
-  if (levelOfCareArr) {
-    content += '- ##### LEVEL OF CARE\n';
-    levelOfCareArr.map((val) => content += `\n* ${val}`);
-    content += `
-
->
-
-`;
-  }
-  
-  if (treatmentFocusArr) {
-    content += '- ##### TREATMENT FOCUS\n';
-    treatmentFocusArr.map((val) => content += `\n* ${val}`);
-    content += `
-
->
-
-`;
-  }
-  
-  content += '<div class="row w100">' +
-             '<h5 class="w100">TREATMENT FOCUS</h5>' +
-              '<div class="clearfix"></div>' +
-                '<p>Self Pay fee,  Financing Available,Private Insurance ,  State Financial Aid,Scholarships </p>' +
-              '</div>';
-  
-  return { path, content } ;
+internals.addAndDeleteMultipleTypes = (formTypeValuesList, type) => async (dispatch, getState, api) => {
+	try {
+	  const addList = [];
+	  const deleteList = [];
+	  const { id } = getState().get('auth').get('user');
+		const typesList = getState().get('account').get(`${type}s`) || [];
+		const isValidDataFlag = strictValidString(type) && strictValidArrayWithLength(typesList);
+		
+		if (isValidDataFlag) {
+			const currentTypeValuesList = getState().get('account').get('userDetails')[type] || [];
+			const urlFragment = type.substr(0, type.length - 4) + 'Group';
+			
+			formTypeValuesList.forEach((formTypeValue, idx) => {
+				const typeId = (strictValidObjectWithKeys(typesList[idx]) && typesList[idx].id) || -1;
+				if (typeId >= -1) {
+					if (formTypeValue && !currentTypeValuesList[idx]) {
+						addList.push(typeId);
+					} else if (!formTypeValue && currentTypeValuesList[idx]) {
+						deleteList.push(typeId);
+					}
+				}
+			});
+			if (strictValidArrayWithLength(addList)) {
+				await api.post(`/${urlFragment}`, { data: { userId: id, ids: addList } });
+			}
+			if (strictValidArrayWithLength(deleteList)) {
+				await api.post(`/${urlFragment}/delete`, { data: { userId: id, typeIds: deleteList } });
+			}
+			return true;
+		}
+	} catch (err) {
+		return false;
+	}
 };

@@ -13,43 +13,39 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'treatmentFocus'],
+  tags: ['api', 'treatmentFocusGroup'],
   
-  description: 'Create treatment Focus',
+  description: 'Create treatment Focus Groups',
   
-  notes: 'Create treatment Focus',
+  notes: 'Create treatment Focus Groups',
   
   validate: {
     payload: {
       userId: joi.number()
                  .required()
                  .description('PK of Users'),
-      
-      treatment: joi.array()
-                   .single()
-                   .items(
-                     joi.object()
-                       .keys({
-                         treatmentfocustypeId: joi.number()
-                                            .required()
-                                            .description('PK of treatmentFocusTypes')
-                       })
-                   )
+	
+	    ids: joi.array()
+	                                .single()
+                                  .items(
+                                    joi.number()
+                                       .description('PK of treatmentFocus Group')
+                                  )
     },
     options: { abortEarly: false },
   },
   
   handler: async (request, h) => {
     const { payload } = request;
-    const { userId, treatment } = payload;
+    const { userId, ids } = payload;
     
     try {
       let promisesList = [];
-  
-      treatment.forEach((serviceObj) => {
+	
+	    ids.forEach(treatmentfocustypeId => {
 	      promisesList.push(treatmentFocusService.createTreatmentFocus({
 	        userId,
-          treatmentfocustypeId: serviceObj.treatmentfocustypeId
+          treatmentfocustypeId
 	      }));
       });
       

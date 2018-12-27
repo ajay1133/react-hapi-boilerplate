@@ -85,7 +85,7 @@ export default class AccountModal extends Component {
           normalize={ normalizePhone }
         />
         <Field
-          name="url"
+          name="website"
           placeholder="Website Url"
           component={TextBox}
           validate={url}

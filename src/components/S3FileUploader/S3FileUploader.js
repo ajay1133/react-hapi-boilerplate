@@ -64,7 +64,7 @@ export default class S3FileUploader extends React.Component {
       borderStyle: 'dashed',
       borderRadius: '2px',
       padding: '5px',
-	    width: '53%',
+	    width: '73%',
 	    margin: '15px auto',
     };
     

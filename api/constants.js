@@ -15,7 +15,7 @@ exports.DEFAULT_USER_ATTRIBUTES = [
 	'title',
 	'address',
 	'phone',
-	'url',
+	'website',
 	'description',
 	'image',
 	'featuredVideo',
