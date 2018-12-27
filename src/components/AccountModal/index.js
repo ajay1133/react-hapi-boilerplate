@@ -45,7 +45,7 @@ export default class AccountModal extends Component {
   };
   
   handleEditUserCancel = async () => {
-	  const { dispatch, handleEditUserCancel } = this.props;
+	  const { handleEditUserCancel } = this.props;
 	  this.setState({ loading: true });
 	  await handleEditUserCancel();
 	  this.setState({ loading: false });
@@ -68,29 +68,25 @@ export default class AccountModal extends Component {
           component={TextBox}
           validate={required}
         />
-        {
-          !validObjectWithParameterKeys(selectedUser, ['id'])
-          &&
-            <Form.Field>
-              <Grid columns='equal'>
-                <Grid.Column>
-                  <Field
-                    name="firstName"
-                    placeholder="First Name"
-                    component={TextBox}
-                    validate={required}
-                  />
-                </Grid.Column>
-                <Grid.Column width={8}>
-                  <Field
-                    name="lastName"
-                    placeholder="Last Name"
-                    component={TextBox}
-                  />
-                </Grid.Column>
-              </Grid>
-            </Form.Field>
-        }
+        <Form.Field>
+          <Grid columns='equal'>
+            <Grid.Column>
+              <Field
+                name="firstName"
+                placeholder="First Name"
+                component={TextBox}
+                validate={required}
+              />
+            </Grid.Column>
+            <Grid.Column width={8}>
+              <Field
+                name="lastName"
+                placeholder="Last Name"
+                component={TextBox}
+              />
+            </Grid.Column>
+          </Grid>
+        </Form.Field>
         <Field
           name="email"
           placeholder="Email"
