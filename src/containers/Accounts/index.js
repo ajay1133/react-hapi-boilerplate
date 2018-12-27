@@ -143,7 +143,7 @@ export default class Accounts extends Component {
     Object.keys(details).filter(key => !details[key]).forEach(key => delete details[key]);
 	  this.setState({ loading: true });
 	  const response = (details.id)
-		  ? await dispatch(updateAccount(details, true))
+		  ? await dispatch(updateAccount(details))
 		  : await dispatch(saveAccount(details));
 	  this.setState({ loading: false });
 	  return response;

@@ -55,7 +55,7 @@ const initialState = Immutable.fromJS({
 		order: [['firstName', 'ASC']]
 	},
   columns: [],
-  selectedUser: undefined,
+  selectedUser: {},
 	accountMsg: null,
 	passwordUpdated: false,
 	passwordUpdatedMsg: null,
@@ -106,6 +106,7 @@ export default function reducer(state = initialState, action) {
         .set('account', false)
         .set('accountErr', null)
         .set('items', action.users)
+        .set('selectedUser', (strictValidObjectWithKeys(action.selectedUser) && action.selectedUser) || {})
         .set('accountMsg', typeCastToString(action.message))
       }
       return state
@@ -156,7 +157,7 @@ export default function reducer(state = initialState, action) {
         
     case SELECT_USER:
       return state
-        .set('selectedUser', action.user);
+        .set('selectedUser', (strictValidObjectWithKeys(action.user) && action.user) || {});
       
     case UPDATED_PROFILE:
       return state
@@ -265,6 +266,7 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
   
   try {
 	  let users = getState().get('account').get('items');
+	  let selectedUser = {};
     const { id } = accountDetails;
     
     delete accountDetails.id;
@@ -280,12 +282,15 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
       deleteFileData.message = `Deleted: ${deleteFileData.files}`;
       await dispatch(deleteBitBucketFile(deleteFileData));
     } else {
-      users.map((user) => {
+      users = users.map((user) => {
         if (user.id === id) {
           Object.assign(user, accountDetails);
         }
         return user;
       });
+      
+      selectedUser = strictValidArrayWithLength(users.filter(user => user.id === id)) &&
+	      users.filter(user => user.id === id)[0];
       
       if (accountDetails.status === 1) {
         accountDetails.active = true;
@@ -298,7 +303,12 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
     await api.put(`/account/${id}`, { data: accountDetails });
     
     dispatch(loadAccounts());
-    dispatch({ type: ACCOUNT_SUCCESS, users, message: 'Updated Successfully !!' });
+    dispatch({
+	    type: ACCOUNT_SUCCESS,
+	    users,
+	    selectedUser,
+	    message: 'Updated Successfully !!'
+    });
 	  dispatch(internals.resetMessage());
    
     return accountDetails;
@@ -556,7 +566,7 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
 				strictValidArrayWithLength(treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId))
 					? treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId)[0] : {}
 			));
-		debugger;
+		
 		path = `${USER_PROFILE_PATH}/${id}.md`;
 		
 		const extraMetaDataKeys = Object.keys(dataObj)

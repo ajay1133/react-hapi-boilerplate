@@ -92,6 +92,7 @@ export default class AccountModal extends Component {
           placeholder="Email"
           component={TextBox}
           validate={email}
+          readOnly={validObjectWithParameterKeys(selectedUser, ['id'])}
         />
         <Field
           name="phone"
@@ -116,7 +117,7 @@ export default class AccountModal extends Component {
           disabled={submitting}
           loading={submitting}
         >
-          { validObjectWithParameterKeys(selectedUser, ['id']) ? 'Edit Profile' : 'Add Profile' }
+          { validObjectWithParameterKeys(selectedUser, ['id']) ? 'Save Profile' : 'Add Profile' }
         </Button>
         {
 	        validObjectWithParameterKeys(selectedUser, ['id']) &&

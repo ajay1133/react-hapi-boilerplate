@@ -22,44 +22,54 @@ module.exports = {
                 .description('Email of User'),
       
       firstName: joi.string()
+                    .optional()
                     .allow(['', null])
                     .max(100)
                     .description('First Name of User'),
       
       lastName: joi.string()
+                   .optional()
                    .allow(['', null])
                    .max(100)
                    .description('Last Name of User'),
       
       title: joi.string()
+                .optional()
                 .allow(['', null])
                 .description('Title of User'),
       
       address: joi.string()
+                  .optional()
                   .allow(['', null])
                   .description('Address of User'),
       
       phone: joi.string()
+                .optional()
                 .allow(['', null])
                 .description('Phone of User'),
       
       website: joi.string()
-              .allow(['', null])
-              .description('Url of User'),
+                  .optional()
+                  .allow(['', null])
+                  .description('Url of User'),
       
       description: joi.string()
+                      .optional()
                       .allow(['', null])
                       .description('Description of User'),
       
       image: joi.string()
+                .optional()
                 .allow(['', null])
                 .description('Image of User'),
       
       featuredVideo: joi.string()
+                        .optional()
                         .allow(['', null])
                         .description('FeaturedVideo of User'),
       
       status: joi.number()
+                 .optional()
                  .valid([1,2,3])
                  .allow(['', null])
                  .description('1=Active, 2=Pending, 3=Denied'),
@@ -68,6 +78,10 @@ module.exports = {
                     .valid(true, false)
                     .default(false)
                     .description('0 = not deleted, 1 = deleted'),
+	
+	    role: joi.number()
+	              .optional()
+	              .description('Role of User')
     },
     options: { abortEarly: false },
   },
