@@ -82,6 +82,7 @@ export default class Accounts extends Component {
     this.editAccount = this.editAccount.bind(this);
     this.typeAction = this.typeAction.bind(this);
     this.closeConfirmBox = this.closeConfirmBox.bind(this);
+    this.handleEditUserCancel = this.handleEditUserCancel.bind(this);
   };
   
   componentDidMount = async () => {
@@ -200,6 +201,12 @@ export default class Accounts extends Component {
   messageDismiss = () => this.setState({ showMessageFlag: false });
   
   closeConfirmBox = () => this.setState({ openConfirmBox: false, selectedUser: null });
+  
+  handleEditUserCancel = async () => {
+  	const { dispatch } = this.props;
+	  await dispatch(selectUser({}));
+  	this.setState({ selectedUser: null });
+  };
   
   render() {
     const { items, itemsFilters, itemsCount, loadErr, accountErr, message } = this.props;
@@ -329,12 +336,13 @@ export default class Accounts extends Component {
                   onConfirm={this.handleConfirm}
                 />
                 <Header as='h4' attached='top' className="Primary">
-				          { selectedUser ? 'Edit Profile' : 'Add New Profile' }
+				          { validObjectWithParameterKeys(selectedUser, ['id']) ? 'Edit Profile' : 'Add New Profile' }
                 </Header>
                 <Segment attached>
                   <AccountModal
-                    account = {this.account}
-                    selectedUser = {selectedUser}
+                    account={this.account}
+                    selectedUser={selectedUser}
+                    handleEditUserCancel={this.handleEditUserCancel}
                   />
                 </Segment>
               </Grid.Column>

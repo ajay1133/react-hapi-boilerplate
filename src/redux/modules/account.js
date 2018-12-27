@@ -378,7 +378,11 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			}
 			
 			if (toUpdateBitBucketFlag) {
-				const fileContentObj = Object.assign({ active: true }, { id }, formData.userServices);
+				const fileContentObj = Object.assign(
+					{ active: true },
+					{ id },
+					{ userServices: formData.userServices },
+				);
 				await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			}
 		} else if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.password)) {
@@ -552,7 +556,7 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
 				strictValidArrayWithLength(treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId))
 					? treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId)[0] : {}
 			));
-		
+		debugger;
 		path = `${USER_PROFILE_PATH}/${id}.md`;
 		
 		const extraMetaDataKeys = Object.keys(dataObj)
@@ -585,9 +589,11 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
 			serviceTypes.forEach((service, idx) => {
 				const serviceHeading = (validObjectWithParameterKeys(service, ['name']) && service.name) || '';
 				content += `- ##### ${serviceHeading.toUpperCase()}\n\n`;
-				userServicesValues.filter(v => v.serviceTypesId === service.id).forEach(userService => {
-					content += (validObjectWithParameterKeys(userService, ['name']) && `\n* ${userService.name}`) || `\n*`;
-				});
+				if (idx in userServicesValues && strictValidArrayWithLength(userServicesValues[idx])) {
+					userServicesValues[idx].forEach(userService => {
+						content += `* ${userService || ''}\n`;
+					});
+				}
 				content += idx === serviceTypes.length - 1 ? '\n\n' : '\n\n>\n\n';
 			});
 		}
