@@ -49,7 +49,8 @@ export const KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS = [
 	'inviteStatus',
 	'updatedAt',
 	'createdAt',
-	'otherDetails'
+	'otherDetails',
+	'userServices'
 ];
 
 export const MD_FILE_DRAFT_OPTIONS_LIST = [
