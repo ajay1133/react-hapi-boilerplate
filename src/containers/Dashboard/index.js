@@ -204,11 +204,11 @@ export default class Dashboard extends Component {
 	
 	  validMetaDataKeys
 		  .forEach(k => {
-        mdStr += `${k} : ${dataObj[k].toString()}\n`;
+        mdStr += `${k}: ${dataObj[k].toString()}\n`;
       });
 	  
 	  extraMetaDataKeys.forEach(k => {
-		  mdStr += `${k} : ${dataObj[k]}\n`;
+		  mdStr += `${k}: ${dataObj[k]}\n`;
 	  });
 	
 	  mdStr += '---\n';

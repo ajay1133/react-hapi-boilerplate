@@ -29,6 +29,7 @@ exports.updateGenderGroup = (payload, id) => GenderGroup.update(payload, { where
 
 exports.deleteGenderGroup = (id) => GenderGroup.destroy({ where: { id } });
 
+exports.deleteGenderGroupByTypeId = (userId, gendertypeId) => GenderGroup.destroy({ where: { userId, gendertypeId } });
 
 
 // Service Types

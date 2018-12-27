@@ -29,6 +29,7 @@ exports.updateAgeGroup = (payload, id) => AgeGroup.update(payload, { where: { id
 
 exports.deleteAgeGroup = (id) => AgeGroup.destroy({ where: { id } });
 
+exports.deleteAgeGroupByTypeId = (userId, agetypeId) => AgeGroup.destroy({ where: { userId, agetypeId } });
 
 
 // Service Types

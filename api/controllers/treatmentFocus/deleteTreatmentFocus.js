@@ -21,11 +21,13 @@ module.exports = {
   
   validate: {
     payload: {
-      ids: joi.array()
+	    userId: joi.number(),
+      
+      typeIds: joi.array()
                      .single()
                      .items(
                        joi.number()
-                          .description('PK of treatment Focus')
+                          .description('PK of Treatment Focus Type id')
                      )
     },
     options: { abortEarly: false },
@@ -33,13 +35,13 @@ module.exports = {
   
   handler: async (request, h) => {
     const { payload } = request;
-    const { ids } = payload;
+    const { userId, typeIds } = payload;
     
     try {
       let promisesList = [];
-  
-      ids.forEach(treatmentFocusId => {
-        promisesList.push(treatmentFocusService.deleteTreatmentFocus(treatmentFocusId));
+	
+	    typeIds.forEach(treatmentfocustypeId => {
+        promisesList.push(treatmentFocusService.deleteTreatmentFocusByTypeId(treatmentfocustypeId));
       });
       
       const data = await Promise.all(promisesList);

@@ -316,10 +316,19 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 		const userServices = getState().get('account').get('userServices');
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		
-		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails)) {
-			const fileContentObj = Object.assign({ active: true }, formData.profileDetails, { id });
+		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails) &&
+			strictValidObjectWithKeys(formData.otherDetails)) {
+			const fileContentObj = Object.assign(
+				{ active: true },
+				formData.profileDetails,
+				{ otherDetails: formData.otherDetails },
+				{ id }
+			);
 			await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			await api.put(`/account/${id}`, { data: formData.profileDetails });
+			await Promise.all(Object.keys(formData.otherDetails).map(detail =>
+				dispatch(internals.addAndDeleteMultipleTypes(formData.otherDetails[detail], detail))
+			));
 			await dispatch(load(true));
     } else if (strictValidObjectWithKeys(formData) && strictValidArrayWithLength(formData.userServices)) {
 			const toAddServicesList = [];
@@ -380,12 +389,6 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 		  
 			await dispatch(updatePassword(updatePasswordObj, true));
 			await dispatch(load(true));
-		}
-		
-		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.otherDetails)) {
-			await Promise.all(Object.keys(formData.otherDetails).map(detail =>
-				dispatch(internals.addAndDeleteMultipleTypes(formData.otherDetails[detail], detail))
-			));
 		}
 		
 		dispatch({ type: LOAD_SUCCESS });
@@ -591,7 +594,6 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
 		
 		content += `<div class="row w100"><h5 class="w100">TREATMENT FOCUS</h5><div class="clearfix"></div>`;
 		content += `<p>${userTreatmentFocusValues.filter(v => v.checked).map(v => v.name).join(', ')}</p></div>`;
-		debugger;
 	}
 	
 	return {
@@ -605,21 +607,21 @@ internals.addKeyValuePairAsString = (k, v, append) => {
 	
 	if (!!v) {
 		if (['string', 'number', 'boolean'].indexOf(typeof v) > - 1) {
-			str = `${k} : ${v.toString()}`;
+			str = `${k}: ${v.toString()}`;
 		} else if (strictValidArrayWithLength(v)) {
-			str = `${k} : [${v.join(', ')}]`;
+			str = `${k}: [${v.join(', ')}]`;
 		} else {
-			str = `${k} : [${JSON.stringify(v)}]`;
+			str = `${k}: [${JSON.stringify(v)}]`;
 		}
 	} else {
-		str = `${k} : `;
+		str = `${k}: `;
 	}
 	
 	str += strictValidString(append) ? `${append}` : '';
 	return str;
 };
 
-internals.getTypeArrayValues = (type, dataObj) => async (getState) => (
+internals.getTypeArrayValues = (type, dataObj) => async (dispatch, getState) => (
 	validObjectWithParameterKeys(dataObj, [type]) &&
 	strictValidArrayWithLength(dataObj[type]) &&
 	dataObj[type].map((v, k) => Object.assign(
@@ -632,7 +634,7 @@ internals.addAndDeleteMultipleTypes = (formTypeValuesList, type) => async (dispa
 	try {
 	  const addList = [];
 	  const deleteList = [];
-	  const { id } = getState().get('auth').get('user') || {};
+	  const { id } = getState().get('auth').get('user');
 		const typesList = getState().get('account').get(`${type}s`) || [];
 		const isValidDataFlag = strictValidString(type) && strictValidArrayWithLength(typesList);
 		
@@ -650,14 +652,12 @@ internals.addAndDeleteMultipleTypes = (formTypeValuesList, type) => async (dispa
 					}
 				}
 			});
-			
 			if (strictValidArrayWithLength(addList)) {
 				await api.post(`/${urlFragment}`, { data: { userId: id, ids: addList } });
 			}
 			if (strictValidArrayWithLength(deleteList)) {
-				await api.post(`/${urlFragment}/delete`, { data: { ids: deleteList } });
+				await api.post(`/${urlFragment}/delete`, { data: { userId: id, typeIds: deleteList } });
 			}
-			
 			return true;
 		}
 	} catch (err) {

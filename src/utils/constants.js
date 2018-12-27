@@ -48,7 +48,8 @@ export const KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS = [
 	'inviteToken',
 	'inviteStatus',
 	'updatedAt',
-	'createdAt'
+	'createdAt',
+	'otherDetails'
 ];
 
 export const MD_FILE_DRAFT_OPTIONS_LIST = [

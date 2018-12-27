@@ -29,7 +29,8 @@ exports.updateTreatmentFocus = (payload, id) => TreatmentFocus.update(payload, {
 
 exports.deleteTreatmentFocus = (id) => TreatmentFocus.destroy({ where: { id } });
 
-
+exports.deleteTreatmentFocusByTypeId = (userId, treatmentfocustypeId) =>
+  TreatmentFocus.destroy({ where: { userId, treatmentfocustypeId } });
 
 // Service Types
 const defaultTreatmentFocusTypesAttributes = [
