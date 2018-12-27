@@ -517,53 +517,80 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
 	let content = '';
 	
 	if (validObjectWithParameterKeys(fileContentObj, ['id'])) {
-		Object.assign(fileContentObj, getState().get('auth').get('user'));
+		const dataObj = Object.assign({}, getState().get('auth').get('user'), fileContentObj);
 		
-		const { id, userServices, otherDetails } = fileContentObj;
+		const { id, userServices, otherDetails } = dataObj;
 		const serviceTypes = getState().get('account').get('serviceTypes');
+		const genderTypes = getState().get('account').get('genderTypes');
+		const ageTypes = getState().get('account').get('ageTypes');
+		const treatmentFocusTypes = getState().get('account').get('treatmentFocusTypes');
 		const userGenderGroups = getState().get('account').get('userGenderGroups');
 		const userAgeGroups = getState().get('account').get('userAgeGroups');
 		const userTreatmentFocusGroups = getState().get('account').get('userTreatmentFocusGroups');
 		const userServicesValues = (strictValidArrayWithLength(userServices) && userServices) || [];
 		const userGenderValues = await dispatch(internals.getTypeArrayValues('genderType', otherDetails)) ||
-			userGenderGroups.map(g => Object.assign({ checked: false }, g));
+			userGenderGroups.map(g => Object.assign(
+				g,
+				{ checked: true },
+				strictValidArrayWithLength(genderTypes.filter(t => t.id === g.gendertypeId))
+					? genderTypes.filter(t => t.id === g.gendertypeId)[0] : {}
+			));
 		const userAgeValues = await dispatch(internals.getTypeArrayValues('ageType', otherDetails)) ||
-			userAgeGroups.map(g => Object.assign({ checked: false }, g));
+			userAgeGroups.map(g => Object.assign(
+				g,
+				{ checked: true },
+				strictValidArrayWithLength(ageTypes.filter(t => t.id === g.agetypeId))
+					? ageTypes.filter(t => t.id === g.agetypeId)[0] : {}
+			));
 		const userTreatmentFocusValues = await dispatch(internals.getTypeArrayValues('treatmentFocusType', otherDetails)) ||
-			userTreatmentFocusGroups.map(g => Object.assign({ checked: false }, g));
+			userTreatmentFocusGroups.map(g => Object.assign(
+				g,
+				{ checked: true },
+				strictValidArrayWithLength(treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId))
+					? treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId)[0] : {}
+			));
 		
 		path = `${USER_PROFILE_PATH}/${id}.md`;
 		
-		const extraMetaDataKeys = Object.keys(fileContentObj)
+		const extraMetaDataKeys = Object.keys(dataObj)
 			.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
-		const validMetaDataKeys = Object.keys(fileContentObj).filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
-		debugger;
+		const validMetaDataKeys = Object.keys(dataObj).filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
+		
 		content = '---\n';
 		
 		validMetaDataKeys.forEach(k => {
-			content += internals.addKeyValuePairAsString(k, fileContentObj[k], '\n');
+			content += internals.addKeyValuePairAsString(k, dataObj[k], '\n');
 		});
 		
 		extraMetaDataKeys.forEach(k => {
-			content += internals.addKeyValuePairAsString(k, fileContentObj[k], '\n');
+			content += internals.addKeyValuePairAsString(k, dataObj[k], '\n');
 		});
 		
-		content += internals
-			.addKeyValuePairAsString('gender', userGenderValues.filter(v => v.checked).map(v => v.name).join[', '], '\n');
-		content += internals
-			.addKeyValuePairAsString('age', userAgeValues.filter(v => v.checked).map(v => v.name).join[', '], '\n');
-		content += '---\n\n';
-		debugger;
+		content += internals.addKeyValuePairAsString(
+			'gender',
+			`[${userGenderValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
+			'\n'
+		);
+		content += internals.addKeyValuePairAsString(
+			'age',
+			`[${userAgeValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
+			'\n'
+		);
+		content += '---\n\n\n\n';
+		
 		if (strictValidArrayWithLength(serviceTypes)) {
-			serviceTypes.forEach(service => {
+			serviceTypes.forEach((service, idx) => {
 				const serviceHeading = (validObjectWithParameterKeys(service, ['name']) && service.name) || '';
-				content += `- ##### ${serviceHeading.toUpperCase()}\n`;
+				content += `- ##### ${serviceHeading.toUpperCase()}\n\n`;
 				userServicesValues.filter(v => v.serviceTypesId === service.id).forEach(userService => {
 					content += (validObjectWithParameterKeys(userService, ['name']) && `\n* ${userService.name}`) || `\n*`;
 				});
-				content += '>\n\n';
+				content += idx === serviceTypes.length - 1 ? '\n\n' : '\n\n>\n\n';
 			});
 		}
+		
+		content += `<div class="row w100"><h5 class="w100">TREATMENT FOCUS</h5><div class="clearfix"></div>`;
+		content += `<p>${userTreatmentFocusValues.filter(v => v.checked).map(v => v.name).join(', ')}</p></div>`;
 		debugger;
 	}
 	
