@@ -9,8 +9,11 @@ export const strictValidObjectWithKeys = obj => strictValidObject(obj) && Object
 
 export const strictValidString = str => !!str && typeof str === 'string';
 
+export const strictValidArrayWithMinLength = (arr, minLength) => strictValidArrayWithLength(arr) &&
+arr.length >= minLength;
+
 export const strictValidSplittableStringWithMinLength = (str, delimeter, minLength) => strictValidString(str) &&
-Array.isArray(str.split(delimeter)) && str.split(delimeter).length >= minLength;
+strictValidArrayWithMinLength(str.split(delimeter), minLength);
 
 export const concatenateRegularExpressions = (regExpList = []) => {
 	let regExp = new RegExp();
@@ -18,7 +21,6 @@ export const concatenateRegularExpressions = (regExpList = []) => {
 	if (strictValidArrayWithLength(regExpList)) {
 		try {
 			regExp = new RegExp(regExpList.join(''));
-			console.log(regExp);
 		} catch (error) {
 			console.log('Error generating regular expression');
 		}

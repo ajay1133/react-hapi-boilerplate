@@ -16,6 +16,8 @@ export const ROOT_BRANCH = 'master';
 
 export const REPO_PATH = 'content/blog';
 
+export const USER_PROFILE_PATH = 'content/profile';
+
 export const DEFAULT_ACCESSIBLE_ROOT_PATH = `/${ROOT_BRANCH}/${REPO_PATH}`;
 
 export const MD_FILE_META_DATA_KEYS = [

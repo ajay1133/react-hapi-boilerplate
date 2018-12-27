@@ -8,9 +8,6 @@ module.exports = {
       payloadType: 'form',
     },
   },
-//  auth: {
-//    strategy: 'default'
-//  },
   tags: ['api', 'account'],
   description: 'Get all accounts',
   notes: 'Get all accounts',
@@ -24,13 +21,17 @@ module.exports = {
                  .allow(['', null])
                  .description('Search keyword: Title, Description'),
   
-      Page: joi.number()
-               .default(1)
+      page: joi.string()
+               .allow(['', null])
                .description('page number to get list of Account'),
   
-      Limit: joi.number()
-                .default(10)
+      limit: joi.string()
+                .allow(['', null])
                 .description('number of account per page'),
+	
+	    order: joi.string()
+	              .allow(['', null])
+	              .description('JSON stringified array of order')
     },
     options: { abortEarly: false },
   },

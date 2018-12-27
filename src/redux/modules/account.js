@@ -1,5 +1,4 @@
 import Immutable from 'immutable';
-import orderBy from 'lodash/orderBy';
 import { load } from './auth';
 import { updateBitBucketFile, deleteBitBucketFile } from './bitBucketRepo';
 import {
@@ -13,7 +12,9 @@ import {
 import {
 	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
 	MD_FILE_META_DATA_KEYS,
-	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS
+	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS,
+	USER_PROFILE_PATH,
+	OFFSET
 } from '../../utils/constants';
 
 const LOAD = 'account/LOAD';
@@ -46,8 +47,14 @@ const initialState = Immutable.fromJS({
   loading: false,
   items: [],
   itemsCount: 0,
+	itemsFilters: {
+  	status: '',
+		keyword: '',
+		page: 1,
+		limit: OFFSET,
+		order: [['firstName', 'ASC']]
+	},
   columns: [],
-  sort: {by: '', dir: 'asc'},
   selectedUser: undefined,
 	accountMsg: null,
 	passwordUpdated: false,
@@ -77,7 +84,9 @@ export default function reducer(state = initialState, action) {
         .set('isLoad', false)
         .set('loadErr', null)
         .set('items', action.items || state.items)
-        .set('itemsCount', action.count || state.itemsCount);
+        .set('itemsCount', action.count || state.itemsCount)
+	      .set('itemsFilters',
+		      (strictValidObjectWithKeys(action.itemsFilters) && action.itemsFilters) || state.itemsFilters);
 
     case LOAD_FAIL:
       return state
@@ -182,33 +191,40 @@ export default function reducer(state = initialState, action) {
   }
 }
 
-export const loadAccounts = (params) => async (dispatch, getState, api) => {
+export const loadAccounts = (filters) => async (dispatch, getState, api) => {
   dispatch({ type: LOAD });
   
   try {
-    const res = await api.get('/account/all', { params });
+  	const itemsFilters = (strictValidObjectWithKeys(filters) && filters) ||
+		  getState().get('account').get('itemsFilters');
+  	if (strictValidArrayWithLength(itemsFilters.order)) {
+  	  itemsFilters.order = JSON.stringify(itemsFilters.order);
+	  }
+    const res = await api.get('/account/all', { params: itemsFilters });
     
     if (validObjectWithParameterKeys(res, ['message'])) {
       dispatch({ type: LOAD_FAIL, error: res.message });
       return;
     }
-    
-    let sortedList = orderBy(res.rows,['firstName'], ['asc']);
-    
-    sortedList.forEach((list, index) => {
-      let events = orderBy(list.events, ['event_participants.updatedAt'], ['desc']);
-      sortedList[index].events = events;
-    });
-    
-    dispatch({ type: LOAD_SUCCESS, items: sortedList, count: res.count });
-    return sortedList;
+	
+	  if (validObjectWithParameterKeys(res, ['rows', 'count'])) {
+		  if (itemsFilters.order) {
+			  itemsFilters.order = JSON.parse(itemsFilters.order);
+		  }
+		  dispatch({
+			  type: LOAD_SUCCESS,
+			  items: res.rows,
+			  count: res.count,
+			  itemsFilters
+		  });
+		  return res.rows;
+	  }
+	  return getState().get('account').get('items');
   } catch (error) {
     let errorMessage = error.message || typeCastToString(error);
-    
-    if (strictValidObjectWithKeys(error) && error.statusCode === 403) {
+    if (validObjectWithParameterKeys(error, ['statusCode']) && error.statusCode === 403) {
       errorMessage = "You are not authorized to access this page";
     }
-    
     dispatch({ type: LOAD_FAIL, error: errorMessage });
 	  dispatch(internals.resetMessage());
   }
@@ -470,13 +486,6 @@ export const loadUserProfileRelatedData = () => async (dispatch, getState, api) 
   }
 };
 
-export const sortAccounts = (sortDir, sortCol) => async (dispatch, getState, api) => {
-  const items = getState().get('account').get('items');
-  const sortedList = orderBy(items,[`${sortCol}`],[`${sortDir}`]);
-  
-  dispatch({ type: LOAD_SUCCESS, items: sortedList, count: sortedList.length });
-};
-
 export const selectUser = (user) => async (dispatch) => {
   dispatch({ type: SELECT_USER, user });
 };
@@ -508,14 +517,27 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
 	let content = '';
 	
 	if (validObjectWithParameterKeys(fileContentObj, ['id'])) {
+		Object.assign(fileContentObj, getState().get('auth').get('user'));
+		
+		const { id, userServices, otherDetails } = fileContentObj;
 		const serviceTypes = getState().get('account').get('serviceTypes');
-		const { id, serviceType = [] } = fileContentObj;
-		path = `/content/profile/${id}.md`;
+		const userGenderGroups = getState().get('account').get('userGenderGroups');
+		const userAgeGroups = getState().get('account').get('userAgeGroups');
+		const userTreatmentFocusGroups = getState().get('account').get('userTreatmentFocusGroups');
+		const userServicesValues = (strictValidArrayWithLength(userServices) && userServices) || [];
+		const userGenderValues = await dispatch(internals.getTypeArrayValues('genderType', otherDetails)) ||
+			userGenderGroups.map(g => Object.assign({ checked: false }, g));
+		const userAgeValues = await dispatch(internals.getTypeArrayValues('ageType', otherDetails)) ||
+			userAgeGroups.map(g => Object.assign({ checked: false }, g));
+		const userTreatmentFocusValues = await dispatch(internals.getTypeArrayValues('treatmentFocusType', otherDetails)) ||
+			userTreatmentFocusGroups.map(g => Object.assign({ checked: false }, g));
+		
+		path = `${USER_PROFILE_PATH}/${id}.md`;
 		
 		const extraMetaDataKeys = Object.keys(fileContentObj)
 			.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
 		const validMetaDataKeys = Object.keys(fileContentObj).filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
-		
+		debugger;
 		content = '---\n';
 		
 		validMetaDataKeys.forEach(k => {
@@ -526,17 +548,23 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
 			content += internals.addKeyValuePairAsString(k, fileContentObj[k], '\n');
 		});
 		
-		content += '---\n';
-		
-		if (strictValidArrayWithLength(serviceType)) {
-			serviceType.forEach((serviceValuesList, idx) => {
-				content += `- ##### ${serviceTypes[idx].name.toUpperCase()}\n`;
-				serviceValuesList.forEach(serviceValue => {
-					content += `\n* ${serviceValue}`;
-					content += '\n>\n';
-				})
+		content += internals
+			.addKeyValuePairAsString('gender', userGenderValues.filter(v => v.checked).map(v => v.name).join[', '], '\n');
+		content += internals
+			.addKeyValuePairAsString('age', userAgeValues.filter(v => v.checked).map(v => v.name).join[', '], '\n');
+		content += '---\n\n';
+		debugger;
+		if (strictValidArrayWithLength(serviceTypes)) {
+			serviceTypes.forEach(service => {
+				const serviceHeading = (validObjectWithParameterKeys(service, ['name']) && service.name) || '';
+				content += `- ##### ${serviceHeading.toUpperCase()}\n`;
+				userServicesValues.filter(v => v.serviceTypesId === service.id).forEach(userService => {
+					content += (validObjectWithParameterKeys(userService, ['name']) && `\n* ${userService.name}`) || `\n*`;
+				});
+				content += '>\n\n';
 			});
 		}
+		debugger;
 	}
 	
 	return {
@@ -551,7 +579,6 @@ internals.addKeyValuePairAsString = (k, v, append) => {
 	if (!!v) {
 		if (['string', 'number', 'boolean'].indexOf(typeof v) > - 1) {
 			str = `${k} : ${v.toString()}`;
-			str += append ? `${append}` : '';
 		} else if (strictValidArrayWithLength(v)) {
 			str = `${k} : [${v.join(', ')}]`;
 		} else {
@@ -561,9 +588,18 @@ internals.addKeyValuePairAsString = (k, v, append) => {
 		str = `${k} : `;
 	}
 	
-	str += append ? `${append}` : '';
+	str += strictValidString(append) ? `${append}` : '';
 	return str;
 };
+
+internals.getTypeArrayValues = (type, dataObj) => async (getState) => (
+	validObjectWithParameterKeys(dataObj, [type]) &&
+	strictValidArrayWithLength(dataObj[type]) &&
+	dataObj[type].map((v, k) => Object.assign(
+		{ checked: v },
+		getState().get('account').get(`${type}s`)[k]
+	))
+) || null;
 
 internals.addAndDeleteMultipleTypes = (formTypeValuesList, type) => async (dispatch, getState, api) => {
 	try {
@@ -598,7 +634,6 @@ internals.addAndDeleteMultipleTypes = (formTypeValuesList, type) => async (dispa
 			return true;
 		}
 	} catch (err) {
-		console.log(err);
 		return false;
 	}
 };

@@ -34,7 +34,7 @@ const selector = formValueSelector('profileForm');
 @connect(state => ({
   initialValues: Object.assign(
   	{},
-	  (strictValidObjectWithKeys(state.get('auth').get('user')) && state.get('auth').get('user')) || {},
+	  (validObjectWithParameterKeys(state.get('auth').get('user'), ['id']) && state.get('auth').get('user')) || {},
 	  state.get('account').get('userDetails') || {}
   ),
 	user: state.get('auth').get('user'),
