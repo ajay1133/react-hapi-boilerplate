@@ -46,7 +46,6 @@ exports.send = async (to, cc, bcc = FROM_EMAIL, replyTo = FROM_EMAIL, subject, m
  */
 internals.emailTemplate = async (templateDir, context) => {
   const template = templateDir + '/' + templateDir.substr(templateDir.lastIndexOf('/') + 1);
-  console.log('template 2 ---------- ', template);
   const email = new EmailTemplate();
   return await email.render(template, context);
 };

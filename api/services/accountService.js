@@ -8,7 +8,7 @@ const logger = require('../helpers/logHelper');
 const Boom = require('boom');
 const User = db.models.User;
 const jwtHelper = require('../helpers/jwtHelper');
-const { userRegistration } = require('../mailer');
+const { userRegistration, contactUs } = require('../mailer');
 const constants = require('../constants');
 
 /**
@@ -190,3 +190,20 @@ exports.getUserByEmail = async (email) => {
     return err;
   }
  };
+
+/**
+ * contactUs: Used to send contact us email
+ * @param payload
+ * @returns {Promise.<*>}
+ */
+exports.contactUs = async (payload) =>  {
+  try {
+    const { name, email, message } = payload;
+    // Contact Us Email
+    const subject = ' Contact US Email';
+    const model = { name, message };
+    return contactUs(email, subject, model);
+  } catch(err) {
+    return err;
+  }
+};

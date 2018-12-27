@@ -49,29 +49,25 @@ export default class AccountModal extends Component {
           component={TextBox}
           validate={required}
         />
-        {
-          !selectedUser
-          &&
-            <Form.Field>
-              <Grid columns='equal'>
-                <Grid.Column>
-                  <Field
-                    name="firstName"
-                    placeholder="First Name"
-                    component={TextBox}
-                    validate={required}
-                  />
-                </Grid.Column>
-                <Grid.Column width={8}>
-                  <Field
-                    name="lastName"
-                    placeholder="Last Name"
-                    component={TextBox}
-                  />
-                </Grid.Column>
-              </Grid>
-            </Form.Field>
-        }
+        <Form.Field>
+          <Grid columns='equal'>
+            <Grid.Column>
+              <Field
+                name="firstName"
+                placeholder="First Name"
+                component={TextBox}
+                validate={required}
+              />
+            </Grid.Column>
+            <Grid.Column width={8}>
+              <Field
+                name="lastName"
+                placeholder="Last Name"
+                component={TextBox}
+              />
+            </Grid.Column>
+          </Grid>
+        </Form.Field>
         <Field
           name="email"
           placeholder="Email"
