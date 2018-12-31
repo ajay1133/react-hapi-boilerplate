@@ -9,7 +9,7 @@ module.exports = {
     },
   },
   auth: {
-    strategy: 'default',
+//    strategy: 'default',
 //    scope: ['admin']
   },
   tags: ['api', 'account'],
