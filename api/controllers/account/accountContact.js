@@ -9,7 +9,7 @@ module.exports = {
     },
   },
   auth: {
-    strategy: 'default',
+//    strategy: 'default',
 //    scope: ['admin']
   },
   tags: ['api', 'account'],
@@ -20,16 +20,16 @@ module.exports = {
       name: joi.string()
                .max(100)
                .required()
-               .description('First Name of User'),
+               .description('Name'),
       
       email: joi.string()
                 .email()
                 .required()
-                .description('Email of User'),
+                .description('Email'),
       
       message: joi.string()
                   .allow(['', null])
-                  .description('Address of User')
+                  .description('Message')
     },
     options: { abortEarly: false },
   },

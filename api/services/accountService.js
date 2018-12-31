@@ -79,6 +79,10 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
     conditionArr.push({ $or: keywordArr });
   }
   
+  if (!order) {
+    order = JSON.stringify([['firstName', 'ASC']]);
+  }
+  
 	User
     .findAndCountAll({
 	    attributes: constants.DEFAULT_USER_ATTRIBUTES,
