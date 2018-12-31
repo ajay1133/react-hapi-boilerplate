@@ -8,10 +8,10 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  auth: {
+//  auth: {
 //    strategy: 'default',
 //    scope: ['admin']
-  },
+//  },
   tags: ['api', 'account'],
   description: 'Contact Form: Send Email',
   notes: 'Contact Form: Send Email',
