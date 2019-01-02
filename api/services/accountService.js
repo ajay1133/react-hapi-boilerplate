@@ -6,7 +6,7 @@ const db = require('../db');
 const cryptoHelper = require('../helpers/cryptoHelper');
 const logger = require('../helpers/logHelper');
 const Boom = require('boom');
-const User = db.models.User;
+const { User, AgeGroup, GenderGroup, TreatmentFocus } = db.models;
 const jwtHelper = require('../helpers/jwtHelper');
 const { userRegistration, contactUs } = require('../mailer');
 const constants = require('../constants');
@@ -59,25 +59,67 @@ exports.createUser = async (userPayload) =>  {
  * Return all user accounts for management
  */
 exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
-  let { status, keyword, page, limit, order } = query;
+  let { status, keyword, page, limit, order, gender, age, insurance } = query;
   let conditionArr = [];
+  let finalInclude = [];
+  
+  let staticKeyObj = { status, keyword, gender, age, insurance };
+  
+  Object.entries(staticKeyObj).forEach(([key, value]) => {
+    if (value) {
+      if (key === 'keyword') {
+        let keywordArr = [
+          { title: { $like: `%${keyword}%` } },
+          { description: { $like: `%${keyword}%` } }
+        ];
+        
+        conditionArr.push({ $or: keywordArr });
+      } else if (key === 'gender') {
+        // Associations
+        User.hasMany(GenderGroup, { foreignKey: 'userId' });
+        GenderGroup.belongsTo(User, { foreignKey: 'userId' });
+  
+        finalInclude.push({
+          attributes: ['userId', 'gendertypeId'],
+          model: GenderGroup,
+          where: {
+            gendertypeId: { $in: [JSON.parse("[" + value + "]")] }
+          }
+        });
+      } else if (key === 'age') {
+        // Associations
+        User.hasMany(AgeGroup, { foreignKey: 'userId' });
+        AgeGroup.belongsTo(User, { foreignKey: 'userId' });
+        
+        finalInclude.push({
+          attributes: ['userId', 'agetypeId'],
+          model: AgeGroup,
+          where: {
+            agetypeId: { $in: [JSON.parse("[" + value + "]")] }
+          }
+        });
+      } else if (key === 'insurance') {
+        // Associations
+        User.hasMany(TreatmentFocus, { foreignKey: 'userId' });
+        TreatmentFocus.belongsTo(User, { foreignKey: 'userId' });
+  
+        finalInclude.push({
+          attributes: ['userId', 'treatmentfocustypeId'],
+          model: TreatmentFocus,
+          where: {
+            treatmentfocustypeId: { $in: [JSON.parse("[" + value + "]")] }
+          }
+        });
+      } else {
+        conditionArr.push({ status });
+      }
+    }
+  });
   
   page = page && page > 1 ? page : 1;
   let offset = page - 1;
   limit = (limit && parseInt(limit)) || 0;
   offset *= limit;
-  
-  if (status) {
-    conditionArr.push({ status });
-  }
-  
-  if (keyword) {
-    let keywordArr = [
-      { title: { $like: `%${keyword}%` } },
-      { description: { $like: `%${keyword}%` } }
-    ];
-    conditionArr.push({ $or: keywordArr });
-  }
   
   if (!order) {
     order = JSON.stringify([['firstName', 'ASC']]);
@@ -86,6 +128,7 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
 	User
     .findAndCountAll({
 	    attributes: constants.DEFAULT_USER_ATTRIBUTES,
+      include: finalInclude,
       where: {
         role: 2,
         $and: conditionArr
