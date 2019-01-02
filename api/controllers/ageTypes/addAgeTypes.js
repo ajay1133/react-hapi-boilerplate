@@ -13,7 +13,7 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'ageTypes'],
+  tags: ['api', 'age'],
   
   description: 'Create age Types',
   

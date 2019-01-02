@@ -12,7 +12,7 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'genderTypes'],
+  tags: ['api', 'gender'],
   
   description: 'Get all gender types',
   

@@ -13,7 +13,7 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'treatmentFocusGroups'],
+  tags: ['api', 'treatment'],
   
   description: 'Delete treatment Focus Groups',
   

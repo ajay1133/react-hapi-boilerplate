@@ -13,7 +13,7 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'genderGroup'],
+  tags: ['api', 'gender'],
   
   description: 'Delete gender Group',
   

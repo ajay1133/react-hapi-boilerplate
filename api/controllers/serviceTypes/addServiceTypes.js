@@ -13,7 +13,7 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'serviceTypes'],
+  tags: ['api', 'services'],
   
   description: 'Create service Types',
   
