@@ -6,20 +6,17 @@ module.exports = {
       queryInterface
         .addColumn('users', 'state', {
           type: Sequelize.STRING,
-          defaultValue: '',
-          after: 'address'
+          defaultValue: ''
         }),
       queryInterface
         .addColumn('users', 'city', {
           type: Sequelize.STRING,
-          defaultValue: '',
-          after: 'state'
+          defaultValue: ''
         }),
       queryInterface
         .addColumn('users', 'zip', {
           type: Sequelize.STRING,
-          defaultValue: '',
-          after: 'city'
+          defaultValue: ''
         })
     ]);
   },
