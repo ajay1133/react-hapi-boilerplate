@@ -12,7 +12,7 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'treatmentFocus'],
+  tags: ['api', 'treatment'],
   
   description: 'Get all treatment Focus',
   
