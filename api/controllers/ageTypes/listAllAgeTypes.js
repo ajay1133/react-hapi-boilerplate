@@ -12,7 +12,7 @@ module.exports = {
     strategy: 'default'
   },
   
-  tags: ['api', 'ageTypes'],
+  tags: ['api', 'age'],
   
   description: 'Get all age types',
   

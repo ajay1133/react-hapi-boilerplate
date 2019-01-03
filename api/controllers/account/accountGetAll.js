@@ -31,7 +31,19 @@ module.exports = {
 	
 	    order: joi.string()
 	              .allow(['', null])
-	              .description('JSON stringified array of order')
+	              .description('JSON stringified array of order'),
+      
+      gender: joi.string()
+	              .allow(['', null])
+	              .description('string of gender id separated by comma, no spaces allowed'),
+      
+      age: joi.string()
+	              .allow(['', null])
+	              .description('string of age id separated by comma, no spaces allowed'),
+  
+      insurance: joi.string()
+	              .allow(['', null])
+	              .description('string of insurance id separated by comma, no spaces allowed')
     },
     options: { abortEarly: false },
   },
