@@ -18,6 +18,7 @@ import {
 	PROFILE_ROOT_PATH,
 	OFFSET
 } from '../../utils/constants';
+import moment from 'moment';
 
 const LOAD = 'account/LOAD';
 const LOAD_SUCCESS = 'account/LOAD_SUCCESS';
@@ -308,7 +309,7 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
     dispatch({
 	    type: ACCOUNT_SUCCESS,
 	    users,
-	    selectedUser,
+	    selectedUser: !accountDetails.isDeleted ? selectedUser : {},
 	    message: 'Updated Successfully !!'
     });
 	  dispatch(internals.resetMessage());
@@ -324,14 +325,14 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 	dispatch({ type: ACCOUNT });
 	
 	try {
-		const { id, email } = getState().get('auth').get('user');
+		const { id, email, status } = getState().get('auth').get('user');
 		const userServices = getState().get('account').get('userServices');
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		
 		if (strictValidObjectWithKeys(formData) && (strictValidObjectWithKeys(formData.profileDetails) ||
 			strictValidObjectWithKeys(formData.otherDetails))) {
 			const fileContentObj = Object.assign(
-				{ active: true },
+				{ active: status === 1 ? 'true' : 'false' },
 				formData.profileDetails,
 				{ otherDetails: formData.otherDetails || {} },
 				{ id }
@@ -530,7 +531,7 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 	let path = null;
 	let content = '';
 	let dataObj = {};
-	debugger;
+	
 	const sessionUser = getState().get('auth').get('user') || {};
 	
 	const sameSessionUserFlag = validObjectWithParameterKeys(fileContentObj, ['id']) &&
@@ -542,9 +543,9 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 		const { id, active } = fileContentObj;
 		path = `${USER_PROFILE_PATH}/${id}.md`;
 		content = await dispatch(internals.getBitBucketFileData(path));
-		debugger;
+		
 		if (!strictValidString(content)) {
-			dataObj = Object.assign({}, fileContentObj);
+			dataObj = Object.assign({ date: moment().format() }, fileContentObj);
 			const extraMetaDataKeys = Object
 				.keys(dataObj)
 				.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
@@ -567,7 +568,6 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 			const toReplaceStr = active ? 'active: false' : 'active: true';
 			content = content.replace(toReplaceStr, `active: ${active}`);
 		}
-		debugger;
 	}
 	
 	if (sameSessionUserFlag) {
@@ -579,7 +579,7 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 		if (image) {
 			dataObj.image = getAbsoluteS3FileUrl(image);
 		}
-		debugger;
+		
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		const genderTypes = getState().get('account').get('genderTypes');
 		const ageTypes = getState().get('account').get('ageTypes');

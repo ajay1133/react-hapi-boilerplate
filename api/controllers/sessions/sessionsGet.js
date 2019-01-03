@@ -21,7 +21,7 @@ module.exports = {
       let user = await accountService.getUser(request.auth.credentials.id);
       return h.response(user);
     } catch(err) {
-      return boom.badRequest(err)
+      return boom.badRequest(typeof err === 'string' ? err : JSON.stringify(err));
     }
   },
 };
