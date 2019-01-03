@@ -19,6 +19,6 @@ npm install -g sequelize-cli
 echo "==> Running Migrations.."
 
 sequelize db:migrate
-sequelize db:seed:all
+# sequelize db:seed:all
 
 echo "*** done ***"
