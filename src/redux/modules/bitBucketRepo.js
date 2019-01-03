@@ -140,8 +140,8 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 	errorMsg[1] = 'Unable to add file';
 	errorMsg[2] = 'Unable to update file';
   
-  successMsg[1] = 'Successfully Added To BitBucket. Loading added file';
-  successMsg[2] = 'Successfully Updated To BitBucket. Loading updated file';
+  successMsg[1] = 'Successfully Added';
+  successMsg[2] = 'Successfully Updated';
   
   const type = data.type;
   delete data.type;

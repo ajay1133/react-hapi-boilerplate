@@ -1,19 +1,21 @@
 import Immutable from 'immutable';
 import { load } from './auth';
-import { updateBitBucketFile, deleteBitBucketFile } from './bitBucketRepo';
+import { updateBitBucketFile, bitBucketView } from './bitBucketRepo';
 import {
 	strictValidObjectWithKeys,
 	typeCastToString,
 	strictValidArrayWithLength,
 	getAbsoluteS3FileUrl,
 	strictValidString,
-	validObjectWithParameterKeys
+	validObjectWithParameterKeys,
+	strictValidArrayWithMinLength
 } from '../../utils/commonutils';
 import {
 	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
 	MD_FILE_META_DATA_KEYS,
 	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS,
 	USER_PROFILE_PATH,
+	PROFILE_ROOT_PATH,
 	OFFSET
 } from '../../utils/constants';
 
@@ -242,8 +244,13 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
 	  accountDetails.status = 2;
     const res = await api.post('/account', { data: accountDetails });
     
-    if (validObjectWithParameterKeys(res, ['id'])) {
-	    await dispatch(internals.updateBitBucketFile(res, 1));
+    if (validObjectWithParameterKeys(res, ['id', 'status'])) {
+	    await dispatch(internals.updateBitBucketFile(Object.assign(
+	    	{},
+		    res,
+		    { active: res.status === 1 ? 'true' : 'false' }),
+		    1
+	    ));
 	    dispatch(loadAccounts());
 	    dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!' });
 	    dispatch(internals.resetMessage());
@@ -273,14 +280,12 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
     
     if (accountDetails.isDeleted) {
       users = users.filter(user => user.id !== id);
-      
-      // Delete file on BitBucket
-      const deleteFileData = {
-        files: `/content/profile/${(id).trim()}.md`
-      };
-      
-      deleteFileData.message = `Deleted: ${deleteFileData.files}`;
-      await dispatch(deleteBitBucketFile(deleteFileData));
+	    selectedUser = strictValidArrayWithLength(users.filter(user => user.id === id)) &&
+		    users.filter(user => user.id === id)[0];
+	    if (accountDetails.status === 3) {
+		    accountDetails.active = false;
+	    }
+	    await dispatch(internals.updateBitBucketFile(Object.assign({ id }, accountDetails), 2));
     } else {
       users = users.map((user) => {
         if (user.id === id) {
@@ -288,14 +293,11 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
         }
         return user;
       });
-      
       selectedUser = strictValidArrayWithLength(users.filter(user => user.id === id)) &&
 	      users.filter(user => user.id === id)[0];
-      
       if (accountDetails.status === 1) {
         accountDetails.active = true;
       }
-	
 	    await dispatch(internals.updateBitBucketFile(Object.assign({ id }, accountDetails), 2));
     }
     
@@ -326,12 +328,12 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 		const userServices = getState().get('account').get('userServices');
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		
-		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails) &&
-			strictValidObjectWithKeys(formData.otherDetails)) {
+		if (strictValidObjectWithKeys(formData) && (strictValidObjectWithKeys(formData.profileDetails) ||
+			strictValidObjectWithKeys(formData.otherDetails))) {
 			const fileContentObj = Object.assign(
 				{ active: true },
 				formData.profileDetails,
-				{ otherDetails: formData.otherDetails },
+				{ otherDetails: formData.otherDetails || {} },
 				{ id }
 			);
 			await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
@@ -518,25 +520,66 @@ internals.resetMessage = (defaultTimeout = DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES
 };
 
 internals.updateBitBucketFile = (fileContentObj, type) => async (dispatch) => {
-	if (fileContentObj.image) {
-		fileContentObj.image = getAbsoluteS3FileUrl(fileContentObj.image);
-	}
-	
 	const mdFileData = await dispatch(internals.getFileContent(fileContentObj));
 	let updateFileData = Object.assign({}, mdFileData, { type });
 	updateFileData.message = `Updated: ${updateFileData.path}`;
-	
 	await dispatch(updateBitBucketFile(updateFileData));
 };
 
-internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
+internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) => {
 	let path = null;
 	let content = '';
+	let dataObj = {};
+	debugger;
+	const sessionUser = getState().get('auth').get('user') || {};
 	
-	if (validObjectWithParameterKeys(fileContentObj, ['id'])) {
-		const dataObj = Object.assign({}, getState().get('auth').get('user'), fileContentObj);
+	const sameSessionUserFlag = validObjectWithParameterKeys(fileContentObj, ['id']) &&
+		validObjectWithParameterKeys(sessionUser, ['id']) &&
+		sessionUser.id === fileContentObj.id;
+	
+	//Works only to change the active key-value pair in the file
+	if (!sameSessionUserFlag && validObjectWithParameterKeys(fileContentObj, ['id', 'active'])) {
+		const { id, active } = fileContentObj;
+		path = `${USER_PROFILE_PATH}/${id}.md`;
+		content = await dispatch(internals.getBitBucketFileData(path));
+		debugger;
+		if (!strictValidString(content)) {
+			dataObj = Object.assign({}, fileContentObj);
+			const extraMetaDataKeys = Object
+				.keys(dataObj)
+				.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
+			const validMetaDataKeys = Object.keys(dataObj).filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
+			
+			content = '---\n';
+			
+			validMetaDataKeys.forEach(k => {
+				content += internals.addKeyValuePairAsString(k, dataObj[k], '\n');
+			});
+			
+			extraMetaDataKeys.forEach(k => {
+				content += internals.addKeyValuePairAsString(k, dataObj[k], '\n');
+			});
+			
+			content += internals.addKeyValuePairAsString('gender', '[]', '\n');
+			content += internals.addKeyValuePairAsString('age', '[]', '\n');
+			content += '---\n\n\n\n';
+		} else {
+			const toReplaceStr = active ? 'active: false' : 'active: true';
+			content = content.replace(toReplaceStr, `active: ${active}`);
+		}
+		debugger;
+	}
+	
+	if (sameSessionUserFlag) {
+		dataObj = Object.assign({}, getState().get('auth').get('user'), fileContentObj);
+		let { id, userServices, otherDetails, image } = dataObj;
+		path = `${USER_PROFILE_PATH}/${id}.md`;
 		
-		const { id, userServices, otherDetails } = dataObj;
+		// Transform relative image url to absolute path if relative url exists
+		if (image) {
+			dataObj.image = getAbsoluteS3FileUrl(image);
+		}
+		debugger;
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		const genderTypes = getState().get('account').get('genderTypes');
 		const ageTypes = getState().get('account').get('ageTypes');
@@ -567,8 +610,6 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
 					? treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId)[0] : {}
 			));
 		
-		path = `${USER_PROFILE_PATH}/${id}.md`;
-		
 		const extraMetaDataKeys = Object.keys(dataObj)
 			.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
 		const validMetaDataKeys = Object.keys(dataObj).filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
@@ -597,14 +638,14 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
 		
 		if (strictValidArrayWithLength(serviceTypes)) {
 			serviceTypes.forEach((service, idx) => {
-				const serviceHeading = (validObjectWithParameterKeys(service, ['name']) && service.name) || '';
-				content += `- ##### ${serviceHeading.toUpperCase()}\n\n`;
 				if (idx in userServicesValues && strictValidArrayWithLength(userServicesValues[idx])) {
+					const serviceHeading = (validObjectWithParameterKeys(service, ['name']) && service.name) || '';
+					content += `- ##### ${serviceHeading.toUpperCase()}\n\n`;
 					userServicesValues[idx].forEach(userService => {
 						content += `* ${userService || ''}\n`;
 					});
+					content += idx === serviceTypes.length - 1 ? '\n\n' : '\n\n>\n\n';
 				}
-				content += idx === serviceTypes.length - 1 ? '\n\n' : '\n\n>\n\n';
 			});
 		}
 		
@@ -616,6 +657,26 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState) => {
 		path,
 		content
 	};
+};
+
+internals.getBitBucketFileData = (path) => async (dispatch, getState, api) => {
+	const bitBucketProfileListing =
+		await api.get('/bitBucket/listing', { params: { path: PROFILE_ROOT_PATH, page: 1 }});
+	const bitBucketDemoFileData = (strictValidArrayWithLength(bitBucketProfileListing) &&
+		validObjectWithParameterKeys(bitBucketProfileListing[0], ['links']) &&
+		bitBucketProfileListing[0]) || {};
+	const uuId = (bitBucketDemoFileData.links && validObjectWithParameterKeys(bitBucketDemoFileData.links, ['self']) &&
+		validObjectWithParameterKeys(bitBucketDemoFileData.links.self, ['href']) &&
+		strictValidArrayWithMinLength(bitBucketDemoFileData.links.self.href.split('/src/'), 2) &&
+		strictValidArrayWithLength(bitBucketDemoFileData.links.self.href.split('/src/')[1].split('/')) &&
+		bitBucketDemoFileData.links.self.href.split('/src/')[1].split('/')[0]) || '';
+	const bitBucketExistingFileData = await dispatch(bitBucketView({
+		path: `/${uuId}/${path}`
+	}));
+	const content =
+		(validObjectWithParameterKeys(bitBucketExistingFileData, ['data']) && bitBucketExistingFileData.data) || '';
+	
+	return content;
 };
 
 internals.addKeyValuePairAsString = (k, v, append) => {
