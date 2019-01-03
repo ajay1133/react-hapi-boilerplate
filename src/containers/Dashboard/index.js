@@ -30,6 +30,7 @@ import {
 	DEFAULT_BITBUCKET_LIST_FILTERS,
 	OFFSET
 } from '../../utils/constants';
+import moment from 'moment';
 
 const md = MarkDown({
   html: false,
@@ -161,7 +162,7 @@ export default class Dashboard extends Component {
     
     const dataObject = {
       path: isAddingFileFlag ? basePath + '/' + formValues.fileName : basePath,
-      content: this.compileFormFieldsToMarkDown(formValues),
+      content: this.compileFormFieldsToMarkDown(formValues, isAddingFileFlag),
       type: 2
     };
     
@@ -193,7 +194,7 @@ export default class Dashboard extends Component {
 	  this.setState({ loading: false });
   };
 	
-	compileFormFieldsToMarkDown = (dataObj) => {
+	compileFormFieldsToMarkDown = (dataObj, isAddingFileFlag) => {
 	  const dataObjKeys = (strictValidObjectWithKeys(dataObj) && Object.keys(dataObj)) || [];
 	 
 	  const extraMetaDataKeys = dataObjKeys
@@ -211,6 +212,10 @@ export default class Dashboard extends Component {
 		  mdStr += `${k}: ${dataObj[k]}\n`;
 	  });
 	
+	  if (isAddingFileFlag) {
+		  mdStr += `date: ${moment().format()}\n`;
+	  }
+	  
 	  mdStr += '---\n';
    
 	  if (dataObjKeys.indexOf('content') > -1) {
