@@ -324,14 +324,14 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 	dispatch({ type: ACCOUNT });
 	
 	try {
-		const { id, email } = getState().get('auth').get('user');
+		const { id, email, status } = getState().get('auth').get('user');
 		const userServices = getState().get('account').get('userServices');
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		
 		if (strictValidObjectWithKeys(formData) && (strictValidObjectWithKeys(formData.profileDetails) ||
 			strictValidObjectWithKeys(formData.otherDetails))) {
 			const fileContentObj = Object.assign(
-				{ active: true },
+				{ active:  status === 1 ? 'true' : 'false'  },
 				formData.profileDetails,
 				{ otherDetails: formData.otherDetails || {} },
 				{ id }

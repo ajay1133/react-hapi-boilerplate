@@ -18,13 +18,13 @@ module.exports = {
     basePath: db.bitBucket.basePath
   },
   aws: {
-    s3: {
-      bucketWrite: 'compass-development-original',
-      bucket: 'compass-development'
-    }
+		s3: {
+			bucketWrite: 'compass-development-storage',
+			bucket: 'compass-development-storage'
+		}
   },
   BasePath:{
-    host: "http://stagingapi.compassrecoverynetwork.com"
+    host: "http://stagingapp.compassrecoverynetwork.com"
   },
   emailUrl: {
     host: 'smtps://username:password@smtp.example.com/?pool=true'
