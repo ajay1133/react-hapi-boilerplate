@@ -20,6 +20,8 @@ export const USER_PROFILE_PATH = 'content/profile';
 
 export const DEFAULT_ACCESSIBLE_ROOT_PATH = `/${ROOT_BRANCH}/${REPO_PATH}`;
 
+export const PROFILE_ROOT_PATH = `/${ROOT_BRANCH}/${USER_PROFILE_PATH}`;
+
 export const MD_FILE_META_DATA_KEYS = [
 	'email',
 	'firstName',

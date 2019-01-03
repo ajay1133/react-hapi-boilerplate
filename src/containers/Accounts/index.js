@@ -95,29 +95,20 @@ export default class Accounts extends Component {
     const { selectedUser, type } = this.state;
     const { dispatch } = this.props;
     
-    let accountDetail = {
-      id: selectedUser.id,
-      title: selectedUser.title,
-      firstName: selectedUser.firstName,
-      lastName: selectedUser.lastName,
-      email: selectedUser.email,
-      phone: selectedUser.phone,
-      website: selectedUser.website,
-      description: selectedUser.description,
-      image: selectedUser.image,
-      featuredVideo: selectedUser.featuredVideo
+    let accountDetails = {
+      id: selectedUser.id
     };
     
     if (type === 'delete') {
-      accountDetail.isDeleted = true;
+      accountDetails.isDeleted = true;
     } else if (type === 'active'){
-      accountDetail.status = 1;
+      accountDetails.status = 1;
     } else if (type === 'denied') {
-      accountDetail.status = 3;
+      accountDetails.status = 3;
     }
     
     this.setState({ loading: true });
-    await dispatch(updateAccount(accountDetail, false));
+    await dispatch(updateAccount(accountDetails, false));
 	  this.setState({
       loading: false,
       openConfirmBox: false,
