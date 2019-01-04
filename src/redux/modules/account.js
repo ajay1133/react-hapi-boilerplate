@@ -8,7 +8,8 @@ import {
 	getAbsoluteS3FileUrl,
 	strictValidString,
 	validObjectWithParameterKeys,
-	strictValidArrayWithMinLength
+	strictValidArrayWithMinLength,
+	addKeyValuePairAsString
 } from '../../utils/commonutils';
 import {
 	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
@@ -16,10 +17,10 @@ import {
 	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS,
 	USER_PROFILE_PATH,
 	PROFILE_ROOT_PATH,
+	PROFILE_MD_META_INITIAL_VALUES,
 	DEFAULT_USER_PROFILE_IMAGE_URL,
 	OFFSET
 } from '../../utils/constants';
-import moment from 'moment';
 
 const LOAD = 'account/LOAD';
 const LOAD_SUCCESS = 'account/LOAD_SUCCESS';
@@ -410,6 +411,7 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			await dispatch(load(true));
 		}
 		
+		await dispatch(loadUserProfileRelatedData());
 		dispatch({ type: LOAD_SUCCESS });
 		dispatch({ type: UPDATED_PROFILE, message: 'Updated Successfully !!' });
 		dispatch(internals.resetMessage());
@@ -540,14 +542,14 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 		validObjectWithParameterKeys(sessionUser, ['id']) &&
 		sessionUser.id === fileContentObj.id;
 	
-	//Works only to change the active key-value pair in the file
 	if (!sameSessionUserFlag && validObjectWithParameterKeys(fileContentObj, ['id', 'active'])) {
 		const { id, active } = fileContentObj;
 		path = `${USER_PROFILE_PATH}/${id}.md`;
 		content = await dispatch(internals.getBitBucketFileData(path));
 		
 		if (!strictValidString(content)) {
-			dataObj = Object.assign({ date: moment().format() }, fileContentObj);
+			//Create a new user profile md file
+			dataObj = Object.assign(PROFILE_MD_META_INITIAL_VALUES, fileContentObj);
 			const extraMetaDataKeys = Object
 				.keys(dataObj)
 				.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
@@ -556,30 +558,34 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 			content = '---\n';
 			
 			validMetaDataKeys.forEach(k => {
-				content += internals.addKeyValuePairAsString(k, dataObj[k], '\n');
+				content += addKeyValuePairAsString(k, dataObj[k], '\n');
 			});
 			
 			extraMetaDataKeys.forEach(k => {
-				content += internals.addKeyValuePairAsString(k, dataObj[k], '\n');
+				content += addKeyValuePairAsString(k, dataObj[k], '\n');
 			});
 			
-			content += internals.addKeyValuePairAsString('gender', '[]', '\n');
-			content += internals.addKeyValuePairAsString('age', '[]', '\n');
+			content += addKeyValuePairAsString('gender', '[]', '\n');
+			content += addKeyValuePairAsString('age', '[]', '\n');
 			content += '---\n\n\n\n';
 		} else {
+			//Replace old file with active true/false
 			const toReplaceStr = active ? 'active: false' : 'active: true';
 			content = content.replace(toReplaceStr, `active: ${active}`);
 		}
 	}
 	
 	if (sameSessionUserFlag) {
-		dataObj = Object.assign({}, getState().get('auth').get('user'), fileContentObj);
-		let { id, userServices, otherDetails, image } = dataObj;
+		dataObj = Object.assign(PROFILE_MD_META_INITIAL_VALUES, sessionUser, fileContentObj);
+		let { id, userServices, otherDetails } = dataObj;
 		path = `${USER_PROFILE_PATH}/${id}.md`;
 		
 		// Transform relative image url to absolute path if relative url exists
-		dataObj.image = (!!image && getAbsoluteS3FileUrl(image)) || DEFAULT_USER_PROFILE_IMAGE_URL;
+		dataObj.image = sessionUser.image
+			? getAbsoluteS3FileUrl(sessionUser.image)
+			: (fileContentObj.image ? getAbsoluteS3FileUrl(fileContentObj.image) : DEFAULT_USER_PROFILE_IMAGE_URL);
 		
+		//save other fields from stored state
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		const genderTypes = getState().get('account').get('genderTypes');
 		const ageTypes = getState().get('account').get('ageTypes');
@@ -617,19 +623,19 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 		content = '---\n';
 		
 		validMetaDataKeys.forEach(k => {
-			content += internals.addKeyValuePairAsString(k, dataObj[k], '\n');
+			content += addKeyValuePairAsString(k, dataObj[k], '\n');
 		});
 		
 		extraMetaDataKeys.forEach(k => {
-			content += internals.addKeyValuePairAsString(k, dataObj[k], '\n');
+			content += addKeyValuePairAsString(k, dataObj[k], '\n');
 		});
 		
-		content += internals.addKeyValuePairAsString(
+		content += addKeyValuePairAsString(
 			'gender',
 			`[${userGenderValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
 			'\n'
 		);
-		content += internals.addKeyValuePairAsString(
+		content += addKeyValuePairAsString(
 			'age',
 			`[${userAgeValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
 			'\n'
@@ -686,25 +692,6 @@ internals.getBitBucketFileData = (path) => async (dispatch, getState, api) => {
 		console.log(typeCastToString(e));
 		return '';
 	}
-};
-
-internals.addKeyValuePairAsString = (k, v, append) => {
-	let str = '';
-	
-	if (!!v) {
-		if (['string', 'number', 'boolean'].indexOf(typeof v) > - 1) {
-			str = `${k}: ${v.toString()}`;
-		} else if (strictValidArrayWithLength(v)) {
-			str = `${k}: [${v.join(', ')}]`;
-		} else {
-			str = `${k}: [${JSON.stringify(v)}]`;
-		}
-	} else {
-		str = `${k}: `;
-	}
-	
-	str += strictValidString(append) ? `${append}` : '';
-	return str;
 };
 
 internals.getTypeArrayValues = (type, dataObj) => async (dispatch, getState) => (

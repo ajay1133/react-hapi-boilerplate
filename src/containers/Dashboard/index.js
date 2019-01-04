@@ -19,7 +19,8 @@ import {
 	strictValidObjectWithKeys,
 	validFileName,
 	validObjectWithParameterKeys,
-	strictValidArrayWithLength
+	strictValidArrayWithLength,
+	addKeyValuePairAsString
 } from '../../utils/commonutils';
 import {
 	DEFAULT_ACCESSIBLE_ROOT_PATH,
@@ -28,6 +29,7 @@ import {
 	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS,
 	VALID_ACCESSIBLE_FILE_FORMATS,
 	DEFAULT_BITBUCKET_LIST_FILTERS,
+	DEFAULT_BLOG_IMAGE_URL,
 	OFFSET
 } from '../../utils/constants';
 import moment from 'moment';
@@ -204,18 +206,11 @@ export default class Dashboard extends Component {
     let mdStr = '---\n';
 	
 	  validMetaDataKeys
+		  .concat(extraMetaDataKeys)
 		  .forEach(k => {
-        mdStr += `${k}: ${dataObj[k].toString()}\n`;
+			  mdStr += addKeyValuePairAsString(k, k === 'image' && !dataObj[k] ? DEFAULT_BLOG_IMAGE_URL : dataObj[k], '\n');
       });
-	  
-	  extraMetaDataKeys.forEach(k => {
-		  mdStr += `${k}: ${dataObj[k]}\n`;
-	  });
-	
-	  if (isAddingFileFlag) {
-		  mdStr += `date: ${moment().format()}\n`;
-	  }
-	  
+		
 	  mdStr += '---\n';
    
 	  if (dataObjKeys.indexOf('content') > -1) {

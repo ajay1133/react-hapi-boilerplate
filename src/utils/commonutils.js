@@ -50,3 +50,22 @@ export const getFileExtension = fn => fn.substring(fn.lastIndexOf('.'), fn.lengt
 export const getAbsoluteS3FileUrl = relativeUrl =>
 (strictValidString(relativeUrl) && !relativeUrl.includes(config.aws.s3Url) && `${config.aws.s3Url}/${relativeUrl}`) ||
 typeCastToString(relativeUrl);
+
+export const addKeyValuePairAsString = (k, v, append) => {
+	let str = '';
+	
+	if (!!v) {
+		if (['string', 'number', 'boolean'].indexOf(typeof v) > - 1) {
+			str = `${k}: ${typeCastToString(v)}`;
+		} else if (strictValidArrayWithLength(v)) {
+			str = `${k}: [${v.join(', ')}]`;
+		} else {
+			str = `${k}: [${JSON.stringify(v)}]`;
+		}
+	} else {
+		str = `${k}: `;
+	}
+	
+	str += strictValidString(append) ? `${append}` : '';
+	return str;
+};

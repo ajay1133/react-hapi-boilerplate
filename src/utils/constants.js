@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 export const OFFSET = 10;
 
 export const SCORE_INTERVAL_OPTIONS =[
@@ -70,10 +72,6 @@ export const MD_FILE_DRAFT_OPTIONS_LIST = [
 	}
 ];
 
-export const MD_META_INITIAL_VALUES = {
-  draft: false
-};
-
 export const VALID_ACCESSIBLE_FILE_FORMATS = ['md'];
 
 export const VALID_ACCESSIBLE_IMAGE_FILE_FORMATS = ['jpg', 'jpeg', 'png', 'gif'];
@@ -113,8 +111,20 @@ export const USER_PASSWORD_SECTION_FORM_KEYS = [
 
 export const DEFAULT_USER_PROFILE_IMAGE_URL = 'images/default_User_Profile_Image.jpg';
 
-export const DEFAULT_BLOG_IMAGE_URL = 'images/default_User_Profile_Image.jpg';
+export const DEFAULT_BLOG_IMAGE_URL = 'images/default_Blog_Image.jpg';
 
 export const VALID_BEGIN_FILE_NAME = '^[_|0-9|a-z|A-Z]+';
 
 export const IMAGE_FILE_NAME_BEGIN_REG_EXP = '^[_|0-9|a-z|A-Z|//|-]+';
+
+export const BLOG_MD_META_INITIAL_VALUES = {
+	draft: 'false',
+	image: DEFAULT_BLOG_IMAGE_URL,
+	date: moment().format()
+};
+
+export const PROFILE_MD_META_INITIAL_VALUES = {
+	draft: 'false',
+	image: DEFAULT_USER_PROFILE_IMAGE_URL,
+	date: moment().format()
+};
