@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { push } from 'connected-react-router';
 import { Table, Grid, Header, Message, Confirm, Icon, Segment, List, Form, Loader } from  'semantic-ui-react';
 import { Field, reduxForm } from 'redux-form/immutable';
 import { DropDown } from '../../components/Form';
@@ -42,6 +43,7 @@ const TableRow = ({row, editAccount, typeAction}) => (
 );
 
 @connect(state => ({
+	user: state.get('auth').get('user'),
   items: state.get('account').get('items'),
 	itemsFilters: (
 	  validObjectWithParameterKeys(state.get('account').get('itemsFilters'), ['page']) &&
@@ -59,9 +61,13 @@ const TableRow = ({row, editAccount, typeAction}) => (
 })
 export default class Accounts extends Component {
   static propTypes = {
+	  user: PropTypes.oneOfType([
+		  PropTypes.string,
+		  PropTypes.object
+	  ]),
     dispatch: PropTypes.func,
     message: PropTypes.string,
-    isLoad: PropTypes.bool,
+    isLoad: PropTypes.bool
   };
   
   static defaultProps = {
@@ -200,9 +206,16 @@ export default class Accounts extends Component {
   };
   
   render() {
-    const { items, itemsFilters, itemsCount, loadErr, accountErr, message } = this.props;
+    const { dispatch, user, items, itemsFilters, itemsCount, loadErr, accountErr, message } = this.props;
     const { loading, selectedUser, showMessageFlag, openConfirmBox, type } = this.state;
 	
+	  const isValidUserFlag = validObjectWithParameterKeys(user, ['id', 'role']) && !!user.id && user.role === 1;
+	  const sessionExpiredFlag = !loading && !isValidUserFlag;
+	
+	  if (sessionExpiredFlag) {
+		  dispatch(push('/'));
+	  }
+	  
 	  return (
       <AuthenticatedUser>
 			  {
