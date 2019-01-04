@@ -256,7 +256,7 @@ export default class Profile extends Component {
 									  <Grid.Row className="newServices">
 										  {
 											  genderTypes.map((genderType, idx) => (
-												  <Grid.Column>
+												  <Grid.Column key={idx}>
 													  <Field
 														  name={ `genderType[${idx}]` }
 														  component={CheckBox}
@@ -331,7 +331,6 @@ export default class Profile extends Component {
 								  size="medium"
 								  rounded
 								  alt="image"
-								  fluid
 								  centered
 							  />
 						  </Grid.Column>
@@ -479,7 +478,58 @@ export default class Profile extends Component {
 			</Grid>
 		);
 	};
-	
+  
+  getSearchSection = () => {
+    const { userVerifiedFlag } = this.state;
+    
+    return (
+      <Grid>
+        <Grid.Column computer="10">
+          <Header size='medium'>Search Keyword</Header>
+          <Grid>
+            <Grid.Row columns={ userVerifiedFlag ? 2 : 1 } className="serviceListing">
+              {
+                !userVerifiedFlag &&
+                <Grid.Column>
+                  <Field
+                    name="currentPassword"
+                    placeholder="Verify Your Current Password"
+                    type="password"
+                    component={TextBox}
+                  />
+                </Grid.Column>
+              }
+              {
+                userVerifiedFlag &&
+                <Grid.Column>
+                  <Field
+                    name="password"
+                    placeholder="Enter New Password"
+                    type="password"
+                    component={TextBox}
+                    validate={passwordValidator}
+                  />
+                </Grid.Column>
+              }
+              {
+                userVerifiedFlag &&
+                <Grid.Column>
+                  <Field
+                    name="confirmPassword"
+                    placeholder="Confirm New Password"
+                    type="password"
+                    component={TextBox}
+                    validate={required}
+                  />
+                </Grid.Column>
+              }
+            </Grid.Row>
+          </Grid>
+        </Grid.Column>
+      </Grid>
+    );
+  };
+  
 	renderTabs = () => {
 		const { handleSubmit } = this.props;
   	const { activeTab, userVerifiedFlag } = this.state;
@@ -488,7 +538,8 @@ export default class Profile extends Component {
 		const tabContent = {
 			profileDetails: this.getProfileTabsSection(),
 			userServices: this.getUserServicesSection(),
-			password: this.getPasswordSection()
+			password: this.getPasswordSection(),
+      search: this.getSearchSection(),
 		};
 
 		const descContent = (
@@ -540,6 +591,15 @@ export default class Profile extends Component {
 					buttonContent = !userVerifiedFlag ? 'Verify Password' : 'Update Password';
 					break;
 					
+        case 'search':
+					contentSection = (
+						<div className="editContent">
+							<Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
+						</div>
+					);
+					buttonContent = 'Update Search';
+					break;
+					
 				default:
 					contentSection = (<div></div>);
 					break;
@@ -580,6 +640,15 @@ export default class Profile extends Component {
 	        onClick: () => this.handleTabClick('password')
         },
 				render: () => pane('password')
+			},
+      {
+        menuItem: {
+        	key: 'search',
+	        icon: 'search',
+	        content: 'SEARCH',
+	        onClick: () => this.handleTabClick('search')
+        },
+				render: () => pane('search')
 			},
 		];
 
