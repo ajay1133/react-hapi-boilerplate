@@ -7,7 +7,7 @@ import {
 } from '../../utils/commonutils';
 import {
 	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
-	MD_META_INITIAL_VALUES,
+	BLOG_MD_META_INITIAL_VALUES,
 	DEFAULT_BITBUCKET_LIST_FILTERS,
 } from '../../utils/constants';
 
@@ -28,7 +28,7 @@ const initialState = Immutable.fromJS({
 	loadErr: null,
 	accessToken: null,
 	repositories: [],
-  bitBucketInitialValues: MD_META_INITIAL_VALUES,
+  bitBucketInitialValues: BLOG_MD_META_INITIAL_VALUES,
 	bitBucketListFilters: DEFAULT_BITBUCKET_LIST_FILTERS
 });
 
@@ -58,7 +58,7 @@ export default function reducer(state = initialState, action) {
 		
 		case BIT_BUCKET_VIEW:
 			return state
-				.set('bitBucketInitialValues', action.result);
+				.set('bitBucketInitialValues', (strictValidObjectWithKeys(action.result) && action.result) || {});
 		
 		case ADD_ACCESS_TOKEN:
 			return state
@@ -248,7 +248,7 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 
 export const resetBitBucketFileForm = () => async (dispatch, getState, api) => {
 	dispatch({ type: LOAD });
-	dispatch({ type: BIT_BUCKET_VIEW, result: MD_META_INITIAL_VALUES });
+	dispatch({ type: BIT_BUCKET_VIEW, result: BLOG_MD_META_INITIAL_VALUES });
 	dispatch({ type: LOAD_SUCCESS });
 };
 

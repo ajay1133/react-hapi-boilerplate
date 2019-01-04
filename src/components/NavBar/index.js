@@ -41,7 +41,7 @@ class NavBar extends Component {
       !!user.lastName);
 	  const currentLocation = location && strictValidObjectWithKeys(location.toJSON()) && location.toJSON().pathname;
 	  
-	  if (!(validObjectWithParameterKeys(user, ['id']) && isShow)) {
+	  if (!(validObjectWithParameterKeys(user, ['id', 'role']) && isShow)) {
 	    return null;
     }
 	

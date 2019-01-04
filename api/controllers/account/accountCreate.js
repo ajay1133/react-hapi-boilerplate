@@ -12,10 +12,10 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  //auth: {
-    //strategy: 'default',
-    //scope: ['admin']
-  //},
+  auth: {
+    strategy: 'default',
+    scope: ['admin']
+  },
   tags: ['api', 'account'],
   description: 'Create user',
   notes: 'Create user',
