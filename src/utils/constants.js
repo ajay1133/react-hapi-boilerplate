@@ -111,7 +111,9 @@ export const USER_PASSWORD_SECTION_FORM_KEYS = [
 	'confirmPassword'
 ];
 
-export const DEFAULT_USER_PROFILE_IMAGE_URL = 'images/default_User_Profile_Image.png';
+export const DEFAULT_USER_PROFILE_IMAGE_URL = 'images/default_User_Profile_Image.jpg';
+
+export const DEFAULT_BLOG_IMAGE_URL = 'images/default_User_Profile_Image.jpg';
 
 export const VALID_BEGIN_FILE_NAME = '^[_|0-9|a-z|A-Z]+';
 

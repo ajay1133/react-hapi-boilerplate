@@ -16,6 +16,7 @@ import {
 	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS,
 	USER_PROFILE_PATH,
 	PROFILE_ROOT_PATH,
+	DEFAULT_USER_PROFILE_IMAGE_URL,
 	OFFSET
 } from '../../utils/constants';
 import moment from 'moment';
@@ -280,13 +281,14 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
     delete accountDetails.id;
     
     if (accountDetails.isDeleted) {
+    	//Make the status = 3, same as of denied
       users = users.filter(user => user.id !== id);
 	    selectedUser = strictValidArrayWithLength(users.filter(user => user.id === id)) &&
 		    users.filter(user => user.id === id)[0];
 	    if (accountDetails.status === 3) {
 		    accountDetails.active = false;
 	    }
-	    await dispatch(internals.updateBitBucketFile(Object.assign({ id }, accountDetails), 2));
+	    await dispatch(internals.updateBitBucketFile(Object.assign(selectedUser, accountDetails), 2));
     } else {
       users = users.map((user) => {
         if (user.id === id) {
@@ -299,7 +301,7 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
       if (accountDetails.status === 1) {
         accountDetails.active = true;
       }
-	    await dispatch(internals.updateBitBucketFile(Object.assign({ id }, accountDetails), 2));
+	    await dispatch(internals.updateBitBucketFile(Object.assign(selectedUser, accountDetails), 2));
     }
     
     delete accountDetails.active;
@@ -576,9 +578,7 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 		path = `${USER_PROFILE_PATH}/${id}.md`;
 		
 		// Transform relative image url to absolute path if relative url exists
-		if (image) {
-			dataObj.image = getAbsoluteS3FileUrl(image);
-		}
+		dataObj.image = (!!image && getAbsoluteS3FileUrl(image)) || DEFAULT_USER_PROFILE_IMAGE_URL;
 		
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		const genderTypes = getState().get('account').get('genderTypes');
@@ -660,23 +660,32 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 };
 
 internals.getBitBucketFileData = (path) => async (dispatch, getState, api) => {
-	const bitBucketProfileListing =
-		await api.get('/bitBucket/listing', { params: { path: PROFILE_ROOT_PATH, page: 1 }});
-	const bitBucketDemoFileData = (strictValidArrayWithLength(bitBucketProfileListing) &&
-		validObjectWithParameterKeys(bitBucketProfileListing[0], ['links']) &&
-		bitBucketProfileListing[0]) || {};
-	const uuId = (bitBucketDemoFileData.links && validObjectWithParameterKeys(bitBucketDemoFileData.links, ['self']) &&
-		validObjectWithParameterKeys(bitBucketDemoFileData.links.self, ['href']) &&
-		strictValidArrayWithMinLength(bitBucketDemoFileData.links.self.href.split('/src/'), 2) &&
-		strictValidArrayWithLength(bitBucketDemoFileData.links.self.href.split('/src/')[1].split('/')) &&
-		bitBucketDemoFileData.links.self.href.split('/src/')[1].split('/')[0]) || '';
-	const bitBucketExistingFileData = await dispatch(bitBucketView({
-		path: `/${uuId}/${path}`
-	}));
-	const content =
-		(validObjectWithParameterKeys(bitBucketExistingFileData, ['data']) && bitBucketExistingFileData.data) || '';
-	
-	return content;
+	try {
+		let content = '';
+		let bitBucketListingParams = { path: PROFILE_ROOT_PATH, page: 1 };
+		const bitBucketProfileListing = await api.get('/bitBucket/listing', { params: bitBucketListingParams });
+		const bitBucketDemoFileData = (strictValidArrayWithLength(bitBucketProfileListing) &&
+			validObjectWithParameterKeys(bitBucketProfileListing[0], ['links']) &&
+			bitBucketProfileListing[0]) || {};
+		const validHrefPresentFlag = bitBucketDemoFileData.links &&
+			validObjectWithParameterKeys(bitBucketDemoFileData.links, ['self']) &&
+			validObjectWithParameterKeys(bitBucketDemoFileData.links.self, ['href']) &&
+			strictValidString(bitBucketDemoFileData.links.self.href) &&
+			strictValidArrayWithMinLength(bitBucketDemoFileData.links.self.href.split('/src/'), 2) &&
+			strictValidArrayWithLength(bitBucketDemoFileData.links.self.href.split('/src/')[1].split('/'));
+		const uuId = (validHrefPresentFlag && bitBucketDemoFileData.links.self.href.split('/src/')[1].split('/')[0]) || '';
+		if (strictValidString(uuId)) {
+			const bitBucketExistingFileData = await dispatch(bitBucketView({
+				path: `/${uuId}/${path}`
+			}));
+			content =
+				(validObjectWithParameterKeys(bitBucketExistingFileData, ['data']) && bitBucketExistingFileData.data) || '';
+		}
+		return content;
+	} catch (e) {
+		console.log(typeCastToString(e));
+		return '';
+	}
 };
 
 internals.addKeyValuePairAsString = (k, v, append) => {
