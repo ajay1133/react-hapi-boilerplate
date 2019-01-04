@@ -69,6 +69,9 @@ db.models.GenderType = db.import('./models/gendertype');
 db.models.TreatmentFocus = db.import('./models/treatmentfocus');
 db.models.TreatmentFocusTypes = db.import('./models/treatmentfocustypes');
 
+db.models.Search = db.import('./models/search');
+db.models.SearchKeyword = db.import('./models/searchkeyword');
+
 
 // Associations
 const models = db.models;
