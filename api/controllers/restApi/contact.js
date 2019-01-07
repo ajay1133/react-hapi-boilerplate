@@ -1,6 +1,6 @@
 const joi = require('joi');
 const boom = require('boom');
-const accountService = require('../../services/accountService');
+const restApiService = require('../../services/restApiService');
 
 module.exports = {
   plugins: {
@@ -8,7 +8,7 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  tags: ['api', 'unauthorzied', 'contact'],
+  tags: ['api', 'restApi'],
   description: 'Contact Form: Send Email',
   notes: 'Contact Form: Send Email',
   validate: {
@@ -38,7 +38,7 @@ module.exports = {
       return boom.badRequest(err);
     };
     
-    return accountService.contactUs(payload)
+    return restApiService.contactUs(payload)
       .then((data) => h.response(data))
       .catch(onError);
   }

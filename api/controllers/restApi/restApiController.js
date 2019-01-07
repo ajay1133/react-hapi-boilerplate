@@ -1,8 +1,13 @@
-const prefix = '/unauthorized';
+const prefix = '/restApi';
 
 module.exports = [
   {
-    path: `${prefix}`,
+    path: `${prefix}/search`,
+    method: 'GET',
+    config: require('./search'),
+  },
+  {
+    path: `${prefix}/registration`,
     method: 'POST',
     config: require('./registration'),
   },

@@ -8,7 +8,7 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  tags: ['api', 'unauthorized', 'registration'],
+  tags: ['api', 'restApi'],
   description: 'Create user',
   notes: 'Create user',
   validate: {

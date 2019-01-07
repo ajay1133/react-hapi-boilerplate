@@ -9,6 +9,10 @@ module.exports = {
     },
   },
   
+  auth: {
+    strategy: 'default'
+  },
+  
   tags: ['api', 'account'],
   
   description: 'get user',

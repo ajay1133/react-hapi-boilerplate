@@ -1,6 +1,6 @@
 const joi = require('joi');
 const boom = require('boom');
-const accountService = require('../../services/accountService');
+const restApiService = require('../../services/restApiService');
 
 module.exports = {
   plugins: {
@@ -8,10 +8,7 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  auth: {
-    strategy: 'default'
-  },
-  tags: ['api', 'account'],
+  tags: ['api', 'restApi'],
   description: 'Get all accounts',
   notes: 'Get all accounts',
   validate: {
@@ -19,10 +16,10 @@ module.exports = {
       status: joi.number()
                  .allow(['', null])
                  .description('1=Active, 2=Pending, 3=Denied'),
-      
-      keyword: joi.string()
+  
+      search: joi.string()
                  .allow(['', null])
-                 .description('Search keyword: Title, Description'),
+                 .description('string of search id separated by comma, no spaces allowed'),
   
       page: joi.string()
                .allow(['', null])
@@ -31,10 +28,6 @@ module.exports = {
       limit: joi.string()
                 .allow(['', null])
                 .description('number of account per page'),
-	
-	    order: joi.string()
-	              .allow(['', null])
-	              .description('JSON stringified array of order'),
       
       gender: joi.string()
 	              .allow(['', null])
@@ -54,7 +47,7 @@ module.exports = {
     const { query } = request;
     
     try {
-      let data = await accountService.getAllAccounts(query);
+      let data = await restApiService.getAllAccounts(query);
       return h.response(data);
     } catch(err) {
       return boom.badRequest(err);
