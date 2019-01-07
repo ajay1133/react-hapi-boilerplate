@@ -27,11 +27,6 @@ module.exports = [
     config: require('./accountVerifyToken'),
   },
   {
-    path: `${prefix}/contact`,
-    method: 'POST',
-    config: require('./accountContact'),
-  },
-  {
     path: `${prefix}/update/password`,
     method: 'PUT',
     config: require('./accountUpdatePassword'),
