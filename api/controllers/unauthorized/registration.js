@@ -8,11 +8,7 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  auth: {
-    strategy: 'default',
-    scope: ['admin']
-  },
-  tags: ['api', 'account'],
+  tags: ['api', 'unauthorized', 'registration'],
   description: 'Create user',
   notes: 'Create user',
   validate: {
