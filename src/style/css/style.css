@@ -2,7 +2,7 @@ body {
 	font-family: 'Segoe UI', 'Helvetica Neue', Arial, Helvetica, sans-serif;
 }
 
-a {
+a, i {
 	cursor: pointer;
 }
 .p-0{
