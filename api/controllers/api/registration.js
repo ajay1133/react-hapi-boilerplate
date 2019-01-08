@@ -82,7 +82,7 @@ module.exports = {
 	    payload.role = 2;
 	    const accountCreatedObject = await accountService.createUser(payload);
 	    if (accountCreatedObject && accountCreatedObject.id) {
-		    let updatedPasswordObj = await accountService.updatePassword({
+		    await accountService.updatePassword({
           password: payload.password,
           email: payload.email,
           inviteToken: '',

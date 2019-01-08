@@ -45,8 +45,9 @@ exports.createUser = async (userPayload) =>  {
     const url = config.BasePath.host;
     const subject = ' Welcome to Compass';
     const model = {
-      inviteLink: `${url}/accept/invitation/${userData.inviteToken}`,
+      inviteLink: userData.inviteToken ? `${url}/accept/invitation/${userData.inviteToken}` : `${url}`,
       name: userPayload.firstName + ' ' + userPayload.lastName,
+      inviteToken: userData.inviteToken
     };
     await userRegistration(userPayload.email, subject, model);
     return result;
