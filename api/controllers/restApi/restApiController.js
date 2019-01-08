@@ -2,6 +2,11 @@ const prefix = '/restApi';
 
 module.exports = [
   {
+    path: `${prefix}/ifEmailExists/{email}`,
+    method: 'GET',
+    config: require('./ifEmailExists'),
+  },
+  {
     path: `${prefix}/search`,
     method: 'GET',
     config: require('./search'),
