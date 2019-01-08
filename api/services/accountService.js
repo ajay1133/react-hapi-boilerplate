@@ -163,8 +163,8 @@ exports.getUser = async (userId) => {
 };
 
 /**
- * Get User on basis of user id
- * @param userId
+ * Get User on basis of user email
+ * @param email
  */
 exports.getUserByEmail = async (email) => {
 	try {

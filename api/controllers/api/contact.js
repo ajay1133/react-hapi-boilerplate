@@ -8,7 +8,7 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  tags: ['api', 'unauthorzied', 'contact'],
+  tags: ['api', 'contact'],
   description: 'Contact Form: Send Email',
   notes: 'Contact Form: Send Email',
   validate: {

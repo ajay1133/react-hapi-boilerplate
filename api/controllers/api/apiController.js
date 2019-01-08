@@ -1,8 +1,13 @@
-const prefix = '/unauthorized';
+const prefix = '/api';
 
 module.exports = [
+	{
+		path: `${prefix}/ifEmailExists/{email}`,
+		method: 'GET',
+		config: require('./ifEmailExists'),
+	},
   {
-    path: `${prefix}`,
+    path: `${prefix}/registration`,
     method: 'POST',
     config: require('./registration'),
   },
