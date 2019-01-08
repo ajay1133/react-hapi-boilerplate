@@ -32,7 +32,6 @@ import {
 	DEFAULT_BLOG_IMAGE_URL,
 	OFFSET
 } from '../../utils/constants';
-import moment from 'moment';
 
 const md = MarkDown({
   html: false,
@@ -253,7 +252,7 @@ export default class Dashboard extends Component {
     } = this.props;
     const { loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag } = this.state;
 	  
-	  const isValidUserFlag = strictValidObjectWithKeys(user) && !!user.id;
+	  const isValidUserFlag = validObjectWithParameterKeys(user, ['id', 'role']) && !!user.id && user.role === 1;
     const sessionExpiredFlag = !loading && !isLoad && !isValidUserFlag;
     const loadingCompleteFlag = !isLoad;
     const validBitBucketListFlag = loadingCompleteFlag && Array.isArray(bitBucketList) && bitBucketList.length;

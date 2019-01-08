@@ -1,10 +1,6 @@
 const joi = require('joi');
 const boom = require('boom');
 const accountService = require('../../services/accountService');
-const constants = require('../../constants');
-const db = require('../../db');
-const jwtHelper = require('../../helpers/jwtHelper');
-const config = require("config");
 
 module.exports = {
   plugins: {
