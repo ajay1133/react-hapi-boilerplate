@@ -38,24 +38,24 @@ module.exports = {
                 .description('Phone of User'),
       
       address: joi.string()
-                 .required()
-                 .allow(['', null])
-                 .description('Address/Street of User'),
+                  .required()
+                  .allow(['', null])
+                  .description('Address/Street of User'),
       
       city: joi.string()
                .required()
                .allow(['', null])
                .description('City of User'),
-	
-	    zip: joi.string()
-	             .required()
-	             .allow(['', null])
-	             .description('Zip of User'),
-	
-	    state: joi.string()
-	               .required()
-	               .allow(['', null])
-	               .description('State of User'),
+      
+      zip: joi.string()
+              .required()
+              .allow(['', null])
+              .description('Zip of User'),
+      
+      state: joi.string()
+                .required()
+                .allow(['', null])
+                .description('State of User'),
       
       status: joi.number()
                  .valid([1,2,3])
@@ -73,24 +73,24 @@ module.exports = {
       request.server.log(['error'], err);
       return boom.badRequest(err);
     };
-	  
+    
     try {
-	    const userExistsObj = await accountService.getUserByEmail(payload.email);
-	    if (userExistsObj && userExistsObj.id) {
-		    onError('This email is already taken');
-	    }
-	    payload.role = 2;
-	    const accountCreatedObject = await accountService.createUser(payload);
-	    if (accountCreatedObject && accountCreatedObject.id) {
-		    let updatedPasswordObj = await accountService.updatePassword({
+      const userExistsObj = await accountService.getUserByEmail(payload.email);
+      if (userExistsObj && userExistsObj.id) {
+        onError('This email is already taken');
+      }
+      payload.role = 2;
+      const accountCreatedObject = await accountService.createUser(payload);
+      if (accountCreatedObject && accountCreatedObject.id) {
+        let updatedPasswordObj = await accountService.updatePassword({
           password: payload.password,
           email: payload.email,
           inviteToken: '',
           inviteStatus: 1
-		    });
-		    return h.response({ data: accountCreatedObject });
+        });
+        return h.response({ data: accountCreatedObject });
       } else {
-		    onError('An error occurred while creating user');
+        onError('An error occurred while creating user');
       }
     } catch (err) {
       onError(err);

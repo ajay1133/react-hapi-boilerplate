@@ -8,7 +8,7 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  tags: ['api', 'ifEmailExists'],
+  tags: ['api', 'restApi'],
   description: 'Check if email is taken',
   notes: 'Check if email is taken',
   validate: {
