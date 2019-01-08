@@ -8,6 +8,9 @@ module.exports = {
       payloadType: 'form',
     },
   },
+  auth: {
+    strategy: 'default'
+  },
   tags: ['api', 'socialAccount'],
   description: 'Create Social User',
   notes: 'Social User registeration and login',
