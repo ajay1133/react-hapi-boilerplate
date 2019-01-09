@@ -247,6 +247,38 @@ export default class Profile extends Component {
 								  />
 							  </Grid.Column>
 						  </Grid.Row>
+						  <Grid.Row >
+							  <Grid.Column computer="8">
+								  <Field
+									  name="address"
+									  placeholder="Street Address"
+									  component={TextBox}
+								  />
+							  </Grid.Column>
+							  <Grid.Column computer="8">
+								  <Field
+									  name="city"
+									  placeholder="City"
+									  component={TextBox}
+								  />
+							  </Grid.Column>
+						  </Grid.Row>
+						  <Grid.Row >
+							  <Grid.Column computer="8">
+								  <Field
+									  name="state"
+									  placeholder="State"
+									  component={TextBox}
+								  />
+							  </Grid.Column>
+							  <Grid.Column computer="8">
+								  <Field
+									  name="zip"
+									  placeholder="Zip"
+									  component={TextBox}
+								  />
+							  </Grid.Column>
+						  </Grid.Row>
 						  <Grid.Row celled="internally">
 							  <Grid.Column width="16" className="mb-10">
 								  <h4>Gender :</h4>

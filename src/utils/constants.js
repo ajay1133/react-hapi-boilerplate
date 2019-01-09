@@ -30,6 +30,9 @@ export const MD_FILE_META_DATA_KEYS = [
 	'lastName',
 	'title',
 	'address',
+	'city',
+	'state',
+	'zip',
 	'phone',
 	'website',
 	'description',
@@ -101,7 +104,11 @@ export const USER_PROFILE_DETAILS_FORM_KEYS = [
 	'email',
 	'phone',
 	'website',
-	'description'
+	'description',
+	'address',
+	'city',
+	'state',
+	'zip'
 ];
 
 export const USER_PASSWORD_SECTION_FORM_KEYS = [
