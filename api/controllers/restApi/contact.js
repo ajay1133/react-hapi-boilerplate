@@ -39,8 +39,10 @@ module.exports = {
     };
   
     try {
-      await restApiService.sendContactUs(payload);
-      h.response({ data: true });
+      const messageId = await restApiService.sendContactUs(payload);
+      if (messageId) {
+        return h.response({ data: true });
+      }
     } catch (e) {
       return onError(e);
     }
