@@ -29,7 +29,7 @@ exports.send = async (to, cc, bcc = FROM_EMAIL, replyTo = FROM_EMAIL, subject, m
       info('Changing subject from dev server =>', DEV_SERVER, subject);
     }
     const template = await internals.emailTemplate(templateDir, { model });
-    await internals.sendEmail(FROM_EMAIL, to, cc, bcc, replyTo, subject, model, template, attachments);
+    return await internals.sendEmail(FROM_EMAIL, to, cc, bcc, replyTo, subject, model, template, attachments);
   } catch (err) {
     info('Error: Unable to send email');
     error(err);
@@ -63,18 +63,18 @@ internals.emailTemplate = async (templateDir, context) => {
  * @param attachments
  * @returns {Promise.<void>}
  */
-internals.sendEmail = async (from, to, cc, bcc, replyTo, subject, model, bodyHtml, attachments = []) => {
+internals.sendEmail = (from, to, cc, bcc, replyTo, subject, model, bodyHtml, attachments = []) => new Promise((resolve, reject) => {
   const mailOptions = { from, to, cc, bcc, replyTo, subject, html: bodyHtml, attachments };
-  await transporter.sendMail(mailOptions, (err, information) => {
+  transporter.sendMail(mailOptions, (err, information) => {
     if (err) {
       error(err);
-      return error(err);
+      reject(err);
     }
     
     info('envelope', information.envelope);
     info('messageId', information.messageId);
     
-    return information.messageId;
+    resolve(information.messageId);
   });
-};
+});
 

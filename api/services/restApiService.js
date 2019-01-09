@@ -90,11 +90,11 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
 });
 
 /**
- * contactUs: Used to send contact us email
+ * sendContactUs: Used to send contact us email
  * @param payload
  * @returns {Promise.<*>}
  */
-exports.contactUs = async (payload) =>  {
+exports.sendContactUs = async (payload) =>  {
   try {
     const { name, email, message } = payload;
     // Contact Us Email

@@ -30,16 +30,19 @@ module.exports = {
     options: { abortEarly: false },
   },
   
-  handler: (request, h) => {
+  handler: async (request, h) => {
     const { payload } = request;
     
     const onError = (err) => {
       request.server.log(['error'], err);
       return boom.badRequest(err);
     };
-    
-    return restApiService.contactUs(payload)
-      .then((data) => h.response(data))
-      .catch(onError);
+  
+    try {
+      const messageId = await restApiService.sendContactUs(payload);
+      return h.response({ data: { messageId } });
+    } catch (e) {
+      return onError(e);
+    }
   }
 };
