@@ -5,7 +5,7 @@ const { Search, SearchKeyword }  = db.models;
 const defaultSearchAttributes = [
   'id',
   'userId',
-  'searchkeywordId'
+  'searchkeywordtypeId'
 ];
 
 exports.getAllSearch = () => Search.findAndCountAll({
@@ -29,13 +29,14 @@ exports.updateSearch = (payload, id) => Search.update(payload, { where: { id } }
 
 exports.deleteSearch = (id) => Search.destroy({ where: { id } });
 
-exports.deleteSearchBySearchId = (userId, searchkeywordId) => Search.destroy({ where: { userId, searchkeywordId } });
+exports.deleteSearchBySearchId = (userId, searchkeywordtypeId) =>
+  Search.destroy({ where: { userId, searchkeywordtypeId } });
 
 
 // Search Keyword
 const defaultSearchKeywordAttributes = [
   'id',
-  'keyword',
+  'name',
   'status'
 ];
 
@@ -61,7 +62,7 @@ exports.getSearchKeywordAndSearch = (query) => {
     
     // Associations
     Search.hasMany(SearchKeyword, { foreignKey: 'id' });
-    SearchKeyword.belongsTo(Search, { foreignKey: 'id', targetKey: 'searchkeywordId' });
+    SearchKeyword.belongsTo(Search, { foreignKey: 'id', targetKey: 'searchkeywordtypeId' });
   
     let condition = { status: 1 };
     if (id) {

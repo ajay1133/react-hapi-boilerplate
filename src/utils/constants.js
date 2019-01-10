@@ -94,7 +94,8 @@ export const DEFAULT_PASSWORD_MIN_LENGTH = 6;
 export const USER_PROFILE_TABS = [
 	'profileDetails',
 	'userServices',
-	'password'
+	'password',
+	'userSearch'
 ];
 
 export const USER_PROFILE_DETAILS_FORM_KEYS = [

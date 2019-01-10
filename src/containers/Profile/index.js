@@ -51,6 +51,8 @@ const selector = formValueSelector('profileForm');
 	userAgeGroups: state.get('account').get('userAgeGroups'),
 	treatmentFocusTypes: state.get('account').get('treatmentFocusTypes'),
 	userTreatmentFocusGroups: state.get('account').get('userTreatmentFocusGroups'),
+	searchKeywordTypes: state.get('account').get('searchKeywordTypes'),
+	userSearchKeywordGroups: state.get('account').get('userSearchKeywordGroups'),
 	currentPassword: selector(state, 'currentPassword'),
 	serviceTypesValuesList: (
 		selector(state, 'serviceType') &&
@@ -67,7 +69,11 @@ const selector = formValueSelector('profileForm');
 	treatmentFocusTypesValuesList: (
 		selector(state, 'treatmentFocusType') &&
 		strictValidObjectWithKeys(selector(state, 'treatmentFocusType')) &&
-		selector(state, 'treatmentFocusType').toJSON()) || []
+		selector(state, 'treatmentFocusType').toJSON()) || [],
+	searchKeywordTypesValuesList: (
+		selector(state, 'searchKeywordType') &&
+		strictValidObjectWithKeys(selector(state, 'searchKeywordType')) &&
+		selector(state, 'searchKeywordType').toJSON()) || [],
 }))
 @reduxForm({
 	form: 'profileForm',
@@ -91,10 +97,13 @@ export default class Profile extends Component {
 		userAgeGroups: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
 		treatmentFocusTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
 		userTreatmentFocusGroups: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
+		searchKeywordTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
+		userSearchKeywordGroups: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
 		serviceTypesValuesList: PropTypes.array,
 		genderTypesValuesList: PropTypes.array,
 		ageTypesValuesList: PropTypes.array,
 		treatmentFocusTypesValuesList: PropTypes.array,
+		searchKeywordTypesValuesList: PropTypes.array
 	};
 	
 	static defaultProps = {
@@ -512,49 +521,25 @@ export default class Profile extends Component {
 	};
   
   getSearchSection = () => {
-    const { userVerifiedFlag } = this.state;
-    
+  	const { searchKeywordTypes } = this.props;
+  	
     return (
       <Grid>
         <Grid.Column computer="10">
           <Header size='medium'>Search Keyword</Header>
           <Grid>
-            <Grid.Row columns={ userVerifiedFlag ? 2 : 1 } className="serviceListing">
-              {
-                !userVerifiedFlag &&
-                <Grid.Column>
-                  <Field
-                    name="currentPassword"
-                    placeholder="Verify Your Current Password"
-                    type="password"
-                    component={TextBox}
-                  />
-                </Grid.Column>
-              }
-              {
-                userVerifiedFlag &&
-                <Grid.Column>
-                  <Field
-                    name="password"
-                    placeholder="Enter New Password"
-                    type="password"
-                    component={TextBox}
-                    validate={passwordValidator}
-                  />
-                </Grid.Column>
-              }
-              {
-                userVerifiedFlag &&
-                <Grid.Column>
-                  <Field
-                    name="confirmPassword"
-                    placeholder="Confirm New Password"
-                    type="password"
-                    component={TextBox}
-                    validate={required}
-                  />
-                </Grid.Column>
-              }
+            <Grid.Row columns="3" className="serviceListing">
+	            {
+		            searchKeywordTypes.map((searchKeywordType, idx) => (
+			            <Grid.Column>
+				            <Field
+					            name={ `searchKeywordType[${idx}]` }
+					            component={CheckBox}
+					            label={ searchKeywordType.name }
+				            />
+			            </Grid.Column>
+		            ))
+	            }
             </Grid.Row>
           </Grid>
         </Grid.Column>
@@ -571,7 +556,7 @@ export default class Profile extends Component {
 			profileDetails: this.getProfileTabsSection(),
 			userServices: this.getUserServicesSection(),
 			password: this.getPasswordSection(),
-      search: this.getSearchSection(),
+			userSearch: this.getSearchSection(),
 		};
 
 		const descContent = (
@@ -623,7 +608,7 @@ export default class Profile extends Component {
 					buttonContent = !userVerifiedFlag ? 'Verify Password' : 'Update Password';
 					break;
 					
-        case 'search':
+        case 'userSearch':
 					contentSection = (
 						<div className="editContent">
 							<Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
@@ -675,12 +660,12 @@ export default class Profile extends Component {
 			},
       {
         menuItem: {
-        	key: 'search',
+        	key: 'userSearch',
 	        icon: 'search',
 	        content: 'SEARCH',
-	        onClick: () => this.handleTabClick('search')
+	        onClick: () => this.handleTabClick('userSearch')
         },
-				render: () => pane('search')
+				render: () => pane('userSearch')
 			},
 		];
 
@@ -704,7 +689,7 @@ export default class Profile extends Component {
   
 	handleSubmit = async(data) => {
 		const {
-			dispatch, genderTypesValuesList, ageTypesValuesList, treatmentFocusTypesValuesList
+			dispatch, genderTypesValuesList, ageTypesValuesList, treatmentFocusTypesValuesList, searchKeywordTypesValuesList
 		} = this.props;
 	  const {
 	  	userVerifiedFlag, activeTab, serviceTypesFieldArray, uploadProfileImageName, uploadProfileImageUrl
@@ -763,6 +748,10 @@ export default class Profile extends Component {
 				  formData = {
 					  userServices: serviceTypesFieldArray
 				  };
+			  } else if (activeTab === 'userSearch') {
+			  	formData = {
+			  		userSearch: searchKeywordTypesValuesList
+				  }
 			  }
 			  
 			  this.setState({ loading: true });

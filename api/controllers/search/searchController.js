@@ -1,4 +1,4 @@
-const prefix = '/search';
+const prefix = '/searchKeywordGroup';
 
 module.exports = [
   {
