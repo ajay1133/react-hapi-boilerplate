@@ -3,10 +3,10 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface
-      .renameColumn('searchkeywords', 'keyword', 'name');
+      .renameColumn('searchKeywords', 'keyword', 'name');
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.renameColumn('searchkeywords', 'name', 'keyword');
+    return queryInterface.renameColumn('searchKeywords', 'name', 'keyword');
   }
 };
