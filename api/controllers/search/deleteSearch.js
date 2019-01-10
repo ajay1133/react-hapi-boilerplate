@@ -40,8 +40,8 @@ module.exports = {
     try {
       let promisesList = [];
 	
-	    typeIds.forEach(searchkeywordId => {
-        promisesList.push(searchService.deleteSearchBySearchId(userId, searchkeywordId));
+	    typeIds.forEach(searchkeywordtypeId => {
+        promisesList.push(searchService.deleteSearchBySearchId(userId, searchkeywordtypeId));
       });
       
       const data = await Promise.all(promisesList);

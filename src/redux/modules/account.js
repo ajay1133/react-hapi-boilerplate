@@ -72,7 +72,9 @@ const initialState = Immutable.fromJS({
 	ageTypes: [],
 	userAgeGroups: [],
 	treatmentFocusTypes: [],
-	userTreatmentFocusGroups: []
+	userTreatmentFocusGroups: [],
+	searchKeywordTypes: [],
+	userSearchKeywordGroups: []
 });
 
 const internals = {};
@@ -178,6 +180,8 @@ export default function reducer(state = initialState, action) {
         .set('userAgeGroups', action.userAgeGroups)
         .set('treatmentFocusTypes', action.treatmentFocusTypes)
         .set('userTreatmentFocusGroups', action.userTreatmentFocusGroups)
+        .set('searchKeywordTypes', action.searchKeywordTypes)
+        .set('userSearchKeywordGroups', action.userSearchKeywordGroups)
         .set('userDetails', action.userDetails);
       
 	  case RESET_MESSAGE:
@@ -409,6 +413,15 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 		  
 			await dispatch(updatePassword(updatePasswordObj, true));
 			await dispatch(load(true));
+		} else if (strictValidObjectWithKeys(formData) && strictValidArrayWithLength(formData.userSearch)) {
+			const fileContentObj = Object.assign(
+				{ active: status === 1 ? 'true' : 'false' },
+				{ otherDetails: { searchKeywordType: formData.userSearch } },
+				{ id }
+			);
+			await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
+			await Promise.all(dispatch(internals.addAndDeleteMultipleTypes(formData.userSearch, 'searchKeywordType')));
+			await dispatch(load(true));
 		}
 		
 		await dispatch(loadUserProfileRelatedData());
@@ -461,6 +474,8 @@ export const loadUserProfileRelatedData = () => async (dispatch, getState, api) 
 		const userAgeGroups = await api.get(`/ageGroup/byUser/${id}`);
 		const treatmentFocusTypes = await api.get(`/treatmentFocusTypes`);
 		const userTreatmentFocusGroups = await api.get(`/treatmentFocusGroup/byUser/${id}`);
+		const searchKeywordTypes = await api.get(`/searchKeywordTypes`);
+		const userSearchKeywordGroups = await api.get(`/searchKeywordGroup/byUser/${id}`);
 		
 		dispatch({ type: LOAD_SUCCESS });
 		
@@ -473,7 +488,10 @@ export const loadUserProfileRelatedData = () => async (dispatch, getState, api) 
 			userAgeGroups: (strictValidObjectWithKeys(userAgeGroups) && userAgeGroups.rows) || [],
 			treatmentFocusTypes: (strictValidObjectWithKeys(treatmentFocusTypes) && treatmentFocusTypes.rows) || [],
 			userTreatmentFocusGroups:
-			  (strictValidObjectWithKeys(userTreatmentFocusGroups) && userTreatmentFocusGroups.rows) || []
+			  (strictValidObjectWithKeys(userTreatmentFocusGroups) && userTreatmentFocusGroups.rows) || [],
+			searchKeywordTypes: (strictValidObjectWithKeys(searchKeywordTypes) && searchKeywordTypes.rows) || [],
+			userSearchKeywordGroups:
+				(strictValidObjectWithKeys(userSearchKeywordGroups) && userSearchKeywordGroups.rows) || []
 		};
 		
 		const serviceType = [];
@@ -494,12 +512,18 @@ export const loadUserProfileRelatedData = () => async (dispatch, getState, api) 
 			.map(v =>
 				!!userDetailsObj.userTreatmentFocusGroups.filter(g => v.status && g.treatmentfocustypeId === v.id).length
 			);
+		const searchKeywordType = userDetailsObj
+			.searchKeywordTypes
+			.map(v =>
+				!!userDetailsObj.userSearchKeywordGroups.filter(g => v.status && g.searchkeywordtypeId === v.id).length
+			);
 		
 		userDetailsObj.userDetails = Object.assign({}, {
 			serviceType: [],
 			genderType,
 			ageType,
-			treatmentFocusType
+			treatmentFocusType,
+			searchKeywordType
 		});
 		
 		dispatch(Object.assign({}, { type: LOAD_USER_PROFILE_RELATED_DATA }, userDetailsObj));
@@ -567,6 +591,7 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 			
 			content += addKeyValuePairAsString('gender', '[]', '\n');
 			content += addKeyValuePairAsString('age', '[]', '\n');
+			content += addKeyValuePairAsString('searchKeyword', '[]', '\n');
 			content += '---\n\n\n\n';
 		} else {
 			//Replace old file with active true/false
@@ -589,10 +614,12 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		const genderTypes = getState().get('account').get('genderTypes');
 		const ageTypes = getState().get('account').get('ageTypes');
+		const searchKeywordTypes = getState().get('account').get('searchKeywordTypes');
 		const treatmentFocusTypes = getState().get('account').get('treatmentFocusTypes');
 		const userGenderGroups = getState().get('account').get('userGenderGroups');
 		const userAgeGroups = getState().get('account').get('userAgeGroups');
 		const userTreatmentFocusGroups = getState().get('account').get('userTreatmentFocusGroups');
+		const userSearchKeywordGroups = getState().get('account').get('userSearchKeywordGroups');
 		const userServicesValues = (strictValidArrayWithLength(userServices) && userServices) || [];
 		const userGenderValues = await dispatch(internals.getTypeArrayValues('genderType', otherDetails)) ||
 			userGenderGroups.map(g => Object.assign(
@@ -614,6 +641,13 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 				{ checked: true },
 				strictValidArrayWithLength(treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId))
 					? treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId)[0] : {}
+			));
+		const userSearchKeywordValues = await dispatch(internals.getTypeArrayValues('searchKeywordType', otherDetails)) ||
+			userSearchKeywordGroups.map(g => Object.assign(
+				g,
+				{ checked: true },
+				strictValidArrayWithLength(searchKeywordTypes.filter(t => t.id === g.searchkeywordtypeId))
+					? searchKeywordTypes.filter(t => t.id === g.searchkeywordtypeId)[0] : {}
 			));
 		
 		const extraMetaDataKeys = Object.keys(dataObj)
@@ -638,6 +672,11 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 		content += addKeyValuePairAsString(
 			'age',
 			`[${userAgeValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
+			'\n'
+		);
+		content += addKeyValuePairAsString(
+			'searchKeyword',
+			`[${userSearchKeywordValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
 			'\n'
 		);
 		content += '---\n\n\n\n';

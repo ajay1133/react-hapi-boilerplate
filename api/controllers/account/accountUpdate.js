@@ -45,6 +45,21 @@ module.exports = {
                   .optional()
                   .allow(['', null])
                   .description('Address of User'),
+	
+	    city: joi.string()
+	                .optional()
+	                .allow(['', null])
+	                .description('City of User'),
+	
+	    state: joi.string()
+	                .optional()
+	                .allow(['', null])
+	                .description('State of User'),
+	
+	    zip: joi.string()
+	                .optional()
+	                .allow(['', null])
+	                .description('Zip of User'),
       
       phone: joi.string()
                 .optional()

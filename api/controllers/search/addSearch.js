@@ -42,10 +42,10 @@ module.exports = {
     try {
       let promisesList = [];
 	
-	    ids.forEach(searchKeywordId => {
+	    ids.forEach(searchkeywordtypeId => {
 	      promisesList.push(searchService.createSearch({
           userId,
-          searchKeywordId
+          searchkeywordtypeId
 	      }));
       });
       

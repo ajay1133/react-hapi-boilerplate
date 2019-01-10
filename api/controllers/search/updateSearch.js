@@ -29,7 +29,7 @@ module.exports = {
                   .description('PK of Users')
                   .required(),
   
-      searchkeywordId: joi.number()
+      searchkeywordtypeId: joi.number()
                          .description('PK of searchkeyword')
                          .required()
     },

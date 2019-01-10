@@ -16,14 +16,12 @@ const constants = require('../constants');
  * @param userPayload {email, password}
  */
 exports.createUser = async (userPayload) =>  {
-  assert(userPayload, i18n('services.accountService.missingUserPayload'));
-
-  const userData = Object.assign({}, userPayload);
-  
-  delete userData.password;
-  userData.role = userPayload.role || 2;
-  
   try {
+	  assert(userPayload, i18n('services.accountService.missingUserPayload'));
+    const userData = Object.assign({}, userPayload);
+	  delete userData.password;
+	
+	  userData.role = userPayload.role || 2;
     let foundUser = await User.findOne({ where: { email: userPayload.email }});
     
     if (foundUser) {
@@ -32,7 +30,6 @@ exports.createUser = async (userPayload) =>  {
 	  
     if (userPayload.password) {
 	    let response = await cryptoHelper.hashString(userPayload.password);
-      userData.role = 1;
       userData.hash = response.hash;
       userData.salt = response.salt;
     } else {
@@ -230,7 +227,7 @@ exports.getUserByEmail = async (email) => {
       userData.hash = hashDetails.hash;
       userData.salt = hashDetails.salt;
       
-      let result = await User.update(userData, {where:{email: userPayload.email }});
+      let result = await User.update(userData, { where:{email: userPayload.email }});
       
       return result;
     }

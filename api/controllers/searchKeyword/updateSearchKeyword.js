@@ -25,7 +25,7 @@ module.exports = {
              .description('PK of search Keyword')
     },
     payload: {
-      keyword: joi.string()
+      name: joi.string()
                .description('keyword of search')
                .required(),
       
