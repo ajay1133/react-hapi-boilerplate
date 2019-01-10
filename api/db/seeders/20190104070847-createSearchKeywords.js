@@ -5,91 +5,91 @@ const currentDate = new Date();
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.bulkInsert('searchKeywords', [{
-        keyword: 'Alcohol',
+        name: 'Alcohol',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Opioids',
+        name: 'Opioids',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Benzodiazepines',
+        name: 'Benzodiazepines',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Cannabis',
+        name: 'Cannabis',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Cocaine',
+	      name: 'Cocaine',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Other Prescription Drugs',
+	      name: 'Other Prescription Drugs',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Methamphetamine',
+	      name: 'Methamphetamine',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Hallucinogens',
+	      name: 'Hallucinogens',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Inhalants',
+	      name: 'Inhalants',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Bath Salts',
+	      name: 'Bath Salts',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'K2',
+	      name: 'K2',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Other Drugs',
+	      name: 'Other Drugs',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Sex Addiction',
+	      name: 'Sex Addiction',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Video Game Addiction',
+	      name: 'Video Game Addiction',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
       },
       {
-        keyword: 'Other Addictions',
+	      name: 'Other Addictions',
         status: 1,
         createdAt: currentDate,
         updatedAt: currentDate
