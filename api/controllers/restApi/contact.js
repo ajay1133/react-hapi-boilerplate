@@ -1,5 +1,6 @@
 const joi = require('joi');
 const boom = require('boom');
+const contactService = require('../../services/contactService');
 const restApiService = require('../../services/restApiService');
 
 module.exports = {
@@ -25,7 +26,13 @@ module.exports = {
       
       message: joi.string()
                   .allow(['', null])
-                  .description('Message')
+                  .description('Message'),
+      
+      status: joi.number()
+                 .valid([0, 1])
+                 .allow(null)
+                 .default(1)
+                 .description('0=Inactive, 1=Active'),
     },
     options: { abortEarly: false },
   },
@@ -39,8 +46,12 @@ module.exports = {
     };
   
     try {
+      // Saving in DB
+      const res = await contactService.createContactUs(payload);
+      
+      // Sending Email
       const messageId = await restApiService.sendContactUs(payload);
-      if (messageId) {
+      if (res && messageId) {
         return h.response({ data: true });
       }
     } catch (e) {
