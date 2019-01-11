@@ -72,6 +72,8 @@ db.models.TreatmentFocusTypes = db.import('./models/treatmentfocustypes');
 db.models.Search = db.import('./models/search');
 db.models.SearchKeyword = db.import('./models/searchkeyword');
 
+db.models.ContactUs = db.import('./models/contactus');
+
 
 // Associations
 const models = db.models;
