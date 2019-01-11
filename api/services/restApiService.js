@@ -21,10 +21,10 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
         Search.belongsTo(User, { foreignKey: 'userId' });
         
         finalInclude.push({
-          attributes: ['userId', 'searchkeywordId'],
+          attributes: ['userId', 'searchkeywordtypeId'],
           model: Search,
           where: {
-            searchkeywordId: { $in: [JSON.parse("[" + value + "]")] }
+            searchkeywordtypeId: { $in: [JSON.parse("[" + value + "]")] }
           }
         });
       } else if (key === 'gender') {
