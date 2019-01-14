@@ -1,12 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Button, Grid, Image, Menu, Segment, Sidebar } from 'semantic-ui-react';
-import { ConnectedRouter } from 'connected-react-router/immutable';
 import { connect } from 'react-redux';
 import NavBar from '../../components/NavBar';
-import routes from '../../routes';
+import MainRoute from '../../routes';
 import 'semantic-ui-css/semantic.css';
-
 import '../../style/css/style.css';
 
 const VerticalSidebar = ({ animation, direction, visible }) => (
@@ -66,7 +64,7 @@ class App extends Component {
                   </Grid.Row>
                 </Grid>
               }
-              <ConnectedRouter history={history}>{ routes }</ConnectedRouter>
+              <MainRoute history={ history } user={ user } />
             </Segment>
           </Sidebar.Pusher>
         </Sidebar.Pushable>
