@@ -64,7 +64,7 @@ class App extends Component {
                   </Grid.Row>
                 </Grid>
               }
-              <MainRoute history={ history } user={ user } />
+              <MainRoute history={ history } />
             </Segment>
           </Sidebar.Pusher>
         </Sidebar.Pushable>

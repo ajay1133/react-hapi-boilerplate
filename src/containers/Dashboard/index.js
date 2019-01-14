@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import MarkDown from 'markdown-it';
 import Markup from 'react-html-markup';
 import { connect } from 'react-redux';
-import { push } from 'connected-react-router';
 import { reduxForm, SubmissionError } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
 import { Button, Table, Loader, Modal, Icon, Message, Grid } from 'semantic-ui-react';
@@ -248,19 +247,13 @@ export default class Dashboard extends Component {
   
   render () {
     const {
-    	dispatch, isLoad, loadErr, bitBucketList = [], bitBucketListFilters, handleSubmit, user, message, error
+    	isLoad, loadErr, bitBucketList = [], bitBucketListFilters, handleSubmit, message, error
     } = this.props;
     const { loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag } = this.state;
-	  
-	  const isValidUserFlag = validObjectWithParameterKeys(user, ['id', 'role']) && !!user.id && user.role === 1;
-    const sessionExpiredFlag = !loading && !isLoad && !isValidUserFlag;
+    
     const loadingCompleteFlag = !isLoad;
     const validBitBucketListFlag = loadingCompleteFlag && Array.isArray(bitBucketList) && bitBucketList.length;
     const isFileLoadedSuccessFlag = !!fileName;
-	  
-    if (sessionExpiredFlag) {
-      dispatch(push('/'));
-    }
     
     return (
       <div>
