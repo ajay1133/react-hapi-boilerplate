@@ -62,6 +62,12 @@ class NavBar extends Component {
                   Dashboard
                 </Menu.Item>
 						  }
+						  {
+							  user.role === 1 &&
+                <Menu.Item active={ currentLocation === '/contactUs' } onClick={ () => this.loadRoute('/contactUs') }>
+                  ContactUs
+                </Menu.Item>
+						  }
               <Menu.Menu position='right'>
                 <Menu.Item>
                   <i className="user icon mr-10" />

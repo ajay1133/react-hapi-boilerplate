@@ -10,10 +10,30 @@ const defaultContactUsAttributes = [
   'status',
 ];
 
-exports.getContactUs = () => contactUs.findAndCountAll({
-  attributes: defaultContactUsAttributes,
-  where: { status: 1 }
-});
+exports.getContactUs = (query) => {
+  const { Page, Limit, SortBy, Order } = query;
+  
+  let page = (!Page || Page < 1) ? 1 : Page;
+  let limit = Limit;
+  
+  let offset = page - 1;
+  offset *= limit;
+  
+  let sortOrder = [];
+  if (SortBy && Order) {
+    sortOrder.push([SortBy, Order]);
+  } else {
+    sortOrder.push(['name']);
+  }
+  
+  return contactUs.findAndCountAll({
+    attributes: defaultContactUsAttributes,
+    where: { status: 1 },
+    offset,
+    limit,
+    order: sortOrder
+  });
+};
 
 exports.createContactUs = (payload) => contactUs.create(payload);
 
