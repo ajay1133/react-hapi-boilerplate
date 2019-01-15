@@ -29,6 +29,11 @@ const Profile = Loadable({
     loading: Loading,
 });
 
+const ContactUs = Loadable({
+    loader: () => import('../containers/ContactUs'),
+    loading: Loading,
+});
+
 const Confirmation = Loadable({
     loader: () => import('../containers/Confirmation'),
     loading: Loading,
@@ -51,11 +56,13 @@ class MainRoute extends React.Component {
           <Switch>
             <AuthRoute path="/accounts" component={ Accounts } checkAuth={ checkAuth } />
             <AuthRoute path="/dashboard" component={ Dashboard } checkAuth={ checkAuth } />
+            <AuthRoute path="/contactUs" component={ ContactUs } checkAuth={ checkAuth } />
             <AuthRoute path="/profile" component={ Profile } checkAuth={ checkAuth } />
             
             <Route exact path="/" component={Home} />
             {/*<Route path="/dashboard" component={Dashboard} />*/}
             {/*<Route path="/accounts" component={Accounts} />*/}
+            {/*<Route path="/contactUs" component={ContactUs} />*/}
             {/*<Route path="/profile" component={Profile} />*/}
             <Route path="/accept/invitation/:inviteToken" component={Confirmation} />
           </Switch>
