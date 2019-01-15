@@ -1,5 +1,4 @@
 import Immutable from 'immutable';
-import { load } from './auth';
 import { updateBitBucketFile, bitBucketView } from './bitBucketRepo';
 import {
 	strictValidObjectWithKeys,
@@ -349,7 +348,6 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			await Promise.all(Object.keys(formData.otherDetails).map(detail =>
 				dispatch(internals.addAndDeleteMultipleTypes(formData.otherDetails[detail], detail))
 			));
-			await dispatch(load(true));
     } else if (strictValidObjectWithKeys(formData) && strictValidArrayWithLength(formData.userServices)) {
 			const toAddServicesList = [];
 			const toDeleteServicesList = [];
@@ -412,7 +410,6 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
       };
 		  
 			await dispatch(updatePassword(updatePasswordObj, true));
-			await dispatch(load(true));
 		} else if (strictValidObjectWithKeys(formData) && strictValidArrayWithLength(formData.userSearch)) {
 			const fileContentObj = Object.assign(
 				{ active: status === 1 ? 'true' : 'false' },
@@ -421,7 +418,6 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 			);
 			await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			await Promise.all(dispatch(internals.addAndDeleteMultipleTypes(formData.userSearch, 'searchKeywordType')));
-			await dispatch(load(true));
 		}
 		
 		await dispatch(loadUserProfileRelatedData());

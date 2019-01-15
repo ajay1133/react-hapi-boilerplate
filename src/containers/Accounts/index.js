@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { push } from 'connected-react-router';
 import { Table, Grid, Header, Message, Confirm, Icon, Segment, List, Form, Loader } from  'semantic-ui-react';
 import { Field, reduxForm } from 'redux-form/immutable';
 import { DropDown } from '../../components/Form';
@@ -206,16 +205,9 @@ export default class Accounts extends Component {
   };
   
   render() {
-    const { dispatch, user, items, itemsFilters, itemsCount, loadErr, accountErr, message } = this.props;
+    const { items, itemsFilters, itemsCount, loadErr, accountErr, message } = this.props;
     const { loading, selectedUser, showMessageFlag, openConfirmBox, type } = this.state;
-	
-	  const isValidUserFlag = validObjectWithParameterKeys(user, ['id', 'role']) && !!user.id && user.role === 1;
-	  const sessionExpiredFlag = !loading && !isValidUserFlag;
-	
-	  if (sessionExpiredFlag) {
-		  dispatch(push('/'));
-	  }
-	  
+    
 	  return (
       <AuthenticatedUser>
 			  {
