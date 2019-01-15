@@ -52,11 +52,7 @@ class MainRoute extends React.Component {
             <AuthRoute path="/accounts" component={ Accounts } checkAuth={ checkAuth } />
             <AuthRoute path="/dashboard" component={ Dashboard } checkAuth={ checkAuth } />
             <AuthRoute path="/profile" component={ Profile } checkAuth={ checkAuth } />
-            
             <Route exact path="/" component={Home} />
-            {/*<Route path="/dashboard" component={Dashboard} />*/}
-            {/*<Route path="/accounts" component={Accounts} />*/}
-            {/*<Route path="/profile" component={Profile} />*/}
             <Route path="/accept/invitation/:inviteToken" component={Confirmation} />
           </Switch>
         </div>

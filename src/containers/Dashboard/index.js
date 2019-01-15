@@ -20,7 +20,8 @@ import {
 	validObjectWithParameterKeys,
 	strictValidArrayWithLength,
 	addKeyValuePairAsString,
-	typeCastToString
+	typeCastToString,
+	getAbsoluteS3FileUrl
 } from '../../utils/commonutils';
 import {
 	DEFAULT_ACCESSIBLE_ROOT_PATH,
@@ -137,8 +138,9 @@ export default class Dashboard extends Component {
       modalOpenFlag: !isLoadingDirectoryFlag,
 	    openRepoFile: !isLoadingDirectoryFlag && openFileInEditModeFlag,
       fileName: !isLoadingDirectoryFlag ? displayName : null,
-      fileContent: !isLoadingDirectoryFlag && res.data ? res.data : null,
-      href,
+      fileContent: !isLoadingDirectoryFlag && res.content ? res.content : null,
+	    uploadBlogImageUrl: !isLoadingDirectoryFlag && res.image ? res.image : null,
+	    href,
       repoPath
     });
   };
@@ -168,7 +170,7 @@ export default class Dashboard extends Component {
     
     const dataObject = {
       path: isAddingFileFlag ? basePath + '/' + formValues.fileName : basePath,
-      content: this.compileFormFieldsToMarkDown(formValues, isAddingFileFlag),
+      content: this.compileFormFieldsToMarkDown(formValues),
       type: 2
     };
     
@@ -181,7 +183,7 @@ export default class Dashboard extends Component {
     await dispatch(updateBitBucketFile(dataObject));
 	  await dispatch(bitBucketListing(Object.assign({}, bitBucketListFilters, params)));
 	
-	  let res = null;
+	  let res = {};
 	
 	  if (!isAddingFileFlag) {
 		  res = await dispatch(bitBucketView(params));
@@ -192,7 +194,7 @@ export default class Dashboard extends Component {
 		  modalOpenFlag: !isAddingFileFlag,
 		  openRepoFile: !isAddingFileFlag,
 		  fileName: !isAddingFileFlag ? this.state.fileName : null,
-		  fileContent: !isAddingFileFlag && res.data ? res.data : null,
+		  fileContent: !isAddingFileFlag && res.content ? res.content : null,
 		  href,
 		  repoPath
 	  });
@@ -200,7 +202,7 @@ export default class Dashboard extends Component {
 	  this.setState({ loading: false });
   };
 	
-	compileFormFieldsToMarkDown = (dataObj, isAddingFileFlag) => {
+	compileFormFieldsToMarkDown = (dataObj) => {
 	  const dataObjKeys = (strictValidObjectWithKeys(dataObj) && Object.keys(dataObj)) || [];
 	 
 	  const extraMetaDataKeys = dataObjKeys
@@ -208,11 +210,16 @@ export default class Dashboard extends Component {
     const validMetaDataKeys = dataObjKeys.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
 		
     let mdStr = '---\n';
-	
+	  
 	  validMetaDataKeys
 		  .concat(extraMetaDataKeys)
 		  .forEach(k => {
-			  mdStr += addKeyValuePairAsString(k, k === 'image' && !dataObj[k] ? DEFAULT_BLOG_IMAGE_URL : dataObj[k], '\n');
+			  mdStr += addKeyValuePairAsString(k,
+				  k === 'image' && !dataObj[k]
+				  ? DEFAULT_BLOG_IMAGE_URL
+				  : (k === 'image' ? getAbsoluteS3FileUrl(dataObj[k]) : dataObj[k]),
+				  '\n'
+			  );
       });
 		
 	  mdStr += '---\n';
@@ -291,7 +298,7 @@ export default class Dashboard extends Component {
     } = this.props;
     const {
     	loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag, imageLoading,
-	    uploadProfileImageUrl
+	    uploadBlogImageUrl
     } = this.state;
     
     const loadingCompleteFlag = !isLoad;
@@ -331,7 +338,7 @@ export default class Dashboard extends Component {
 									      style={{ float: 'right', marginTop: '-10px' }}
 									      onClick={ () => this.modalOpen(true) }
 								      >
-									      Add File
+									      Add Blog
 								      </Button>
 							      }
 						      </h4>
@@ -443,7 +450,7 @@ export default class Dashboard extends Component {
           >
             <Modal.Header>
               { fileName && <Icon name='file' size='large' /> }
-              <span style={{ marginLeft: '5px' }}>{ fileName || 'Add File' }</span>
+              <span style={{ marginLeft: '5px' }}>{ fileName || 'Add Blog' }</span>
             </Modal.Header>
             <Modal.Content>
 	            {
@@ -473,7 +480,7 @@ export default class Dashboard extends Component {
 	                  handleBlogImageFinishedUpload={ this.handleBlogImageFinishedUpload }
 	                  resetBlogImageOnComplete={ this.resetBlogImageOnComplete }
 	                  imageLoading={ imageLoading }
-	                  uploadProfileImageUrl={ uploadProfileImageUrl }
+	                  uploadBlogImageUrl={ uploadBlogImageUrl }
                   />
                 }
                 {
@@ -482,6 +489,8 @@ export default class Dashboard extends Component {
 	                  repoPath={repoPath}
 	                  handleBlogImageFinishedUpload={ this.handleBlogImageFinishedUpload }
 	                  resetBlogImageOnComplete={ this.resetBlogImageOnComplete }
+	                  imageLoading={ imageLoading }
+	                  uploadBlogImageUrl={ uploadBlogImageUrl }
                   />
                 }
               </Modal.Description>

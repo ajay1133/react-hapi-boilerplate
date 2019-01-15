@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Form, Loader, Image } from 'semantic-ui-react';
 import { Field } from 'redux-form/immutable';
 import { getAbsoluteS3FileUrl } from '../../utils/commonutils';
-import { MD_FILE_DRAFT_OPTIONS_LIST, DEFAULT_USER_PROFILE_IMAGE_URL } from '../../utils/constants';
+import { MD_FILE_DRAFT_OPTIONS_LIST, DEFAULT_BLOG_IMAGE_URL } from '../../utils/constants';
 import { TextBox, RadioGroup, RichEditor } from '../../components/Form';
 import S3FileUploader from '../../components/S3FileUploader';
 import config from '../../config';
@@ -14,11 +14,11 @@ class EditFile extends Component {
 		handleBlogImageFinishedUpload: PropTypes.func,
 		resetBlogImageOnComplete: PropTypes.func,
 		imageLoading: PropTypes.bool,
-		uploadProfileImageUrl: PropTypes.string
+		uploadBlogImageUrl: PropTypes.string
 	};
 	
 	render() {
-		const { handleBlogImageFinishedUpload, resetBlogImageOnComplete, imageLoading, uploadProfileImageUrl } = this.props;
+		const { handleBlogImageFinishedUpload, resetBlogImageOnComplete, imageLoading, uploadBlogImageUrl } = this.props;
 		
 		return (
 			<Form>
@@ -35,7 +35,7 @@ class EditFile extends Component {
 				{
 					!imageLoading &&
 					<Image
-						src={ getAbsoluteS3FileUrl(uploadProfileImageUrl) || DEFAULT_USER_PROFILE_IMAGE_URL }
+						src={ getAbsoluteS3FileUrl(uploadBlogImageUrl) || DEFAULT_BLOG_IMAGE_URL }
 						size="medium"
 						rounded
 						alt="image"
