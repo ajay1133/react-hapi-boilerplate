@@ -19,7 +19,9 @@ import {
 	validFileName,
 	validObjectWithParameterKeys,
 	strictValidArrayWithLength,
-	addKeyValuePairAsString
+	addKeyValuePairAsString,
+	typeCastToString,
+	getAbsoluteS3FileUrl
 } from '../../utils/commonutils';
 import {
 	DEFAULT_ACCESSIBLE_ROOT_PATH,
@@ -29,7 +31,9 @@ import {
 	VALID_ACCESSIBLE_FILE_FORMATS,
 	DEFAULT_BITBUCKET_LIST_FILTERS,
 	DEFAULT_BLOG_IMAGE_URL,
-	OFFSET
+	OFFSET,
+	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS,
+	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES
 } from '../../utils/constants';
 
 const md = MarkDown({
@@ -60,7 +64,10 @@ export default class Dashboard extends Component {
     fileContent: null,
     href: null,
     repoPath: null,
-    showMessageFlag: true
+    showMessageFlag: true,
+	  uploadBlogImageUrl: null,
+	  uploadBlogImageName: null,
+	  uploadBlogImageError: null
   };
   
   static propTypes = {
@@ -131,8 +138,9 @@ export default class Dashboard extends Component {
       modalOpenFlag: !isLoadingDirectoryFlag,
 	    openRepoFile: !isLoadingDirectoryFlag && openFileInEditModeFlag,
       fileName: !isLoadingDirectoryFlag ? displayName : null,
-      fileContent: !isLoadingDirectoryFlag && res.data ? res.data : null,
-      href,
+      fileContent: !isLoadingDirectoryFlag && res.content ? res.content : null,
+	    uploadBlogImageUrl: !isLoadingDirectoryFlag && res.image ? res.image : null,
+	    href,
       repoPath
     });
   };
@@ -146,9 +154,9 @@ export default class Dashboard extends Component {
 	
   setFile = async (values) => {
     const { dispatch, bitBucketListFilters } = this.props;
-    const { href, repoPath } = this.state;
+    const { href, repoPath, uploadBlogImageUrl } = this.state;
     
-    const formValues = values.toJSON() || {};
+    const formValues = Object.assign({}, values.toJSON(), { image: uploadBlogImageUrl }) || {};
     
     const isAddingFileFlag = validObjectWithParameterKeys(formValues, ['fileName', 'filePath']);
 	  
@@ -162,7 +170,7 @@ export default class Dashboard extends Component {
     
     const dataObject = {
       path: isAddingFileFlag ? basePath + '/' + formValues.fileName : basePath,
-      content: this.compileFormFieldsToMarkDown(formValues, isAddingFileFlag),
+      content: this.compileFormFieldsToMarkDown(formValues),
       type: 2
     };
     
@@ -175,7 +183,7 @@ export default class Dashboard extends Component {
     await dispatch(updateBitBucketFile(dataObject));
 	  await dispatch(bitBucketListing(Object.assign({}, bitBucketListFilters, params)));
 	
-	  let res = null;
+	  let res = {};
 	
 	  if (!isAddingFileFlag) {
 		  res = await dispatch(bitBucketView(params));
@@ -186,7 +194,7 @@ export default class Dashboard extends Component {
 		  modalOpenFlag: !isAddingFileFlag,
 		  openRepoFile: !isAddingFileFlag,
 		  fileName: !isAddingFileFlag ? this.state.fileName : null,
-		  fileContent: !isAddingFileFlag && res.data ? res.data : null,
+		  fileContent: !isAddingFileFlag && res.content ? res.content : null,
 		  href,
 		  repoPath
 	  });
@@ -194,7 +202,7 @@ export default class Dashboard extends Component {
 	  this.setState({ loading: false });
   };
 	
-	compileFormFieldsToMarkDown = (dataObj, isAddingFileFlag) => {
+	compileFormFieldsToMarkDown = (dataObj) => {
 	  const dataObjKeys = (strictValidObjectWithKeys(dataObj) && Object.keys(dataObj)) || [];
 	 
 	  const extraMetaDataKeys = dataObjKeys
@@ -202,11 +210,16 @@ export default class Dashboard extends Component {
     const validMetaDataKeys = dataObjKeys.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
 		
     let mdStr = '---\n';
-	
+	  
 	  validMetaDataKeys
 		  .concat(extraMetaDataKeys)
 		  .forEach(k => {
-			  mdStr += addKeyValuePairAsString(k, k === 'image' && !dataObj[k] ? DEFAULT_BLOG_IMAGE_URL : dataObj[k], '\n');
+			  mdStr += addKeyValuePairAsString(k,
+				  k === 'image' && !dataObj[k]
+				  ? DEFAULT_BLOG_IMAGE_URL
+				  : (k === 'image' ? getAbsoluteS3FileUrl(dataObj[k]) : dataObj[k]),
+				  '\n'
+			  );
       });
 		
 	  mdStr += '---\n';
@@ -220,11 +233,16 @@ export default class Dashboard extends Component {
   
 	modalOpen = async (addNewFileFlag) => {
 		const { dispatch } = this.props;
-		const stateObject = { openRepoFile: true };
+		let stateObject = { openRepoFile: true };
 		
 	  if (addNewFileFlag) {
-	    stateObject.modalOpenFlag = true;
-		  this.setState({ loading: true });
+	  	stateObject = Object.assign({}, stateObject, {
+	  		modalOpenFlag: true,
+			  uploadBlogImageName: null,
+			  uploadBlogImageUrl: null,
+			  uploadBlogImageError: null
+	  	});
+	    this.setState({ loading: true });
 		  await dispatch(resetBitBucketFileForm());
 		  this.setState({ loading: false });
     }
@@ -239,17 +257,49 @@ export default class Dashboard extends Component {
 	    fileName: null,
 	    fileContent: null,
 	    href: null,
-	    repoPath: null
+	    repoPath: null,
+	    uploadBlogImageName: null,
+	    uploadBlogImageUrl: null,
+	    uploadBlogImageError: null
     });
   };
 	
   messageDismiss = () => this.setState({ showMessageFlag: false });
-  
+	
+	handleBlogImageFinishedUpload = async ({ name, s3Key }) => {
+		if (!validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
+			this.setState({ uploadBlogImageError: 'Invalid File Name, a valid image file should only have' +
+			'\'.jpg\', \'.jpeg\', \'.png\' or \'.gif\'  extension(s)' });
+			setTimeout(() => this.setState({ uploadBlogImageError: null }), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
+			return;
+		}
+		
+		this.setState({ imageLoading: true, uploadBlogImageUrl: s3Key });
+	};
+	
+	resetBlogImageOnComplete = async ({ name }) => {
+		try {
+			if (validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
+				this.setState({
+					imageLoading: false,
+					uploadBlogImageName: name
+				});
+			}
+		} catch (err) {
+			throw new SubmissionError({
+				_error: typeCastToString(err) || 'Error updating image'
+			});
+		}
+	};
+	
   render () {
     const {
     	isLoad, loadErr, bitBucketList = [], bitBucketListFilters, handleSubmit, message, error
     } = this.props;
-    const { loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag } = this.state;
+    const {
+    	loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag, imageLoading,
+	    uploadBlogImageUrl
+    } = this.state;
     
     const loadingCompleteFlag = !isLoad;
     const validBitBucketListFlag = loadingCompleteFlag && Array.isArray(bitBucketList) && bitBucketList.length;
@@ -288,7 +338,7 @@ export default class Dashboard extends Component {
 									      style={{ float: 'right', marginTop: '-10px' }}
 									      onClick={ () => this.modalOpen(true) }
 								      >
-									      Add File
+									      Add Blog
 								      </Button>
 							      }
 						      </h4>
@@ -400,7 +450,7 @@ export default class Dashboard extends Component {
           >
             <Modal.Header>
               { fileName && <Icon name='file' size='large' /> }
-              <span style={{ marginLeft: '5px' }}>{ fileName || 'Add File' }</span>
+              <span style={{ marginLeft: '5px' }}>{ fileName || 'Add Blog' }</span>
             </Modal.Header>
             <Modal.Content>
 	            {
@@ -426,11 +476,22 @@ export default class Dashboard extends Component {
                 }
                 {
                   openRepoFile && isFileLoadedSuccessFlag &&
-                  <EditFile />
+                  <EditFile
+	                  handleBlogImageFinishedUpload={ this.handleBlogImageFinishedUpload }
+	                  resetBlogImageOnComplete={ this.resetBlogImageOnComplete }
+	                  imageLoading={ imageLoading }
+	                  uploadBlogImageUrl={ uploadBlogImageUrl }
+                  />
                 }
                 {
 	                openRepoFile && !isFileLoadedSuccessFlag &&
-                  <AddFile repoPath={repoPath} />
+                  <AddFile
+	                  repoPath={repoPath}
+	                  handleBlogImageFinishedUpload={ this.handleBlogImageFinishedUpload }
+	                  resetBlogImageOnComplete={ this.resetBlogImageOnComplete }
+	                  imageLoading={ imageLoading }
+	                  uploadBlogImageUrl={ uploadBlogImageUrl }
+                  />
                 }
               </Modal.Description>
             </Modal.Content>

@@ -123,12 +123,13 @@ export const bitBucketView = (params) => async (dispatch, getState, api) => {
     
     dispatch({ type: BIT_BUCKET_VIEW, result });
     dispatch({ type: LOAD_SUCCESS });
+    return result;
 	} catch (error) {
 	  dispatch({ type: BIT_BUCKET_VIEW, result: {} });
 		dispatch({ type: LOAD_FAIL, error });
 	  dispatch(internals.resetMessage());
+	  return res;
 	}
-	return res;
 };
 
 export const updateBitBucketFile = (data) => async (dispatch, getState, api) => {
@@ -234,7 +235,6 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 		}
 		
 		const content = res.slice(2).join(delimiterToDiffDetailsWithContent).trim();
-		
 		res = Object.assign({}, details, { content });
 	} catch (error) {
 		console.log('Error parsing file: ', error);

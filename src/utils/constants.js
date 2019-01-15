@@ -75,9 +75,9 @@ export const MD_FILE_DRAFT_OPTIONS_LIST = [
 	}
 ];
 
-export const VALID_ACCESSIBLE_FILE_FORMATS = ['md'];
+export const VALID_ACCESSIBLE_FILE_FORMATS = ['md', 'MD'];
 
-export const VALID_ACCESSIBLE_IMAGE_FILE_FORMATS = ['jpg', 'jpeg', 'png', 'gif'];
+export const VALID_ACCESSIBLE_IMAGE_FILE_FORMATS = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG', 'gif', 'GIF'];
 
 export const DEFAULT_BITBUCKET_LIST_FILTERS = {
 	path: DEFAULT_ACCESSIBLE_ROOT_PATH,

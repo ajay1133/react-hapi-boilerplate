@@ -35,7 +35,7 @@ fileName && Array.isArray(validExtensionsList) &&
 !!validExtensionsList.length &&
 concatenateRegularExpressions([
 	(strictValidString(startingRegExp) && startingRegExp) || VALID_BEGIN_FILE_NAME,
-	validExtensionsList.map(v => (strictValidString(v) && `.${v}`) || '').join('|'),
+	validExtensionsList.map(v => (strictValidString(v) && `.${v.toLowerCase()}`) || '').join('|'),
 	'$'
 ]).test(fileName);
 

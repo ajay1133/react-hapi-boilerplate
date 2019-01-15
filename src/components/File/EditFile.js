@@ -1,16 +1,25 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Form } from 'semantic-ui-react';
+import { Form, Loader, Image } from 'semantic-ui-react';
 import { Field } from 'redux-form/immutable';
-import { MD_FILE_DRAFT_OPTIONS_LIST } from '../../utils/constants';
+import { getAbsoluteS3FileUrl } from '../../utils/commonutils';
+import { MD_FILE_DRAFT_OPTIONS_LIST, DEFAULT_BLOG_IMAGE_URL } from '../../utils/constants';
 import { TextBox, RadioGroup, RichEditor } from '../../components/Form';
+import S3FileUploader from '../../components/S3FileUploader';
+import config from '../../config';
 
 class EditFile extends Component {
 	static propTypes = {
-		dispatch: PropTypes.func
+		dispatch: PropTypes.func,
+		handleBlogImageFinishedUpload: PropTypes.func,
+		resetBlogImageOnComplete: PropTypes.func,
+		imageLoading: PropTypes.bool,
+		uploadBlogImageUrl: PropTypes.string
 	};
 	
 	render() {
+		const { handleBlogImageFinishedUpload, resetBlogImageOnComplete, imageLoading, uploadBlogImageUrl } = this.props;
+		
 		return (
 			<Form>
 				<Field
@@ -19,11 +28,25 @@ class EditFile extends Component {
 					component={ TextBox }
 					placeholder="Enter Title"
 				/>
-				<Field
-					name="image"
-					label="Image"
-					component={ TextBox }
-					placeholder="Enter Image Path Relative To Root"
+				{
+					imageLoading &&
+					<Loader active inline='centered'>Loading...</Loader>
+				}
+				{
+					!imageLoading &&
+					<Image
+						src={ getAbsoluteS3FileUrl(uploadBlogImageUrl) || DEFAULT_BLOG_IMAGE_URL }
+						size="medium"
+						rounded
+						alt="image"
+						centered
+					/>
+				}
+				<S3FileUploader
+					signingUrl={`${config.apiHost}/aws/uploadFile/blogImages`}
+					onFileUpload={ handleBlogImageFinishedUpload }
+					resetOnComplete={ resetBlogImageOnComplete }
+					toShowContent={ ' Change Blog Image' }
 				/>
 				<Field
 					name="draft"
