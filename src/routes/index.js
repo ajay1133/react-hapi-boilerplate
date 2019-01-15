@@ -43,6 +43,7 @@ const Confirmation = Loadable({
   user: state.get('auth').get('user')
 }))
 @reduxForm({
+  form: 'routerForm',
   enableReinitialize: true
 })
 class MainRoute extends React.Component {
