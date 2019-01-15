@@ -694,8 +694,10 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 			});
 		}
 		
-		content += `<div class="row w100"><h5 class="w100">TREATMENT FOCUS</h5><div class="clearfix"></div>`;
-		content += `<p>${userTreatmentFocusValues.filter(v => v.checked).map(v => v.name).join(', ')}</p></div>`;
+		if (userTreatmentFocusValues) {
+			content += `<div class="row w100"><h5 class="w100">INSURANCE</h5><div class="clearfix"></div>`;
+			content += `<p>${userTreatmentFocusValues.filter(v => v.checked).map(v => v.name).join(', ')}</p></div>`;
+		}
 	}
 	
 	return {

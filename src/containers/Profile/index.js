@@ -113,6 +113,7 @@ export default class Profile extends Component {
 	
 	state = {
 		loading: true,
+		imageLoading: false,
 		showMessageFlag: true,
 		userVerifiedFlag: false,
 		activeTab: USER_PROFILE_TABS[0] || null,
@@ -194,7 +195,7 @@ export default class Profile extends Component {
 
 	getProfileTabsSection = () => {
 		const { genderTypes = [], ageTypes = [], treatmentFocusTypes = [] } = this.props;
-		const { uploadProfileImageError, uploadProfileImageUrl } = this.state;
+		const { uploadProfileImageError, uploadProfileImageUrl, imageLoading } = this.state;
 		
 		return (
 		  <Grid>
@@ -359,7 +360,7 @@ export default class Profile extends Component {
 				  <Grid.Column computer="6">
 					  {
 						  !!uploadProfileImageError &&
-						  <Grid.Row columns="1">
+						  <Grid.Row columns="1" className="mb-10">
 							  <Grid.Column>
 								  <span style={{ color: 'red' }}>{ uploadProfileImageError }</span>
 							  </Grid.Column>
@@ -367,13 +368,20 @@ export default class Profile extends Component {
 					  }
 					  <Grid.Row>
 						  <Grid.Column>
-							  <Image
-								  src={ getAbsoluteS3FileUrl(uploadProfileImageUrl) || DEFAULT_USER_PROFILE_IMAGE_URL }
-								  size="medium"
-								  rounded
-								  alt="image"
-								  centered
-							  />
+							  {
+								  imageLoading &&
+								  <Loader active inline='centered'>Loading...</Loader>
+							  }
+							  {
+							  	!imageLoading &&
+								  <Image
+									  src={ getAbsoluteS3FileUrl(uploadProfileImageUrl) || DEFAULT_USER_PROFILE_IMAGE_URL }
+									  size="medium"
+									  rounded
+									  alt="image"
+									  centered
+								  />
+							  }
 						  </Grid.Column>
 					  </Grid.Row>
 					  <Grid.Row>
@@ -813,14 +821,14 @@ export default class Profile extends Component {
 		
 		try {
 			if (validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
-				this.setState({ loading: true });
+				this.setState({ imageLoading: true });
 				const formData = {
 					profileDetails: { image: uploadProfileImageUrl }
 				};
 				await dispatch(updateUserProfile(formData));
 				this.handleTabClick(activeTab);
 				this.setState({
-					loading: false,
+					imageLoading: false,
 					uploadProfileImageName: name
 				});
 			}

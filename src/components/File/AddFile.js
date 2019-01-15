@@ -3,17 +3,21 @@ import PropTypes from 'prop-types';
 import { Form } from 'semantic-ui-react';
 import { Field } from 'redux-form/immutable';
 import { MD_FILE_DRAFT_OPTIONS_LIST } from '../../utils/constants';
+import S3FileUploader from '../../components/S3FileUploader';
 import { fileNameValidator } from '../../utils/validations';
 import { TextBox, RadioGroup, RichEditor } from '../../components/Form';
+import config from '../../config';
 
 class AddFile extends Component {
 	static propTypes = {
+		dispatch: PropTypes.func,
 		repoPath: PropTypes.string,
-		dispatch: PropTypes.func
+		handleBlogImageFinishedUpload: PropTypes.func,
+		resetBlogImageOnComplete: PropTypes.func
 	};
 	
 	render() {
-		const { repoPath } = this.props;
+		const { repoPath, handleBlogImageFinishedUpload, resetBlogImageOnComplete } = this.props;
 		
 		return (
 			<Form>
@@ -45,11 +49,11 @@ class AddFile extends Component {
 					component={ TextBox }
 					placeholder="Enter Title"
 				/>
-				<Field
-					name="image"
-					label="Image"
-					component={ TextBox }
-					placeholder={ `Enter Image Path Relative To ${repoPath ? `${repoPath}/` : '/'}` }
+				<S3FileUploader
+					signingUrl={`${config.apiHost}/aws/uploadFile/blogImages`}
+					onFileUpload={ handleBlogImageFinishedUpload }
+					resetOnComplete={ resetBlogImageOnComplete }
+					toShowContent={ ' Add Blog Image' }
 				/>
 				<Field
 					name="draft"

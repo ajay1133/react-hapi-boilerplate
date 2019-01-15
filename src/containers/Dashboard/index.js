@@ -20,7 +20,8 @@ import {
 	validFileName,
 	validObjectWithParameterKeys,
 	strictValidArrayWithLength,
-	addKeyValuePairAsString
+	addKeyValuePairAsString,
+	typeCastToString
 } from '../../utils/commonutils';
 import {
 	DEFAULT_ACCESSIBLE_ROOT_PATH,
@@ -30,7 +31,9 @@ import {
 	VALID_ACCESSIBLE_FILE_FORMATS,
 	DEFAULT_BITBUCKET_LIST_FILTERS,
 	DEFAULT_BLOG_IMAGE_URL,
-	OFFSET
+	OFFSET,
+	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS,
+	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES
 } from '../../utils/constants';
 
 const md = MarkDown({
@@ -61,7 +64,10 @@ export default class Dashboard extends Component {
     fileContent: null,
     href: null,
     repoPath: null,
-    showMessageFlag: true
+    showMessageFlag: true,
+	  uploadBlogImageUrl: null,
+	  uploadBlogImageName: null,
+	  uploadBlogImageError: null
   };
   
   static propTypes = {
@@ -147,9 +153,9 @@ export default class Dashboard extends Component {
 	
   setFile = async (values) => {
     const { dispatch, bitBucketListFilters } = this.props;
-    const { href, repoPath } = this.state;
+    const { href, repoPath, uploadBlogImageUrl } = this.state;
     
-    const formValues = values.toJSON() || {};
+    const formValues = Object.assign({}, values.toJSON(), { image: uploadBlogImageUrl }) || {};
     
     const isAddingFileFlag = validObjectWithParameterKeys(formValues, ['fileName', 'filePath']);
 	  
@@ -221,11 +227,16 @@ export default class Dashboard extends Component {
   
 	modalOpen = async (addNewFileFlag) => {
 		const { dispatch } = this.props;
-		const stateObject = { openRepoFile: true };
+		let stateObject = { openRepoFile: true };
 		
 	  if (addNewFileFlag) {
-	    stateObject.modalOpenFlag = true;
-		  this.setState({ loading: true });
+	  	stateObject = Object.assign({}, stateObject, {
+	  		modalOpenFlag: true,
+			  uploadBlogImageName: null,
+			  uploadBlogImageUrl: null,
+			  uploadBlogImageError: null
+	  	});
+	    this.setState({ loading: true });
 		  await dispatch(resetBitBucketFileForm());
 		  this.setState({ loading: false });
     }
@@ -240,17 +251,49 @@ export default class Dashboard extends Component {
 	    fileName: null,
 	    fileContent: null,
 	    href: null,
-	    repoPath: null
+	    repoPath: null,
+	    uploadBlogImageName: null,
+	    uploadBlogImageUrl: null,
+	    uploadBlogImageError: null
     });
   };
 	
   messageDismiss = () => this.setState({ showMessageFlag: false });
-  
+	
+	handleBlogImageFinishedUpload = async ({ name, s3Key }) => {
+		if (!validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
+			this.setState({ uploadBlogImageError: 'Invalid File Name, a valid image file should only have' +
+			'\'.jpg\', \'.jpeg\', \'.png\' or \'.gif\'  extension(s)' });
+			setTimeout(() => this.setState({ uploadBlogImageError: null }), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
+			return;
+		}
+		
+		this.setState({ imageLoading: true, uploadBlogImageUrl: s3Key });
+	};
+	
+	resetBlogImageOnComplete = async ({ name }) => {
+		try {
+			if (validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
+				this.setState({
+					imageLoading: false,
+					uploadBlogImageName: name
+				});
+			}
+		} catch (err) {
+			throw new SubmissionError({
+				_error: typeCastToString(err) || 'Error updating image'
+			});
+		}
+	};
+	
   render () {
     const {
     	dispatch, isLoad, loadErr, bitBucketList = [], bitBucketListFilters, handleSubmit, user, message, error
     } = this.props;
-    const { loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag } = this.state;
+    const {
+    	loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag, imageLoading,
+	    uploadProfileImageUrl
+    } = this.state;
 	  
 	  const isValidUserFlag = validObjectWithParameterKeys(user, ['id', 'role']) && !!user.id && user.role === 1;
     const sessionExpiredFlag = !loading && !isLoad && !isValidUserFlag;
@@ -433,11 +476,20 @@ export default class Dashboard extends Component {
                 }
                 {
                   openRepoFile && isFileLoadedSuccessFlag &&
-                  <EditFile />
+                  <EditFile
+	                  handleBlogImageFinishedUpload={ this.handleBlogImageFinishedUpload }
+	                  resetBlogImageOnComplete={ this.resetBlogImageOnComplete }
+	                  imageLoading={ imageLoading }
+	                  uploadProfileImageUrl={ uploadProfileImageUrl }
+                  />
                 }
                 {
 	                openRepoFile && !isFileLoadedSuccessFlag &&
-                  <AddFile repoPath={repoPath} />
+                  <AddFile
+	                  repoPath={repoPath}
+	                  handleBlogImageFinishedUpload={ this.handleBlogImageFinishedUpload }
+	                  resetBlogImageOnComplete={ this.resetBlogImageOnComplete }
+                  />
                 }
               </Modal.Description>
             </Modal.Content>
