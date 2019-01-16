@@ -180,15 +180,9 @@ export default class Dashboard extends Component {
 			path: (href && typeof href === 'string' && href.split('/src')[1]) || DEFAULT_ACCESSIBLE_ROOT_PATH
 		};
     
-    await dispatch(updateBitBucketFile(dataObject));
+    const res = await dispatch(updateBitBucketFile(dataObject));
 	  await dispatch(bitBucketListing(Object.assign({}, bitBucketListFilters, params)));
-	
-	  let res = {};
-	
-	  if (!isAddingFileFlag) {
-		  res = await dispatch(bitBucketView(params));
-	  }
-	
+	  
 	  this.setState({
 		  loading: false,
 		  modalOpenFlag: !isAddingFileFlag,

@@ -136,3 +136,37 @@ export const PROFILE_MD_META_INITIAL_VALUES = {
 	image: DEFAULT_USER_PROFILE_IMAGE_URL,
 	date: moment().format()
 };
+
+export const DEFAULT_USER_SERVICES = [];
+
+DEFAULT_USER_SERVICES[1] = [
+	{ text: 'Select to Add Service', value: '' },
+	{ text: 'Test Service Of Treatment Type 1', value: 'Test Service Of Treatment Type 1' },
+	{ text: 'Test Service Of Treatment Type 2', value: 'Test Service Of Treatment Type 2' },
+	{ text: 'Test Service Of Treatment Type 3', value: 'Test Service Of Treatment Type 3' }
+];
+
+DEFAULT_USER_SERVICES[2] = [
+	{ text: 'Select to Add Service', value: '' },
+	{ text: 'Test Service Of Type Of Services 1', value: 'Test Service Of Type Of Services 1' },
+	{ text: 'Test Service Of Type Of Services 2', value: 'Test Service Of Type Of Services 2' },
+	{ text: 'Test Service Of Type Of Services 3', value: 'Test Service Of Type Of Services 3' }
+];
+
+DEFAULT_USER_SERVICES[3] = [
+	{ text: 'Select to Add Service', value: '' },
+	{ text: 'Test Service Of Level Of Care 1', value: 'Test Service Of Level Of Care 1' },
+	{ text: 'Test Service Of Level Of Care 2', value: 'Test Service Of Level Of Care 2' },
+	{ text: 'Test Service Of Level Of Care 3', value: 'Test Service Of Level Of Care 3' }
+];
+
+DEFAULT_USER_SERVICES[4] = [
+	{ text: 'Select to Add Service', value: '' },
+	{ text: 'Test Service Of Treatment Focus 1', value: 'Test Service Of Treatment Focus 1' },
+	{ text: 'Test Service Of Treatment Focus 2', value: 'Test Service Of Treatment Focus 2' },
+	{ text: 'Test Service Of Treatment Focus 3', value: 'Test Service Of Treatment Focus 3' }
+];
+
+export const DEFAULT_USER_SERVICE_OPTIONS_LIST = [
+	'No Service Available'
+];

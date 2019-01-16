@@ -37,6 +37,7 @@ exports.deleteSearchBySearchId = (userId, searchkeywordtypeId) =>
 const defaultSearchKeywordAttributes = [
   'id',
   'name',
+	'type',
   'status'
 ];
 
