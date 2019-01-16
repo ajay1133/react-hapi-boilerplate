@@ -2,10 +2,10 @@
 module.exports = {
 	up: (queryInterface, Sequelize) => {
 		return queryInterface
-			.addColumn('searchkeywords', 'type', Sequelize.STRING);
+			.addColumn('searchKeywords', 'type', Sequelize.STRING);
 	},
 	
 	down: (queryInterface, Sequelize) => {
-		return queryInterface.removeColumn('searchkeywords', 'type');
+		return queryInterface.removeColumn('searchKeywords', 'type');
 	}
 };
