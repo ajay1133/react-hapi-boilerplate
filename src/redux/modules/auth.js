@@ -9,6 +9,9 @@ const LOAD = 'auth/LOAD';
 const LOAD_SUCCESS = 'auth/LOAD_SUCCESS';
 const LOAD_FAIL = 'auth/LOAD_FAIL';
 
+const FORGOT_SUCCESS = 'auth/FORGOT_SUCCESS';
+const FORGOT_FAIL = 'auth/FORGOT_FAIL';
+
 const LOGIN = 'auth/LOGIN';
 const LOGIN_SUCCESS = 'auth/LOGIN_SUCCESS';
 const LOGIN_FAIL = 'auth/LOGIN_FAIL';
@@ -24,6 +27,7 @@ const initialState = Immutable.fromJS({
   loadErr: null,
   isLogin: false,
   loginErr: null,
+  loginMsg: null,
   user: null,
   loading: false,
   signupError: null
@@ -56,6 +60,19 @@ export default function reducer(state = initialState, action) {
       return state
         .set('isLogin', false)
         .set('user', action.user);
+
+    case FORGOT_SUCCESS:
+      return state
+        .set('isLogin', false)
+        .set('loginMsg', action.message)
+        .set('user', null);
+
+    case FORGOT_FAIL:
+      return state
+        .set('isLogin', false)
+        .set('loginErr', action.error)
+        .set('loginMsg', false)
+        .set('user', null);
 
     case LOGIN_FAIL:
       return state
@@ -134,6 +151,18 @@ export const login = (email, password) => async (dispatch, getState, api) => {
     return res;
   } catch (err) {
     dispatch({ type: LOGIN_FAIL, error: err.message });
+  }
+};
+
+export const forgotPassword = (email) => async (dispatch, getState, api) => {
+  dispatch({ type: LOGIN });
+  
+  try {
+    const res = await api.post('/sessions/forgotPassword', { data: { email } });
+    dispatch({ type: FORGOT_SUCCESS, message: res.message });
+    return res;
+  } catch (err) {
+    dispatch({ type: FORGOT_FAIL, error: err.message });
   }
 };
 
