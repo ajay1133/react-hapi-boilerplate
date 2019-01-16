@@ -2,8 +2,8 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import { Field, reduxForm, formValueSelector, SubmissionError } from 'redux-form/immutable';
-import {Grid, Message, Loader, Tab, Header, Button, Form, Image} from  'semantic-ui-react';
-import {TextBox, TextArea, CheckBox} from '../../components/Form';
+import { Grid, Message, Loader, Tab, Header, Button, Form, Image } from  'semantic-ui-react';
+import { TextBox, TextArea, CheckBox, DropDown } from '../../components/Form';
 import { required, email, normalizePhone, url, passwordValidator } from '../../utils/validations';
 import {
 	strictValidObjectWithKeys,
@@ -11,7 +11,8 @@ import {
 	strictValidArrayWithLength,
 	validObjectWithParameterKeys,
 	getAbsoluteS3FileUrl,
-	validFileName
+	validFileName,
+	strictValidString
 } from '../../utils/commonutils';
 import {
 	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
@@ -20,7 +21,9 @@ import {
 	USER_PASSWORD_SECTION_FORM_KEYS,
 	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS,
 	DEFAULT_USER_PROFILE_IMAGE_URL,
-	IMAGE_FILE_NAME_BEGIN_REG_EXP
+	IMAGE_FILE_NAME_BEGIN_REG_EXP,
+	DEFAULT_USER_SERVICES,
+	DEFAULT_USER_SERVICE_OPTIONS_LIST
 } from '../../utils/constants';
 import { verifyUser } from '../../redux/modules/auth';
 import { loadUserProfileRelatedData, updateUserProfile } from '../../redux/modules/account';
@@ -418,14 +421,22 @@ export default class Profile extends Component {
 			  const validServiceFlag = strictValidArrayWithLength(serviceTypesFieldArray) &&
 				  idx in serviceTypesFieldArray && strictValidArrayWithLength(serviceTypesFieldArray[idx]);
 			  
+			  const optionsList = (
+				    strictValidArrayWithLength(DEFAULT_USER_SERVICES) &&
+				    (idx + 1) in DEFAULT_USER_SERVICES &&
+					  strictValidArrayWithLength(DEFAULT_USER_SERVICES[idx + 1]) &&
+				    DEFAULT_USER_SERVICES[idx + 1]
+				  ) || DEFAULT_USER_SERVICE_OPTIONS_LIST;
+			  
 			  return (
 				  <Grid.Column className={ secondLastOrLastIdx ? 'mb-20' : '' }>
 					  <Form.Group>
 						  <Field
 							  label={ serviceType.name }
 							  name={ `serviceType[${idx}]` }
-							  placeholder="Add Service"
-							  component={TextBox}
+							  placeholder={ `Add ${serviceType.name} Service` }
+							  options={ optionsList }
+							  component={ DropDown }
 						  />
 					  </Form.Group>
 					  <Button type="button" icon='add' onClick={(e) => this.addRemoveInput(e, 'add', idx)} />
@@ -530,25 +541,52 @@ export default class Profile extends Component {
   
   getSearchSection = () => {
   	const { searchKeywordTypes } = this.props;
-  	
+  	let tempIdx = 0;
+  	let typesArrayObject = { otherTypes: [] };
+	  
+	  searchKeywordTypes.forEach((searchKeywordType, idx) => {
+	  	if (searchKeywordType.type) {
+	  		if (!strictValidArrayWithLength(typesArrayObject[searchKeywordType.type])) {
+				  typesArrayObject[searchKeywordType.type] = [];
+			  }
+			  typesArrayObject[searchKeywordType.type].push(searchKeywordType);
+		  } else {
+			  typesArrayObject['otherTypes'].push(searchKeywordType);
+		  }
+	  });
+	  
     return (
       <Grid>
         <Grid.Column computer="10">
-          <Header size='medium'>Search Keyword</Header>
+          <Header size='medium'>Search Keyword (s)</Header>
           <Grid>
-            <Grid.Row columns="3" className="serviceListing">
-	            {
-		            searchKeywordTypes.map((searchKeywordType, idx) => (
-			            <Grid.Column>
-				            <Field
-					            name={ `searchKeywordType[${idx}]` }
-					            component={CheckBox}
-					            label={ searchKeywordType.name }
-				            />
-			            </Grid.Column>
-		            ))
-	            }
-            </Grid.Row>
+	          {
+		          Object.keys(typesArrayObject).map(type => {
+		          	const validTypeFlag = strictValidString(type) && type !== 'otherTypes';
+			          return (
+				          <Grid.Row columns="1" className="serviceListing">
+					          <Grid.Column>
+						          {
+							          validTypeFlag && <Header size='small'>{ type }</Header>
+						          }
+						          {
+							          strictValidArrayWithLength(typesArrayObject[type]) &&
+							          typesArrayObject[type].map(searchKeywordType => {
+								          tempIdx++;
+								          return (
+									          <Field
+										          name={ `searchKeywordType[${tempIdx}]` }
+										          component={CheckBox}
+										          label={ searchKeywordType.name }
+									          />
+								          );
+							          })
+						          }
+					          </Grid.Column>
+				          </Grid.Row>
+			          );
+		          })
+	          }
           </Grid>
         </Grid.Column>
       </Grid>

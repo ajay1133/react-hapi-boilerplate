@@ -158,12 +158,12 @@ export const updateBitBucketFile = (data) => async (dispatch, getState, api) => 
 		
 		dispatch({ type: LOAD_SUCCESS, message: (type && type in successMsg && successMsg[type]) || '' });
 		dispatch(internals.resetMessage());
+		return await dispatch(convertMd2Json(data.content));
 	} catch (error) {
 		dispatch({ type: LOAD_FAIL, error });
 		dispatch(internals.resetMessage());
+		return {};
 	}
-	
-	return res;
 };
 
 /**
@@ -194,7 +194,7 @@ export const deleteBitBucketFile = (data) => async (dispatch, getState, api) => 
  * convertMd2Json
  * @param content
  */
-export const convertMd2Json = (fileContent) => async (dispatch, getState, api) => {
+export const convertMd2Json = (fileContent) => async (dispatch) => {
 	dispatch({ type: LOAD });
 	
 	let res = {};
@@ -246,7 +246,7 @@ export const convertMd2Json = (fileContent) => async (dispatch, getState, api) =
 	return res;
 };
 
-export const resetBitBucketFileForm = () => async (dispatch, getState, api) => {
+export const resetBitBucketFileForm = () => async (dispatch) => {
 	dispatch({ type: LOAD });
 	dispatch({ type: BIT_BUCKET_VIEW, result: BLOG_MD_META_INITIAL_VALUES });
 	dispatch({ type: LOAD_SUCCESS });
