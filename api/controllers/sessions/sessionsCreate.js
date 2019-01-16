@@ -42,7 +42,7 @@ module.exports = {
       if (user && user.id) {
         let scope = ['user'];
         
-        if (user.role == 1) {
+        if (user.role === 1) {
           scope.push('admin');
         } else {
           scope.push('customer');
@@ -55,17 +55,17 @@ module.exports = {
             let accessToken =  await jwtHelper.sign(user);
             return h.response({ user, accessToken });
           } catch(err) {
-            onError("Invalid Username or Password");
+            onError("Invalid Email or Password");
           }
         } else {
           request.auth.session.set(user);
           return h.response({ user });
         }
       } else {
-        onError("Invalid Username or Password");
+        onError("Invalid Email or Password");
       }
     } catch(err) {
-      onError("Invalid Username or Password");
+      onError("Invalid Email or Password");
     }
 
   },

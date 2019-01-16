@@ -226,10 +226,8 @@ exports.getUserByEmail = async (email) => {
     if (hashDetails) {
       userData.hash = hashDetails.hash;
       userData.salt = hashDetails.salt;
-      
-      let result = await User.update(userData, { where:{email: userPayload.email }});
-      
-      return result;
+  
+      return await User.update(userData, { where:{email: userPayload.email }});
     }
   } catch(err) {
     return err;

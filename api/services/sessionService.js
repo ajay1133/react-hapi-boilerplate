@@ -3,7 +3,9 @@ const i18n = require('../helpers/i18nHelper');
 const Boom = require('boom');
 const db = require('../db');
 const cryptoHelper = require('../helpers/cryptoHelper');
+const jwtHelper = require('../helpers/jwtHelper');
 const constants = require('../constants');
+const { forgotPassword } = require('../mailer');
 const User = db.models.User;
 
 /**
@@ -32,7 +34,7 @@ exports.authenticate = async (email, password) => {
   assert(password, i18n('services.sessionService.missingPassword'));
   
   let userDetails = await User.findOne({
-    where: {email: email },
+    where: { email: email },
     attributes: constants.USER_AUTHENTICATION_ATTRIBUTES
   });
   
@@ -57,4 +59,34 @@ exports.authenticate = async (email, password) => {
   }
   
   return user;
+};
+
+/**
+ * forgotPassword: Authenticate a user by its email and send reset link
+ * @param email
+ */
+exports.forgotPassword = async (email) => {
+  assert(email, i18n('services.sessionService.missingEmail'));
+  let updatedData = {};
+  let userDetails = await User.findOne({ where: { email }, attributes: constants.USER_AUTHENTICATION_ATTRIBUTES });
+  
+  if (userDetails) {
+    const user = userDetails.toJSON();
+    
+    delete user.hash;
+    delete user.salt;
+    
+    updatedData.inviteToken = await jwtHelper.sign(user, '48h', 'HS512');
+    updatedData.inviteStatus = 0;
+  
+    // Update in DB
+    await User.update(updatedData, { where: { id: user.id } });
+    
+    // Send Forgot Password Email
+    user.token = updatedData.inviteToken;
+    await forgotPassword(user);
+    return true;
+  } else {
+    return false;
+  }
 };

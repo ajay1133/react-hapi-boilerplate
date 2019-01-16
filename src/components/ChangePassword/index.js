@@ -46,7 +46,7 @@ class ChangePassword extends Component {
       <Segment className="mainLogin centered forgotNew">
         <Form className="login-form" onSubmit={handleSubmit(this.changePassword)}>
           <Header as='h3' className="side">
-            Set Your New Account Password
+            Set Your Password
           </Header>
           <Grid>
 	          {
