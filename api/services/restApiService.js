@@ -7,11 +7,11 @@ const constants = require('../constants');
  * Return all user accounts for management
  */
 exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
-  let { status, search, page, limit, gender, age, insurance } = query;
+  let { status, search, zip, page, limit, gender, age, insurance } = query;
   let conditionArr = [];
   let finalInclude = [];
   
-  let staticKeyObj = { status, search, gender, age, insurance };
+  let staticKeyObj = { status, search, zip, gender, age, insurance };
   
   Object.entries(staticKeyObj).forEach(([key, value]) => {
     if (value) {
@@ -27,6 +27,8 @@ exports.getAllAccounts = (query) => new Promise( ( resolve, reject ) => {
             searchkeywordtypeId: { $in: [JSON.parse("[" + value + "]")] }
           }
         });
+      } else if (key === 'zip') {
+        conditionArr.push({ zip: { $like: `${zip}%` } });
       } else if (key === 'gender') {
         // Associations
         User.hasMany(GenderGroup, { foreignKey: 'userId' });
