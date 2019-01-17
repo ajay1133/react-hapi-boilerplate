@@ -21,6 +21,10 @@ module.exports = {
                  .allow(['', null])
                  .description('string of search id separated by comma, no spaces allowed'),
   
+      zip: joi.string()
+              .allow(['', null])
+              .description('zip code'),
+  
       page: joi.string()
                .allow(['', null])
                .description('page number to get list of Account'),
