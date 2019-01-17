@@ -4,6 +4,7 @@ import { Button, Grid, Image, Menu, Segment, Sidebar } from 'semantic-ui-react';
 import { connect } from 'react-redux';
 import NavBar from '../../components/NavBar';
 import MainRoute from '../../routes';
+import { validObjectWithParameterKeys } from '../../utils/commonutils';
 import 'semantic-ui-css/semantic.css';
 import '../../style/css/style.css';
 
@@ -45,12 +46,14 @@ class App extends Component {
     const { history, isShow = true, user } = this.props;
     const { animation, dimmed, direction, visible } = this.state;
     
+    const isValidUserFlag = validObjectWithParameterKeys(user, ['id', 'role']);
+    
     return (
       <div className="full-height">
         <Button className="hide" onClick={this.handleAnimationChange('push')}>Push</Button>
         <Sidebar.Pushable as={Segment}>
           {
-            user && <VerticalSidebar animation={animation} direction={direction} visible={visible} />
+	          isValidUserFlag && <VerticalSidebar animation={animation} direction={direction} visible={visible} />
           }
           <Sidebar.Pusher dimmed={dimmed && visible} >
             <Segment basic>

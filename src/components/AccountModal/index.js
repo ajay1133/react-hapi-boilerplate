@@ -3,9 +3,10 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Field, reduxForm, reset } from 'redux-form/immutable';
 import { Button, Form, Grid, Loader } from 'semantic-ui-react';
-import { TextBox, TextArea } from '../Form';
-import { required, email, normalizePhone, url } from '../../utils/validations';
-import { validObjectWithParameterKeys } from '../../utils/commonutils';
+import { TextBox, TextArea, DropDown } from '../Form';
+import { required, email, normalizePhone, url, isValidZip } from '../../utils/validations';
+import { validObjectWithParameterKeys, getOptionsListFromArray } from '../../utils/commonutils';
+import { US_STATES_LIST } from '../../utils/constants';
 
 @connect(state => ({
   initialValues: state.get('account').get('selectedUser')
@@ -93,6 +94,34 @@ export default class AccountModal extends Component {
           component={TextBox}
           validate={email}
           readOnly={validObjectWithParameterKeys(selectedUser, ['id'])}
+        />
+        <Field
+          name="address"
+          placeholder="Street Address"
+          component={TextBox}
+        />
+        <Field
+          name="city"
+          placeholder="City"
+          component={TextBox}
+        />
+        <Field
+          search
+          fluid
+          multiple={ false }
+          selection
+          selectOnBlur={ true }
+          noResultsMessage="No results found"
+          name="state"
+          placeholder="State"
+          options={ getOptionsListFromArray(US_STATES_LIST) }
+          component={DropDown}
+        />
+        <Field
+          name="zip"
+          placeholder="Zip"
+          component={TextBox}
+          validate={isValidZip}
         />
         <Field
           name="phone"

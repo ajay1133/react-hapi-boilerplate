@@ -1,14 +1,11 @@
-import React, { Component } from 'react'
-import { Button, Form, Segment, Message } from 'semantic-ui-react'
-import { Redirect } from 'react-router';
-import PropTypes from 'prop-types'
-import { login, forgotPassword, load } from '../../redux/modules/auth'
-import { connect } from 'react-redux'
-import { reduxForm } from 'redux-form/immutable'
-import { Input } from '../../components/Form'
+import React, { Component } from 'react';
+import { Button, Form, Segment, Message } from 'semantic-ui-react';
+import PropTypes from 'prop-types';
+import { login, forgotPassword, load } from '../../redux/modules/auth';
+import { connect } from 'react-redux';
+import { reduxForm } from 'redux-form/immutable';
+import { Input } from '../../components/Form';
 import { required, email } from '../../utils/validations';
-import { validObjectWithParameterKeys } from '../../utils/commonutils';
-import { DEFAULT_HOME_PAGE_ROUTES } from '../../utils/constants';
 
 @connect(state => ({
   user: state.get('auth').get('user'),
@@ -71,12 +68,10 @@ export default class Login extends Component {
   };
   
   render() {
-    const { handleSubmit, isLoading, loginBusy, loginError, user, passwordUpdated, passwordUpdatedMsg, loginMsg } = this.props;
+    const {
+      handleSubmit, isLoading, loginBusy, loginError, passwordUpdated, passwordUpdatedMsg, loginMsg
+    } = this.props;
     const { showForgot } = this.state;
-    
-    if (!isLoading && validObjectWithParameterKeys(user, ['id', 'role'])) {
-	    return <Redirect to = {DEFAULT_HOME_PAGE_ROUTES[user.role]} />;
-    }
     
     return (
       <Segment className="centered loginOuter">
@@ -129,7 +124,7 @@ export default class Login extends Component {
           !showForgot &&
           <p className="pt-1 m-0 text-center">
             <a
-              href="javascript:void(0)"
+              href="#"
               onClick={ this.showForgotPassword }>
               Forgot your password ?
             </a>

@@ -176,3 +176,11 @@ export function passwordValidator(password) {
       ` least ${DEFAULT_PASSWORD_MIN_LENGTH} characters long`;
 	}
 }
+
+export function isValidZip(zip) {
+	const isValidZipFlag = /^\d{5}(-\d{4})?$/.test(zip);
+	
+	if (!isValidZipFlag) {
+	  return 'Invalid Zip';
+  }
+}
