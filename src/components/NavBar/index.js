@@ -31,9 +31,14 @@ class NavBar extends Component {
   
   loadRoute = (route) => {
 		const { dispatch } =  this.props;
-		dispatch(push(route));
+		if (route) {
+		  dispatch(push(route));
+		  return;
+		}
+		dispatch(push('/'));
+    return;
 	};
-	
+  
   render() {
     const { user, isShow, location } = this.props;
     
@@ -69,7 +74,7 @@ class NavBar extends Component {
                 </Menu.Item>
 						  }
               <Menu.Menu position='right'>
-                <Menu.Item>
+                <Menu.Item onClick={ () => this.loadRoute() }>
                   <i className="user icon mr-10" />
                   { (validUserNameFlag && (user.firstName + ' ' + user.lastName)) || user.email }
                 </Menu.Item>

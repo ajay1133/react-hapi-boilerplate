@@ -5,13 +5,22 @@ import { ConnectedRouter } from 'connected-react-router/immutable';
 import { Route, Switch } from 'react-router';
 import Loadable from 'react-loadable';
 import { reduxForm } from 'redux-form/immutable';
-
 import Loading from  '../components/Loading';
-import AuthRoute from  './AuthRoute';
+import { validObjectWithParameterKeys } from '../utils/commonutils';
 
 const Home = Loadable({
     loader: () => import('../containers/Home'),
     loading: Loading,
+});
+
+const TermsOfUse = Loadable({
+	loader: () => import('../containers/TermsOfUse'),
+	loading: Loading,
+});
+
+const PrivacyPolicy = Loadable({
+	loader: () => import('../containers/PrivacyPolicy'),
+	loading: Loading,
 });
 
 const Dashboard = Loadable({
@@ -49,20 +58,53 @@ const Confirmation = Loadable({
 class MainRoute extends React.Component {
   render () {
     const { history, user } = this.props;
-    const checkAuth = { isAuthenticated: !!user };
+    const isUserLoggedInFlag = validObjectWithParameterKeys(user, ['id', 'role']);
+    
+    const switchRoutesACL = (
+      <Switch>
+	      {
+		      !isUserLoggedInFlag &&
+          <Route path="/terms-of-use" component={TermsOfUse} />
+	      }
+	      {
+		      !isUserLoggedInFlag &&
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+	      }
+        {
+		      !isUserLoggedInFlag &&
+          <Route path="/accept/invitation/:inviteToken" component={Confirmation} />
+	      }
+	      {
+		      !isUserLoggedInFlag &&
+          <Route path="/" component={Home} />
+	      }
+        {
+	        isUserLoggedInFlag && user.role === 1 &&
+          <Route path="/accounts" component={Accounts} />
+        }
+	      {
+		      isUserLoggedInFlag && user.role === 1 &&
+          <Route path="/dashboard" component={Dashboard} />
+	      }
+	      {
+		      isUserLoggedInFlag && user.role === 1 &&
+          <Route path="/contactUs" component={ContactUs} />
+	      }
+	      {
+		      isUserLoggedInFlag && user.role === 1 &&
+          <Route path="/" component={Accounts} />
+	      }
+	      {
+		      isUserLoggedInFlag && user.role !== 1 &&
+          <Route path="/" component={Profile} />
+	      }
+      </Switch>
+    );
     
     return (
       <ConnectedRouter history={ history }>
         <div>
-          <Switch>
-            <AuthRoute path="/accounts" component={ Accounts } checkAuth={ checkAuth } />
-            <AuthRoute path="/dashboard" component={ Dashboard } checkAuth={ checkAuth } />
-            <AuthRoute path="/contactUs" component={ ContactUs } checkAuth={ checkAuth } />
-            <AuthRoute path="/profile" component={ Profile } checkAuth={ checkAuth } />
-            <Route exact path="/" component={Home} />
-            {/*<Route path="/contactUs" component={ContactUs} />*/}
-            <Route path="/accept/invitation/:inviteToken" component={Confirmation} />
-          </Switch>
+          { switchRoutesACL }
         </div>
       </ConnectedRouter>
     );

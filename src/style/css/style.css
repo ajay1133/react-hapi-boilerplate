@@ -74,6 +74,10 @@ a, i {
 	padding: 30%;
 	height: 94vh;
 }
+.plainTextContent {
+	padding: 10%;
+	height: 64vh;
+}
 .text-white{
 	color: #fff;
 }
@@ -370,6 +374,10 @@ span.statusPending, .statusDenied, .statusActive {
 	.loginForm {
 		padding: 42px 20%;
 		height: 44vh;
+	}
+	.plainTextContent {
+		padding: 2px 3%;
+		height: 100vh;
 	}
 	.blueBg p {
 		font-size: 15px;

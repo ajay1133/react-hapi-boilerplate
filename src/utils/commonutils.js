@@ -1,5 +1,5 @@
 import config from '../config';
-import { VALID_BEGIN_FILE_NAME } from './constants';
+import { VALID_BEGIN_FILE_NAME, DEFAULT_OPTION } from './constants';
 
 export const strictValidArrayWithLength = arr => arr && Array.isArray(arr) && !!arr.length;
 
@@ -69,3 +69,19 @@ export const addKeyValuePairAsString = (k, v, append) => {
 	str += strictValidString(append) ? `${append}` : '';
 	return str;
 };
+
+export const getOptionsListFromArray = (arr, useDefaultOptionFlag = true, defaultOption = DEFAULT_OPTION) => (
+	useDefaultOptionFlag &&
+	strictValidString(defaultOption) &&
+	strictValidArrayWithLength(arr) &&
+	[{ text: defaultOption, value: '' }].concat(arr.map(v => { return { text: v, value: v }; }))
+) || (
+	!useDefaultOptionFlag &&
+	strictValidArrayWithLength(arr) &&
+	arr.map(v => { return { text: v, value: v }; })
+) || (
+	useDefaultOptionFlag &&
+	strictValidString(defaultOption) &&
+	!strictValidArrayWithLength(arr) &&
+	[{ text: defaultOption, value: '' }]
+) || [];
