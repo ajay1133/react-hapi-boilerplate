@@ -4,7 +4,7 @@ import {connect} from 'react-redux';
 import { Field, reduxForm, formValueSelector, SubmissionError } from 'redux-form/immutable';
 import { Grid, Message, Loader, Tab, Header, Button, Form, Image } from  'semantic-ui-react';
 import { TextBox, TextArea, CheckBox, DropDown } from '../../components/Form';
-import { required, email, normalizePhone, url, passwordValidator } from '../../utils/validations';
+import { required, email, normalizePhone, url, passwordValidator, isValidZip } from '../../utils/validations';
 import {
 	strictValidObjectWithKeys,
 	typeCastToString,
@@ -12,7 +12,8 @@ import {
 	validObjectWithParameterKeys,
 	getAbsoluteS3FileUrl,
 	validFileName,
-	strictValidString
+	strictValidString,
+	getOptionsListFromArray
 } from '../../utils/commonutils';
 import {
 	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
@@ -22,8 +23,8 @@ import {
 	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS,
 	DEFAULT_USER_PROFILE_IMAGE_URL,
 	IMAGE_FILE_NAME_BEGIN_REG_EXP,
-	DEFAULT_USER_SERVICES,
-	DEFAULT_USER_SERVICE_OPTIONS_LIST
+	USER_SERVICES_LIST,
+	US_STATES_LIST
 } from '../../utils/constants';
 import { verifyUser } from '../../redux/modules/auth';
 import { loadUserProfileRelatedData, updateUserProfile } from '../../redux/modules/account';
@@ -245,24 +246,6 @@ export default class Profile extends Component {
 						  <Grid.Row >
 							  <Grid.Column computer="8">
 								  <Field
-									  name="phone"
-									  placeholder="Phone Number"
-									  component={TextBox}
-									  normalize={ normalizePhone }
-								  />
-							  </Grid.Column>
-							  <Grid.Column computer="8">
-								  <Field
-									  name="website"
-									  placeholder="Website Url"
-									  component={TextBox}
-									  validate={url}
-								  />
-							  </Grid.Column>
-						  </Grid.Row>
-						  <Grid.Row >
-							  <Grid.Column computer="8">
-								  <Field
 									  name="address"
 									  placeholder="Street Address"
 									  component={TextBox}
@@ -279,9 +262,16 @@ export default class Profile extends Component {
 						  <Grid.Row >
 							  <Grid.Column computer="8">
 								  <Field
+									  search
+									  fluid
+									  multiple={ false }
+									  selection
+									  selectOnBlur={ true }
+									  noResultsMessage="No results found"
 									  name="state"
 									  placeholder="State"
-									  component={TextBox}
+									  options={ getOptionsListFromArray(US_STATES_LIST) }
+									  component={DropDown}
 								  />
 							  </Grid.Column>
 							  <Grid.Column computer="8">
@@ -289,6 +279,25 @@ export default class Profile extends Component {
 									  name="zip"
 									  placeholder="Zip"
 									  component={TextBox}
+									  validate={isValidZip}
+								  />
+							  </Grid.Column>
+						  </Grid.Row>
+						  <Grid.Row >
+							  <Grid.Column computer="8">
+								  <Field
+									  name="phone"
+									  placeholder="Phone Number"
+									  component={TextBox}
+									  normalize={ normalizePhone }
+								  />
+							  </Grid.Column>
+							  <Grid.Column computer="8">
+								  <Field
+									  name="website"
+									  placeholder="Website Url"
+									  component={TextBox}
+									  validate={url}
 								  />
 							  </Grid.Column>
 						  </Grid.Row>
@@ -421,21 +430,20 @@ export default class Profile extends Component {
 			  const validServiceFlag = strictValidArrayWithLength(serviceTypesFieldArray) &&
 				  idx in serviceTypesFieldArray && strictValidArrayWithLength(serviceTypesFieldArray[idx]);
 			  
-			  const optionsList = (
-				    strictValidArrayWithLength(DEFAULT_USER_SERVICES) &&
-				    (idx + 1) in DEFAULT_USER_SERVICES &&
-					  strictValidArrayWithLength(DEFAULT_USER_SERVICES[idx + 1]) &&
-				    DEFAULT_USER_SERVICES[idx + 1]
-				  ) || DEFAULT_USER_SERVICE_OPTIONS_LIST;
-			  
 			  return (
 				  <Grid.Column className={ secondLastOrLastIdx ? 'mb-20' : '' }>
 					  <Form.Group>
 						  <Field
+							  search
+							  fluid
+							  multiple={ false }
+							  selection
+							  selectOnBlur={ true }
+							  noResultsMessage="No results found"
 							  label={ serviceType.name }
 							  name={ `serviceType[${idx}]` }
 							  placeholder={ `Add ${serviceType.name} Service` }
-							  options={ optionsList }
+							  options={ getOptionsListFromArray(USER_SERVICES_LIST[idx + 1], true, 'SELECT TO ADD A SERVICE') }
 							  component={ DropDown }
 						  />
 					  </Form.Group>

@@ -137,36 +137,40 @@ export const PROFILE_MD_META_INITIAL_VALUES = {
 	date: moment().format()
 };
 
-export const DEFAULT_USER_SERVICES = [];
+export const DEFAULT_OPTION = 'SELECT';
 
-DEFAULT_USER_SERVICES[1] = [
-	{ text: 'Select to Add Service', value: '' },
-	{ text: 'Test Service Of Treatment Type 1', value: 'Test Service Of Treatment Type 1' },
-	{ text: 'Test Service Of Treatment Type 2', value: 'Test Service Of Treatment Type 2' },
-	{ text: 'Test Service Of Treatment Type 3', value: 'Test Service Of Treatment Type 3' }
+export const USER_SERVICES_LIST = [];
+
+USER_SERVICES_LIST[1] = [
+	'Test Service Of Treatment Type 1',
+	'Test Service Of Treatment Type 2',
+	'Test Service Of Treatment Type 3'
 ];
 
-DEFAULT_USER_SERVICES[2] = [
-	{ text: 'Select to Add Service', value: '' },
-	{ text: 'Test Service Of Type Of Services 1', value: 'Test Service Of Type Of Services 1' },
-	{ text: 'Test Service Of Type Of Services 2', value: 'Test Service Of Type Of Services 2' },
-	{ text: 'Test Service Of Type Of Services 3', value: 'Test Service Of Type Of Services 3' }
+USER_SERVICES_LIST[2] = [
+	'Test Service Of Type Of Services 1',
+	'Test Service Of Type Of Services 2',
+	'Test Service Of Type Of Services 3'
 ];
 
-DEFAULT_USER_SERVICES[3] = [
-	{ text: 'Select to Add Service', value: '' },
-	{ text: 'Test Service Of Level Of Care 1', value: 'Test Service Of Level Of Care 1' },
-	{ text: 'Test Service Of Level Of Care 2', value: 'Test Service Of Level Of Care 2' },
-	{ text: 'Test Service Of Level Of Care 3', value: 'Test Service Of Level Of Care 3' }
+USER_SERVICES_LIST[3] = [
+	'Test Service Of Level Of Care 1',
+	'Test Service Of Level Of Care 2',
+	'Test Service Of Level Of Care 3'
 ];
 
-DEFAULT_USER_SERVICES[4] = [
-	{ text: 'Select to Add Service', value: '' },
-	{ text: 'Test Service Of Treatment Focus 1', value: 'Test Service Of Treatment Focus 1' },
-	{ text: 'Test Service Of Treatment Focus 2', value: 'Test Service Of Treatment Focus 2' },
-	{ text: 'Test Service Of Treatment Focus 3', value: 'Test Service Of Treatment Focus 3' }
+USER_SERVICES_LIST[4] = [
+	'Test Service Of Treatment Focus 1',
+	'Test Service Of Treatment Focus 2',
+	'Test Service Of Treatment Focus 3'
 ];
 
-export const DEFAULT_USER_SERVICE_OPTIONS_LIST = [
-	'No Service Available'
+export const US_STATES_LIST = [
+	"Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona", "California", "Colorado", "Connecticut",
+	"District of Columbia", "Delaware", "Florida", "Georgia", "Guam", "Hawaii", "Iowa", "Idaho", "Illinois",
+	"Indiana", "Kansas", "Kentucky", "Louisiana", "Massachusetts", "Maryland", "Maine", "Michigan", "Minnesota",
+	"Missouri", "Mississippi", "Montana", "North Carolina", "North Dakota", "Nebraska", "New Hampshire", "New Jersey",
+	"New Mexico", "Nevada", "New York", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island",
+	"South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Virginia", "Virgin Islands", "Vermont", "Washington",
+	"Wisconsin", "West Virginia", "Wyoming"
 ];
