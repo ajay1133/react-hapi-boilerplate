@@ -13,7 +13,7 @@ const Home = withRouter(({ location, user }) => {
         <Grid.Row className="mainLogin p-0">
           <Grid.Column mobile={16} tablet={8} computer={9} style={{ padding: 0}}>
             <div className="blueBg">
-              <Image src='images/logo.png' size='medium' />
+              <Image src='images/logo.png' size='medium' as="a" href="/"/>
               <h1 className="pt-15  text-white">Welcome To</h1>
               <p>Compass Recovery Network</p>
             </div>

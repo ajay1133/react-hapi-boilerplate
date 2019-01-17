@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { reduxForm } from 'redux-form/immutable';
 import { Input } from '../../components/Form';
 import { required, email } from '../../utils/validations';
+import '../../style/css/style.css';
 
 @connect(state => ({
   user: state.get('auth').get('user'),
@@ -32,7 +33,7 @@ export default class Login extends Component {
   };
   
   state = {
-    showForgot: false
+    showForgotPasswordFlag: false
   };
   
   static defaultProps = {
@@ -49,11 +50,11 @@ export default class Login extends Component {
   };
 
   _login = async (formData) => {
-    const { showForgot } = this.state;
+    const { showForgotPasswordFlag } = this.state;
     const { dispatch } = this.props;
     const { email, password } = formData.toJS() || {};
     
-    if (showForgot) {
+    if (showForgotPasswordFlag) {
       await dispatch(forgotPassword(email));
     } else {
       await dispatch(login(email, password));
@@ -61,9 +62,9 @@ export default class Login extends Component {
   };
   
   showForgotPassword = () => {
-    const { showForgot } = this.state;
+    const { showForgotPasswordFlag } = this.state;
     this.setState({
-      showForgot: !showForgot
+	    showForgotPasswordFlag: !showForgotPasswordFlag
     });
   };
   
@@ -71,7 +72,7 @@ export default class Login extends Component {
     const {
       handleSubmit, isLoading, loginBusy, loginError, passwordUpdated, passwordUpdatedMsg, loginMsg
     } = this.props;
-    const { showForgot } = this.state;
+    const { showForgotPasswordFlag } = this.state;
     
     return (
       <Segment className="centered loginOuter">
@@ -85,16 +86,16 @@ export default class Login extends Component {
           <Input
             className="username"
             name="email"
-            placeholder="Email"
+            placeholder="Enter Your Email"
             type="text"
             size="large"
             validate={[required, email]}
           />
           {
-            !showForgot &&
+            !showForgotPasswordFlag &&
             <Input
               name="password"
-              placeholder="Password"
+              placeholder="Enter Your Password"
               type="password"
               size="large"
               validate={[required]}
@@ -104,11 +105,12 @@ export default class Login extends Component {
             fluid
             primary
             type="submit"
+            className={ showForgotPasswordFlag ? 'mb-10' : '' }
             loading={isLoading || loginBusy}
-            content={ !showForgot ? 'Login' : 'Forgot Password' }
+            content={ !showForgotPasswordFlag ? 'Login' : 'Submit' }
           />
           {
-            showForgot &&
+	          showForgotPasswordFlag &&
             <Button
               fluid
               primary
@@ -121,13 +123,11 @@ export default class Login extends Component {
           loginError && <Message error content={loginError} />
         }
         {
-          !showForgot &&
+          !showForgotPasswordFlag &&
           <p className="pt-1 m-0 text-center">
-            <a
-              href="#"
-              onClick={ this.showForgotPassword }>
+            <div clasName="hand-pointer" onClick={ this.showForgotPassword }>
               Forgot your password ?
-            </a>
+            </div>
           </p>
         }
       </Segment>
