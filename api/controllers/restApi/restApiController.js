@@ -20,5 +20,10 @@ module.exports = [
     path: `${prefix}/contact`,
     method: 'POST',
     config: require('./contact'),
+  },
+  {
+    path: `${prefix}/stripe/create-charge`,
+    method: 'POST',
+    config: require('./stripe-create-charge')
   }
 ];
