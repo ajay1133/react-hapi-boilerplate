@@ -25,9 +25,8 @@ module.exports = {
 		}
 	},
   stripe: {
-    publishableKey: 'pk_test_27C51hBPWxTt462lzHsb4Jdk',
     secretKey: 'sk_test_3akdpHjSXOigyyxlkwn91lMw',
-    planId: 'prod_EMHnigYNiXtuJT'
+    planId: 'plan_EMHodgPZFnpPvS'
   },
   emailUrl:{
     host: ''
