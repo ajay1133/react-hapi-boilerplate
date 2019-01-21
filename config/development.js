@@ -24,6 +24,11 @@ module.exports = {
 			bucket: 'compass-development-storage'
 		}
 	},
+  stripe: {
+    publishableKey: 'pk_test_27C51hBPWxTt462lzHsb4Jdk',
+    secretKey: 'sk_test_3akdpHjSXOigyyxlkwn91lMw',
+    planId: 'prod_EMHnigYNiXtuJT'
+  },
   emailUrl:{
     host: ''
   },
