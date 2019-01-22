@@ -1,7 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const blogs = sequelize.define('blogs', {
-    fileName: DataTypes.STRING,
     title: DataTypes.STRING,
     image: DataTypes.STRING,
     draft: DataTypes.BOOLEAN,
