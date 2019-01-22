@@ -12,13 +12,14 @@ const TermsOfUse = withRouter(({ location, user }) => {
         <Grid.Row className="mainLogin p-0">
           <Grid.Column mobile={16} tablet={8} computer={9} style={{ padding: 0}}>
             <div className="blueBg">
-              <Image src='images/logo.png' size='medium' />
+              <Image src='images/logo.png' size='medium' as="a" href="/"/>
               <h1 className="pt-15  text-white">Welcome To</h1>
               <p>Compass Recovery Network</p>
             </div>
           </Grid.Column>
           <Grid.Column mobile={16} tablet={8} computer={7} style={{ padding: 0}}>
             <div className="plainTextContent">
+              <h1>Terms Of Use</h1>
               <div>
                 Lorem ipsum dolor sit amet, pro solum option ex, tantas tibique nam ea. Cum ex graeci pericula, congue mollis maiestatis eum eu, solum ullum mea at. Populo phaedrum assueverit sed ad, nam at idque minimum partiendo. Eu labores eleifend nam, at cum ubique indoctum, vel apeirian electram suscipiantur ei. Pri ad cetero nusquam. Qui liber definiebas ea, eam ex equidem propriae offendit.
     

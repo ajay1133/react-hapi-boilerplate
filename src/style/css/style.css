@@ -76,7 +76,7 @@ a, i {
 }
 .plainTextContent {
 	padding: 10%;
-	height: 64vh;
+	height: 94vh;
 }
 .text-white{
 	color: #fff;
@@ -362,6 +362,9 @@ span.statusPending, .statusDenied, .statusActive {
 .newServices .field{
 	padding: 6px 0;
 }
+.hand-pointer:hover div {
+	color: #000;
+}
 @media only screen and (max-width: 767px) {
 	.blueBg {
 		height: 32vh;
@@ -377,7 +380,7 @@ span.statusPending, .statusDenied, .statusActive {
 	}
 	.plainTextContent {
 		padding: 2px 3%;
-		height: 100vh;
+		height: 98vh;
 	}
 	.blueBg p {
 		font-size: 15px;
