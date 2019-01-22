@@ -142,9 +142,18 @@ export const DEFAULT_OPTION = 'SELECT';
 export const USER_SERVICES_LIST = [];
 
 USER_SERVICES_LIST[1] = [
-	'Test Service Of Treatment Type 1',
-	'Test Service Of Treatment Type 2',
-	'Test Service Of Treatment Type 3'
+  'Residential Treatment Centers/Rehabs',
+  'Luxury/Executive Rehabs',
+  'Partial Hospitalization Programs (PHP)',
+  'Intensive Outpatient Programs (IOP)',
+  'Supportive Outpatient Programs (SOP)',
+  'Ambulatory Detox',
+  'Dual Diagnosis',
+  'Psychiatrists',
+  'Nurse Practioners/Physician Assistants',
+  'Counselors',
+  'Suboxone Clinics',
+  'Support Groups'
 ];
 
 USER_SERVICES_LIST[2] = [
