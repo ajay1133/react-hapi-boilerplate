@@ -1,5 +1,6 @@
 const joi = require('joi');
 const boom = require('boom');
+const config = require('config');
 const accountService = require('../../services/accountService');
 
 module.exports = {
@@ -17,6 +18,10 @@ module.exports = {
                 .email()
                 .required()
                 .description('Email of User'),
+	
+	    stripeCardToken: joi.string()
+                .required()
+                .description('Stripe Card Token'),
       
       password: joi.string()
                    .required(),
@@ -75,22 +80,43 @@ module.exports = {
     };
     
     try {
+	    const stripe = require("stripe")(config.stripe.secretKey);
       const userExistsObj = await accountService.getUserByEmail(payload.email);
       if (userExistsObj && userExistsObj.id) {
         onError('This email is already taken');
       }
+	    console.log('stripe key: ', config.stripe.secretKey);
       payload.role = 2;
-      const accountCreatedObject = await accountService.createUser(payload);
-      if (accountCreatedObject && accountCreatedObject.id) {
-      	await accountService.updatePassword({
-          password: payload.password,
-          email: payload.email,
-          inviteToken: '',
-          inviteStatus: 1
-        });
-        return h.response({ data: accountCreatedObject });
+	    const stripeCustomer = await stripe.customers.create({
+		    source: payload.stripeCardToken,
+		    email: payload.email,
+	    });
+	    let stripeCustomerSubscription = {};
+	    console.log('stripe customer: ', stripeCustomer);
+	    if (stripeCustomer && stripeCustomer.id) {
+		    stripeCustomerSubscription = await stripe.subscriptions.create({
+			    customer: stripeCustomer.id,
+			    items: [{ plan: config.stripe.planId }],
+		    });
       } else {
-        onError('An error occurred while creating user');
+		    onError('An error occurred while creating stripe customer');
+	    }
+	    console.log('stripe customer subscription: ', stripeCustomerSubscription);
+	    if (stripeCustomerSubscription && stripeCustomerSubscription.id) {
+		    const accountCreatedObject = await accountService.createUser(payload);
+		    if (accountCreatedObject && accountCreatedObject.id) {
+			    await accountService.updatePassword({
+				    password: payload.password,
+				    email: payload.email,
+				    inviteToken: '',
+				    inviteStatus: 1
+			    });
+			    return h.response({ data: accountCreatedObject });
+		    } else {
+			    onError('An error occurred while creating user');
+		    }
+      } else {
+		    onError('An error occurred while creating stripe customer subscription');
       }
     } catch (err) {
       onError(err);
