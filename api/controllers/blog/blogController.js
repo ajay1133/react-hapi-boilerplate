@@ -12,12 +12,12 @@ module.exports = [
     config: require('./addBlog'),
   },
   {
-    path: `${prefix}/{id}`,
+    path: `${prefix}/{fileName}`,
     method: 'PUT',
     config: require('./updateBlog'),
   },
   {
-    path: `${prefix}/{id}`,
+    path: `${prefix}/{fileName}`,
     method: 'DELETE',
     config: require('./deleteBlog'),
   },

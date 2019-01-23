@@ -21,8 +21,8 @@ module.exports = {
   
   validate: {
     params: {
-      id: joi.number()
-             .description('PK of blog')
+      fileName: joi.string()
+                   .description('fileName'),
     },
     payload: {
       title: joi.string()
@@ -61,10 +61,10 @@ module.exports = {
   
   handler: async (request, h) => {
     const { params, payload } = request;
-    const { id } = params;
+    const { fileName } = params;
     
     try {
-      const data = await blogService.updateBlog(payload, id);
+      const data = await blogService.updateBlog(payload, fileName);
       return h.response(data);
     } catch(err) {
       return boom.badRequest(err);
