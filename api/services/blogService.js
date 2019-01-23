@@ -3,13 +3,13 @@ const { Blogs }  = db.models;
 
 // Blogs
 const defaultBlogAttributes = [
-  'id',
   'title',
   'image',
   'draft',
   'description',
   'content',
   'status',
+  'fileName'
 ];
 
 exports.getBlog = (query) => {
@@ -39,6 +39,6 @@ exports.getBlog = (query) => {
 
 exports.createBlog = (payload) => Blogs.create(payload);
 
-exports.updateBlog = (payload, id) => Blogs.update(payload, { where: { id } });
+exports.updateBlog = (payload, fileName) => Blogs.update(payload, { where: { fileName } });
 
-exports.deleteBlog = (id) => Blogs.destroy({ where: { id } });
+exports.deleteBlog = (fileName) => Blogs.destroy({ where: { fileName } });

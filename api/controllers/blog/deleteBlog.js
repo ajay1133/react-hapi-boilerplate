@@ -21,18 +21,18 @@ module.exports = {
   
   validate: {
     params: {
-      id: joi.number()
-             .description('PK of blog')
+      fileName: joi.string()
+                   .description('fileName of blog')
     },
     options: { abortEarly: false },
   },
   
   handler: async (request, h) => {
     const { params } = request;
-    const { id } = params;
+    const { fileName } = params;
     
     try {
-      const data = await blogService.deleteBlog(id);
+      const data = await blogService.deleteBlog(fileName);
       return h.response(data);
     } catch(err) {
       return boom.badRequest(err);

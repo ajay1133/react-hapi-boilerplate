@@ -6,7 +6,8 @@ module.exports = (sequelize, DataTypes) => {
     draft: DataTypes.BOOLEAN,
     description: DataTypes.TEXT,
     content: DataTypes.TEXT,
-    status: DataTypes.BOOLEAN
+    status: DataTypes.BOOLEAN,
+    fileName: DataTypes.STRING,
   }, {});
   blogs.associate = function(models) {
     // associations can be defined here

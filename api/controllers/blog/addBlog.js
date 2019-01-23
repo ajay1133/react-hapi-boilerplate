@@ -22,8 +22,8 @@ module.exports = {
   validate: {
     payload: {
       title: joi.string()
-                .description('title')
-                .required(),
+                .required()
+                .description('title'),
       
       image: joi.string()
                 .optional()
@@ -50,6 +50,10 @@ module.exports = {
                  .allow(null)
                  .default(1)
                  .description('0=Inactive, 1=Active'),
+  
+      fileName: joi.string()
+                   .required()
+                   .description('fileName'),
     },
     options: { abortEarly: false },
   },
