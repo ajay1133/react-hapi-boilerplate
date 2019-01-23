@@ -18,6 +18,10 @@ module.exports = {
       bucket: 'compass-production'
     }
   },
+	stripe: {
+		secretKey: 'sk_test_3akdpHjSXOigyyxlkwn91lMw',
+		planId: 'plan_EMHodgPZFnpPvS'
+	},
   BasePath:{
     host: "https://app.fan.com"
   },

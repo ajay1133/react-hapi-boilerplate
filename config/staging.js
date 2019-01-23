@@ -23,6 +23,10 @@ module.exports = {
 			bucket: 'compass-development-storage'
 		}
   },
+	stripe: {
+		secretKey: 'sk_test_3akdpHjSXOigyyxlkwn91lMw',
+		planId: 'plan_EMHodgPZFnpPvS'
+	},
   BasePath:{
     host: "http://stagingapp.compassrecoverynetwork.com"
   },
