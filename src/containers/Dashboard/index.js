@@ -8,6 +8,7 @@ import { Button, Table, Loader, Modal, Icon, Message, Grid } from 'semantic-ui-r
 import AddFile from '../../components/File/AddFile';
 import EditFile from '../../components/File/EditFile';
 import Pagination from '../../components/Pagination';
+import { saveBlog, updateBlog } from '../../redux/modules/blog';
 import {
 	bitBucketListing,
 	bitBucketView,
@@ -45,9 +46,9 @@ const md = MarkDown({
 @connect(state => ({
 	initialValues: state.get('bitBucketRepo').get('bitBucketInitialValues'),
 	user: state.get('auth').get('user'),
-  message: state.get('bitBucketRepo').get('message'),
+  message: state.get('blog').get('message') || state.get('bitBucketRepo').get('message'),
   isLoad: state.get('bitBucketRepo').get('isLoad'),
-  loadErr: state.get('bitBucketRepo').get('loadErr'),
+  loadErr: state.get('blog').get('error') || state.get('bitBucketRepo').get('loadErr'),
 	bitBucketList: state.get('bitBucketRepo').get('bitBucketList'),
 	bitBucketListFilters: state.get('bitBucketRepo').get('bitBucketListFilters')
 }))
@@ -88,7 +89,7 @@ export default class Dashboard extends Component {
 	
 	constructor(props) {
 		super(props);
-		this.saveAccount = this.getBitBucketData.bind(this);
+		this.getBitBucketData.bind(this);
 	};
 	
   componentDidMount = async () => {
@@ -154,7 +155,7 @@ export default class Dashboard extends Component {
 	
   setFile = async (values) => {
     const { dispatch, bitBucketListFilters } = this.props;
-    const { href, repoPath, uploadBlogImageUrl } = this.state;
+    const { href, repoPath, uploadBlogImageUrl, fileName } = this.state;
     
     const formValues = Object.assign({}, values.toJSON(), { image: uploadBlogImageUrl }) || {};
     
@@ -179,6 +180,16 @@ export default class Dashboard extends Component {
     const params = {
 			path: (href && typeof href === 'string' && href.split('/src')[1]) || DEFAULT_ACCESSIBLE_ROOT_PATH
 		};
+    
+    const { title, image, draft, description, content } = formValues;
+    const blogDetails = { title, image, draft: (draft === 'true') ? 1 : 0, description, content };
+    
+    if (fileName) {
+      await dispatch(updateBlog(fileName, blogDetails));
+    } else {
+      blogDetails.fileName = formValues.fileName;
+      await dispatch(saveBlog(blogDetails));
+    }
     
     const res = await dispatch(updateBitBucketFile(dataObject));
 	  await dispatch(bitBucketListing(Object.assign({}, bitBucketListFilters, params)));

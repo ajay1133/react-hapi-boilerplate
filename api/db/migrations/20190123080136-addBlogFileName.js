@@ -4,7 +4,6 @@ module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface
       .addColumn('blogs', 'fileName', {
-        primaryKey: true,
         type: Sequelize.STRING
       });
   },
