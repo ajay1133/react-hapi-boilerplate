@@ -85,14 +85,12 @@ module.exports = {
       if (userExistsObj && userExistsObj.id) {
         onError('This email is already taken');
       }
-	    console.log('stripe key: ', config.stripe.secretKey);
       payload.role = 2;
 	    const stripeCustomer = await stripe.customers.create({
 		    source: payload.stripeCardToken,
 		    email: payload.email,
 	    });
 	    let stripeCustomerSubscription = {};
-	    console.log('stripe customer: ', stripeCustomer);
 	    if (stripeCustomer && stripeCustomer.id) {
 		    stripeCustomerSubscription = await stripe.subscriptions.create({
 			    customer: stripeCustomer.id,
@@ -101,7 +99,6 @@ module.exports = {
       } else {
 		    onError('An error occurred while creating stripe customer');
 	    }
-	    console.log('stripe customer subscription: ', stripeCustomerSubscription);
 	    if (stripeCustomerSubscription && stripeCustomerSubscription.id) {
 		    const accountCreatedObject = await accountService.createUser(payload);
 		    if (accountCreatedObject && accountCreatedObject.id) {
