@@ -1,528 +1,351 @@
 import React, { Component } from 'react';
-import MarkDown from 'markdown-it';
-import Markup from 'react-html-markup';
-import { connect } from 'react-redux';
-import { reduxForm, SubmissionError } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
-import { Button, Table, Loader, Modal, Icon, Message, Grid } from 'semantic-ui-react';
-import AddFile from '../../components/File/AddFile';
-import EditFile from '../../components/File/EditFile';
+import { connect } from 'react-redux';
+import { Table, Grid, Header, Message, Confirm, Icon, Segment, List, Form, Loader } from  'semantic-ui-react';
+import { Field, reduxForm } from 'redux-form/immutable';
+import { DropDown } from '../../components/Form';
+import { loadAccounts, saveAccount, updateAccount, selectUser } from '../../redux/modules/account';
+import AccountModal  from '../../components/AccountModal';
 import Pagination from '../../components/Pagination';
-import { saveBlog, updateBlog } from '../../redux/modules/blog';
 import {
-	bitBucketListing,
-	bitBucketView,
-	updateBitBucketFile,
-	resetBitBucketFileForm
-} from '../../redux/modules/bitBucketRepo';
-import {
-	strictValidObjectWithKeys,
-	validFileName,
-	validObjectWithParameterKeys,
-	strictValidArrayWithLength,
-	addKeyValuePairAsString,
-	typeCastToString,
-	getAbsoluteS3FileUrl
+  strictValidArrayWithLength,
+  validObjectWithParameterKeys,
+  strictValidArrayWithMinLength
 } from '../../utils/commonutils';
-import {
-	DEFAULT_ACCESSIBLE_ROOT_PATH,
-	REPO_PATH,
-	MD_FILE_META_DATA_KEYS,
-	KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS,
-	VALID_ACCESSIBLE_FILE_FORMATS,
-	DEFAULT_BITBUCKET_LIST_FILTERS,
-	DEFAULT_BLOG_IMAGE_URL,
-	OFFSET,
-	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS,
-	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES
-} from '../../utils/constants';
+import { OFFSET } from '../../utils/constants';
+import AuthenticatedUser from '../../components/AuthenticatedUser';
+import '../../style/css/style.css';
 
-const md = MarkDown({
-  html: false,
-  linkify: true,
-  typographer: true
-});
+const rowBgColor = [];
+rowBgColor[1] = 'bg-success';
+rowBgColor[2] = 'bg-warning';
+rowBgColor[3] = 'bg-danger';
+
+const statusDropDownArr = [
+  { key: 0, text: 'Please select', value: '' },
+  { key: 2, text: 'Pending', value: 2, label: { color: 'yellow', empty: true, circular: true }, },
+  { key: 3, text: 'Denied', value: 3, label: { color: 'red', empty: true, circular: true }, },
+  { key: 1, text: 'Active', value: 1, label: { color: 'green', empty: true, circular: true } },
+];
+const TableRow = ({row, editAccount, typeAction}) => (
+  <Table.Row className={(row.status) ? rowBgColor[row.status] : 'bg-warning'}>
+    <Table.Cell>{ row.firstName } { row.lastName }</Table.Cell>
+    <Table.Cell>{ row.email } </Table.Cell>
+    <Table.Cell>{ row.phone }</Table.Cell>
+    <Table.Cell>
+      <a onClick={ () => editAccount(row) } >  <Icon name='edit outline' size='small' /> </a>
+      <a onClick={() => typeAction('delete', row)} > <Icon name='trash alternate outline' size='small' /> </a>
+      <a onClick={() => typeAction('active', row)} > <Icon name='check circle outline' size='small' /></a>
+      <a onClick={() => typeAction('denied', row)} > <Icon name='eye slash outline' size='small' /> </a>
+    </Table.Cell>
+  </Table.Row>
+);
 
 @connect(state => ({
-	initialValues: state.get('bitBucketRepo').get('bitBucketInitialValues'),
 	user: state.get('auth').get('user'),
-  message: state.get('blog').get('message') || state.get('bitBucketRepo').get('message'),
-  isLoad: state.get('bitBucketRepo').get('isLoad'),
-  loadErr: state.get('blog').get('error') || state.get('bitBucketRepo').get('loadErr'),
-	bitBucketList: state.get('bitBucketRepo').get('bitBucketList'),
-	bitBucketListFilters: state.get('bitBucketRepo').get('bitBucketListFilters')
+  items: state.get('account').get('items'),
+	itemsFilters: (
+	  validObjectWithParameterKeys(state.get('account').get('itemsFilters'), ['page']) &&
+    state.get('account').get('itemsFilters')
+  ) || state.get('account').get('itemsFilters').toJSON() || {},
+	itemsCount: state.get('account').get('itemsCount'),
+  loadErr: state.get('account').get('loadErr'),
+  accountErr: state.get('account').get('accountErr'),
+  message: state.get('bitBucketRepo').get('message') || state.get('account').get('accountMsg'),
+  isLoad: state.get('bitBucketRepo').get('isLoad')
 }))
 @reduxForm({
-  form: 'setFileForm',
-  enableReinitialize: true
+  form: 'listUserFiltersForm',
+	enableReinitialize: true
 })
 export default class Dashboard extends Component {
+  static propTypes = {
+	  user: PropTypes.oneOfType([
+		  PropTypes.string,
+		  PropTypes.object
+	  ]),
+    dispatch: PropTypes.func,
+    message: PropTypes.string,
+    isLoad: PropTypes.bool
+  };
+  
+  static defaultProps = {
+    dispatch: null
+  };
+  
   state = {
     loading: true,
-    modalOpenFlag: false,
-    openRepoFile: false,
-    fileName: null,
-    fileContent: null,
-    href: null,
-    repoPath: null,
-    showMessageFlag: true,
-	  uploadBlogImageUrl: null,
-	  uploadBlogImageName: null,
-	  uploadBlogImageError: null
+    selectedUser: null,
+    openConfirmBox: false,
+    type: null,
+    showMessageFlag: true
   };
   
-  static propTypes = {
-    dispatch: PropTypes.func,
-    handleSubmit: PropTypes.func,
-    user: PropTypes.oneOfType([
-    	PropTypes.string,
-	    PropTypes.object
-    ]),
-    message: PropTypes.string,
-    isLoad: PropTypes.bool,
-    loadErr: PropTypes.string,
-    error: PropTypes.string,
-    location: PropTypes.object,
-	  bitBucketList: PropTypes.array,
-	  bitBucketListFilters: PropTypes.object
+  constructor(props) {
+    super(props);
+    this.account = this.account.bind(this);
+    this.editAccount = this.editAccount.bind(this);
+    this.typeAction = this.typeAction.bind(this);
+    this.closeConfirmBox = this.closeConfirmBox.bind(this);
+    this.handleEditUserCancel = this.handleEditUserCancel.bind(this);
   };
-	
-	constructor(props) {
-		super(props);
-		this.getBitBucketData.bind(this);
-	};
-	
+  
   componentDidMount = async () => {
-    const { dispatch, bitBucketListFilters, bitBucketList } = this.props;
-    const params = validObjectWithParameterKeys(bitBucketListFilters, Object.keys(DEFAULT_BITBUCKET_LIST_FILTERS)) ?
-	    bitBucketListFilters : (bitBucketListFilters.toJSON() || DEFAULT_BITBUCKET_LIST_FILTERS);
-    
-    const areFiltersSameFlag = JSON.stringify(params) === JSON.stringify(bitBucketListFilters);
-    const needToSyncDataFlag = !strictValidArrayWithLength(bitBucketList) || !areFiltersSameFlag;
-    
-	  if (needToSyncDataFlag) {
-	  	await dispatch(bitBucketListing(params));
-	  }
-	  
+	  const { dispatch, itemsFilters } = this.props;
+	  await dispatch(loadAccounts(itemsFilters));
 	  this.setState({ loading: false });
   };
-	
-  getMd = (content) => {
-  	try {
-		  return md.render(content);
-	  } catch (error) {
-  		console.log('Error in rendering file: ', error);
-  		return null;
-	  }
+  
+  handleConfirm = async () => {
+    const { selectedUser, type } = this.state;
+    const { dispatch } = this.props;
+    
+    let accountDetails = {
+      id: selectedUser.id
+    };
+    
+    if (type === 'delete') {
+      accountDetails.isDeleted = true;
+    } else if (type === 'active'){
+      accountDetails.status = 1;
+    } else if (type === 'denied') {
+      accountDetails.status = 3;
+    }
+    
+    this.setState({ loading: true });
+    await dispatch(updateAccount(accountDetails, false));
+	  this.setState({
+      loading: false,
+      openConfirmBox: false,
+      selectedUser: null
+	  });
   };
   
-  getBitBucketData = async (e, href, type, displayName, repoPath, openFileInEditModeFlag = false) => {
-    const { dispatch, bitBucketListFilters } = this.props;
-	  
-    const params = {
-      path: (href && typeof href === 'string' && href.split('/src')[1]) || DEFAULT_ACCESSIBLE_ROOT_PATH
-    };
-	  
-    this.setState({ loading: true });
-    
-    let res = null;
-    const isLoadingDirectoryFlag = type === 'commit_directory';
-    
-    if (isLoadingDirectoryFlag) {
-      res = await dispatch(bitBucketListing(Object.assign({}, bitBucketListFilters, params)));
-    } else {
-	    res = await dispatch(bitBucketView(params));
-    }
-	  
+  editAccount = async row => {
+    const { dispatch } = this.props;
+	  this.setState({ loading: true });
+    await dispatch(selectUser(row));
     this.setState({
       loading: false,
-      modalOpenFlag: !isLoadingDirectoryFlag,
-	    openRepoFile: !isLoadingDirectoryFlag && openFileInEditModeFlag,
-      fileName: !isLoadingDirectoryFlag ? displayName : null,
-      fileContent: !isLoadingDirectoryFlag && res.content ? res.content : null,
-	    uploadBlogImageUrl: !isLoadingDirectoryFlag && res.image ? res.image : null,
-	    href,
-      repoPath
+      selectedUser: row
     });
   };
-	
-	navigateBitBucketListPage = async (page) => {
-		const { dispatch, bitBucketListFilters } = this.props;
-		this.setState({ loading: true });
-		await dispatch(bitBucketListing(Object.assign({}, bitBucketListFilters, { page })));
-		this.setState({ loading: false });
-	};
-	
-  setFile = async (values) => {
-    const { dispatch, bitBucketListFilters } = this.props;
-    const { href, repoPath, uploadBlogImageUrl, fileName } = this.state;
-    
-    const formValues = Object.assign({}, values.toJSON(), { image: uploadBlogImageUrl }) || {};
-    
-    const isAddingFileFlag = validObjectWithParameterKeys(formValues, ['fileName', 'filePath']);
-	  
-    if (isAddingFileFlag && !validFileName(formValues.fileName, VALID_ACCESSIBLE_FILE_FORMATS)) {
-    	throw new SubmissionError({ _error:
-		    'Invalid File Name, a valid file must start with \'_\' or alphanumeric character and have a \'.md\' extension'
-    	});
-    }
-	
-	  const basePath = repoPath || REPO_PATH;
-    
-    const dataObject = {
-      path: isAddingFileFlag ? basePath + '/' + formValues.fileName : basePath,
-      content: this.compileFormFieldsToMarkDown(formValues),
-      type: 2
-    };
-    
-    this.setState({ loading: true });
-		
-    const params = {
-			path: (href && typeof href === 'string' && href.split('/src')[1]) || DEFAULT_ACCESSIBLE_ROOT_PATH
-		};
-    
-    const { title, image, draft, description, content } = formValues;
-    const blogDetails = { title, image, draft: (draft === 'true') ? 1 : 0, description, content };
-    
-    if (fileName) {
-      await dispatch(updateBlog(fileName, blogDetails));
-    } else {
-      blogDetails.fileName = formValues.fileName;
-      await dispatch(saveBlog(blogDetails));
-    }
-    
-    const res = await dispatch(updateBitBucketFile(dataObject));
-	  await dispatch(bitBucketListing(Object.assign({}, bitBucketListFilters, params)));
-	  
-	  this.setState({
-		  loading: false,
-		  modalOpenFlag: !isAddingFileFlag,
-		  openRepoFile: !isAddingFileFlag,
-		  fileName: !isAddingFileFlag ? this.state.fileName : null,
-		  fileContent: !isAddingFileFlag && res.content ? res.content : null,
-		  href,
-		  repoPath
-	  });
-	  
+  
+  typeAction = (type, row) => this.setState({ openConfirmBox: true, type, selectedUser: row });
+  
+  account = async details => {
+    const { dispatch } = this.props;
+    delete details.events;
+    Object.keys(details).filter(key => !details[key]).forEach(key => delete details[key]);
+	  this.setState({ loading: true });
+	  const response = (details.id)
+		  ? await dispatch(updateAccount(details))
+		  : await dispatch(saveAccount(details));
+	  this.setState({ loading: false });
+	  return response;
+  };
+  
+  handleSort = async sortCol => {
+	  const { itemsFilters } = this.props;
+	  const { dispatch } = this.props;
+	  this.setState({ loading: true });
+	  const initialColumnOrderList = validObjectWithParameterKeys(itemsFilters, ['order']) &&
+      strictValidArrayWithLength(itemsFilters.order) && itemsFilters.order.filter(v => v[0] === sortCol);
+	  const sortDir = strictValidArrayWithLength(initialColumnOrderList) &&
+      strictValidArrayWithMinLength(initialColumnOrderList[0], 2) ? initialColumnOrderList[0][1] || 'ASC' : 'ASC';
+	  const newSortDir = sortDir.toUpperCase() === 'ASC' ? 'DESC' : 'ASC';
+	  const newOrderByList = [[sortCol, newSortDir]];
+	  dispatch(loadAccounts(Object.assign(itemsFilters, { order: newOrderByList })));
+	  this.setState({ loading: false });
+  };
+  
+  handleStatus = async (e, status) => {
+    let { itemsFilters } = this.props;
+    const { dispatch } = this.props;
+	  this.setState({ loading: true });
+	  itemsFilters.page = 1;
+    dispatch(loadAccounts(Object.assign(itemsFilters, { status })));
 	  this.setState({ loading: false });
   };
 	
-	compileFormFieldsToMarkDown = (dataObj) => {
-	  const dataObjKeys = (strictValidObjectWithKeys(dataObj) && Object.keys(dataObj)) || [];
-	 
-	  const extraMetaDataKeys = dataObjKeys
-		  .filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
-    const validMetaDataKeys = dataObjKeys.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
-		
-    let mdStr = '---\n';
-	  
-	  validMetaDataKeys
-		  .concat(extraMetaDataKeys)
-		  .forEach(k => {
-			  mdStr += addKeyValuePairAsString(k,
-				  k === 'image' && !dataObj[k]
-				  ? DEFAULT_BLOG_IMAGE_URL
-				  : (k === 'image' ? getAbsoluteS3FileUrl(dataObj[k]) : dataObj[k]),
-				  '\n'
-			  );
-      });
-		
-	  mdStr += '---\n';
-   
-	  if (dataObjKeys.indexOf('content') > -1) {
-		  mdStr += dataObj.content.trim();
-	  }
-	  
-	  return mdStr;
-  };
-  
-	modalOpen = async (addNewFileFlag) => {
+	handleNavigatePage = (page) => {
+		const { itemsFilters } = this.props;
 		const { dispatch } = this.props;
-		let stateObject = { openRepoFile: true };
-		
-	  if (addNewFileFlag) {
-	  	stateObject = Object.assign({}, stateObject, {
-	  		modalOpenFlag: true,
-			  uploadBlogImageName: null,
-			  uploadBlogImageUrl: null,
-			  uploadBlogImageError: null
-	  	});
-	    this.setState({ loading: true });
-		  await dispatch(resetBitBucketFileForm());
-		  this.setState({ loading: false });
+		this.setState({ loading: true });
+		dispatch(loadAccounts(Object.assign(itemsFilters, { page })));
+		this.setState({ loading: false });
+  };
+	
+	getSortClass = sortCol => {
+	  let { itemsFilters } = this.props;
+	  let sortClass = 'sortAsc';
+	  let sortIconClass = 'down';
+	  if (validObjectWithParameterKeys(itemsFilters, ['order'])) {
+		  const colSortList = strictValidArrayWithLength(itemsFilters.order) &&
+        itemsFilters.order.filter(v => v[0] === sortCol);
+		  if (strictValidArrayWithLength(colSortList) && strictValidArrayWithMinLength(colSortList[0], 2)) {
+			  sortClass = colSortList[0][1].toUpperCase() === 'ASC' ? 'active sortAsc' : 'active sortDesc';
+			  sortIconClass = colSortList[0][1].toUpperCase() === 'ASC' ? 'down' : 'up';
+		  }
     }
-    
-	  this.setState(stateObject);
-	};
-  
-  modalClose = () => {
-    this.setState({
-      modalOpenFlag: false,
-      openRepoFile: false,
-	    fileName: null,
-	    fileContent: null,
-	    href: null,
-	    repoPath: null,
-	    uploadBlogImageName: null,
-	    uploadBlogImageUrl: null,
-	    uploadBlogImageError: null
-    });
+    return {
+	    sortClass,
+	    sortIconClass
+    }
   };
 	
   messageDismiss = () => this.setState({ showMessageFlag: false });
-	
-	handleBlogImageFinishedUpload = async ({ name, s3Key }) => {
-		if (!validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
-			this.setState({ uploadBlogImageError: 'Invalid File Name, a valid image file should only have' +
-			'\'.jpg\', \'.jpeg\', \'.png\' or \'.gif\'  extension(s)' });
-			setTimeout(() => this.setState({ uploadBlogImageError: null }), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
-			return;
-		}
-		
-		this.setState({ imageLoading: true, uploadBlogImageUrl: s3Key });
-	};
-	
-	resetBlogImageOnComplete = async ({ name }) => {
-		try {
-			if (validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
-				this.setState({
-					imageLoading: false,
-					uploadBlogImageName: name
-				});
-			}
-		} catch (err) {
-			throw new SubmissionError({
-				_error: typeCastToString(err) || 'Error updating image'
-			});
-		}
-	};
-	
-  render () {
-    const {
-    	isLoad, loadErr, bitBucketList = [], bitBucketListFilters, handleSubmit, message, error
-    } = this.props;
-    const {
-    	loading, fileName, fileContent, repoPath, modalOpenFlag, openRepoFile, showMessageFlag, imageLoading,
-	    uploadBlogImageUrl
-    } = this.state;
+  
+  closeConfirmBox = () => this.setState({ openConfirmBox: false, selectedUser: null });
+  
+  handleEditUserCancel = async () => {
+  	const { dispatch } = this.props;
+	  await dispatch(selectUser({}));
+  	this.setState({ selectedUser: null });
+  };
+  
+  render() {
+    const { items, itemsFilters, itemsCount, loadErr, accountErr, message } = this.props;
+    const { loading, selectedUser, showMessageFlag, openConfirmBox, type } = this.state;
     
-    const loadingCompleteFlag = !isLoad;
-    const validBitBucketListFlag = loadingCompleteFlag && Array.isArray(bitBucketList) && bitBucketList.length;
-    const isFileLoadedSuccessFlag = !!fileName;
-    
-    return (
-      <div>
-        {
-          message && showMessageFlag &&
+	  return (
+      <AuthenticatedUser>
+			  {
+				  message && showMessageFlag &&
           <Message onDismiss={this.messageDismiss}>
             <span style={{ color: 'green' }}>{ message }</span>
           </Message>
-        }
-        
-        {
-	        loadErr && showMessageFlag && !modalOpenFlag &&
+			  }
+			  {
+				  (loadErr || accountErr) && showMessageFlag &&
           <Message onDismiss={this.messageDismiss}>
-            <span style={{ color: 'red' }}>{ loadErr }</span>
+            <span style={{ color: 'red' }}>{ loadErr || accountErr }</span>
           </Message>
-        }
-	
-	      <div className="ui card fluid cardShadow">
-		      <div className="content pageMainTitle">
-			      <Grid>
-				      <div className="ui left floated column innerAdjust">
-					      <h3 className="mainHeading"> Dashboard</h3>
-				      </div>
-				      <Grid.Row>
-					      <Grid.Column>
-						      <h4>
-							      { loadingCompleteFlag ? 'Listing' : 'Loading' } Files From BitBucket Repository
-							      {
-								      loadingCompleteFlag &&
-								      <Button
-									      primary
-									      style={{ float: 'right', marginTop: '-10px' }}
-									      onClick={ () => this.modalOpen(true) }
-								      >
-									      Add Blog
-								      </Button>
-							      }
-						      </h4>
-						
-						      {
-							      validBitBucketListFlag &&
-							      <div className="content" style={{ marginTop: '10px', marginRight: '10px' }}>
-								      <Table celled>
-									      <Table.Header>
-										      <Table.Row>
-											      <Table.HeaderCell>File Name</Table.HeaderCell>
-											      <Table.HeaderCell><span style={{ float: 'right' }}>Action (s)</span></Table.HeaderCell>
-										      </Table.Row>
-									      </Table.Header>
-									      <Table.Body>
-										      {
-											      bitBucketList.map((repo, idx) => {
-											      	const validFileFlag = validFileName(
-											      		repo.path.split('/').pop(),
-													      VALID_ACCESSIBLE_FILE_FORMATS
-												      );
-											      	
-												      return (
-													      <Table.Row key={idx}>
-														      <Table.Cell>
-															      { repo.path.split('/').pop() }
-														      </Table.Cell>
-														      <Table.Cell>
-															      <Icon
-																      name="edit"
-																      style={{ float: 'right' }}
-																      disabled={ !validFileFlag }
-																      onClick={ (e) => validFileFlag && this.getBitBucketData(
-																	      e,
-																	      repo.links.self.href,
-																	      repo.type,
-																	      repo.path.split('/').pop(),
-																	      repo.path,
-																	      true
-																      ) }
-															      />
-															      <Icon
-																      name="eye"
-																      style={{ float: 'right', marginRight: '10px' }}
-																      onClick={ (e) => this.getBitBucketData(
-																	      e,
-																	      repo.links.self.href,
-																	      repo.type,
-																	      repo.path.split('/').pop(),
-																	      repo.path,
-																	      false
-																      ) }
-															      />
-														      </Table.Cell>
-													      </Table.Row>
-												      );
-											      })
-										      }
-									      </Table.Body>
-									      <Table.Footer>
-										      <Table.Row>
-											      <Table.HeaderCell colSpan='5'>
-												      <Pagination
-													      totalEntries={
-													      	bitBucketList.length === OFFSET ?
-															      (bitBucketListFilters.page * OFFSET) + 1
-															      : bitBucketListFilters.page * OFFSET
-													      }
-													      offset={ OFFSET }
-													      currentPage={ bitBucketListFilters.page }
-													      navigate={(page) => this.navigateBitBucketListPage(page)}
-												      />
-											      </Table.HeaderCell>
-										      </Table.Row>
-									      </Table.Footer>
-								      </Table>
-							      </div>
-						      }
-						
-						      {
-							      loadingCompleteFlag && !validBitBucketListFlag &&
-							      <div className="content">
-								      <span style={{ color: 'red' }}>{ loadErr || 'Error loading repository' }</span>
-							      </div>
-						      }
-						
-						      {
-							      !loadingCompleteFlag &&
-							      <div className="content">
-								      <Loader active inline='centered'>Loading ...</Loader>
-							      </div>
-						      }
-					      </Grid.Column>
-				      </Grid.Row>
-			      </Grid>
-		      </div>
-	      </div>
-	      
+			  }
+	      {
+		      loading &&
+          <Loader active inline='centered'>Loading...</Loader>
+	      }
         {
-          !loading && loadingCompleteFlag &&
-          <Modal
-            open={ modalOpenFlag }
-            dimmer="blurring"
-            closeOnEscape={ true }
-            closeOnDimmerClick={ false }
-            onClose={this.modalClose}
-            size="large"
-            closeIcon
-          >
-            <Modal.Header>
-              { fileName && <Icon name='file' size='large' /> }
-              <span style={{ marginLeft: '5px' }}>{ fileName || 'Add Blog' }</span>
-            </Modal.Header>
-            <Modal.Content>
-	            {
-		            loadErr && showMessageFlag &&
-		            <Message onDismiss={this.messageDismiss}>
-			            <span style={{ color: 'red' }}>{ loadErr }</span>
-		            </Message>
-	            }
-	            {
-		            error &&
-		            <Message onDismiss={this.messageDismiss}>
-			            <span style={{ color: 'red' }}>{ error }</span>
-		            </Message>
-	            }
-              <Modal.Description>
-                {
-                  !openRepoFile && isFileLoadedSuccessFlag &&
-                  <Markup htmlString= { this.getMd(fileContent) } />
-                }
-                {
-                  !openRepoFile && !isFileLoadedSuccessFlag &&
-                  <span style={{ color: 'red' }}>Error fetching content</span>
-                }
-                {
-                  openRepoFile && isFileLoadedSuccessFlag &&
-                  <EditFile
-	                  handleBlogImageFinishedUpload={ this.handleBlogImageFinishedUpload }
-	                  resetBlogImageOnComplete={ this.resetBlogImageOnComplete }
-	                  imageLoading={ imageLoading }
-	                  uploadBlogImageUrl={ uploadBlogImageUrl }
+          !loading &&
+          <Grid>
+            <div className="ui left floated column innerAdjust">
+              <h3 className="mainHeading"> Accounts</h3>
+            </div>
+            <Grid.Row>
+              <Grid.Column computer={12}>
+                <List horizontal floated='right'>
+                  <List.Item>
+                    <span className="statusPending"/>
+                    <List.Content floated='right'> Pending </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <span className="statusDenied"/>
+                    <List.Content floated='right'> Denied </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <span className="statusActive"/>
+                    <List.Content floated='right'> Active </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <List.Content floated='right'>
+                      <Form className="mt-10">
+                        <Field
+                          className="minWidth130"
+                          name="status"
+                          component={ DropDown }
+                          options={ statusDropDownArr }
+                          inline={ true }
+                          fluid={ true }
+                          search={ true }
+                          selectOnBlur={ true }
+                          placeholder="Please select"
+                          onChange={(e, v) => this.handleStatus(e, v)}
+                        />
+                      </Form>
+                    </List.Content>
+                  </List.Item>
+                </List>
+              </Grid.Column>
+            </Grid.Row>
+            <Grid.Row>
+              <Grid.Column  computer={12}>
+                <Table celled>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.HeaderCell className={`${this.getSortClass('firstName').sortClass}` }>
+                        <a onClick={() => this.handleSort('firstName') }>Name
+                          <i className={`sort amount ${this.getSortClass('firstName').sortIconClass} icon ml-05`}></i>
+                        </a>
+                      </Table.HeaderCell>
+                      <Table.HeaderCell className={`${this.getSortClass('email').sortClass}` }>
+                        <a onClick={() => this.handleSort('email') }>Email
+                          <i className={`sort amount ${this.getSortClass('email').sortIconClass} icon ml-05`}></i>
+                        </a>
+                      </Table.HeaderCell>
+                      <Table.HeaderCell className={`${this.getSortClass('phone').sortClass}` }>
+                        <a onClick={() => this.handleSort('phone') }>Phone
+                          <i className={`sort amount ${this.getSortClass('phone').sortIconClass} icon ml-05`}></i>
+                        </a>
+                      </Table.HeaderCell>
+                      <Table.HeaderCell>Action</Table.HeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
+					          {
+						          strictValidArrayWithLength(items) &&
+						          items.map(user => (
+                        <TableRow
+                          key={user.id}
+                          row={user}
+                          editAccount={this.editAccount}
+                          typeAction={this.typeAction}
+                        />
+                      ))
+					          }
+	                  {
+		                  !strictValidArrayWithLength(items) &&
+		                  <Table.Row>
+			                  <Table.Cell colSpan="100%" style={{ color: 'red', textAlign: 'center' }}>
+				                  No users found
+			                  </Table.Cell>
+		                  </Table.Row>
+	                  }
+                  </Table.Body>
+                </Table>
+			          {
+				          strictValidArrayWithLength(items) &&
+                  <Pagination
+                    totalEntries={itemsCount}
+                    offset={OFFSET}
+                    currentPage={itemsFilters.page}
+                    navigate={(page) => this.handleNavigatePage(page)}
                   />
-                }
-                {
-	                openRepoFile && !isFileLoadedSuccessFlag &&
-                  <AddFile
-	                  repoPath={repoPath}
-	                  handleBlogImageFinishedUpload={ this.handleBlogImageFinishedUpload }
-	                  resetBlogImageOnComplete={ this.resetBlogImageOnComplete }
-	                  imageLoading={ imageLoading }
-	                  uploadBlogImageUrl={ uploadBlogImageUrl }
+			          }
+              </Grid.Column>
+              <Grid.Column computer={4}>
+                <Confirm
+                  content={`Are you sure you want to ${type} this user ?`}
+                  confirmButton="Confirm"
+                  open={openConfirmBox}
+                  onCancel={this.closeConfirmBox}
+                  onConfirm={this.handleConfirm}
+                />
+                <Header as='h4' attached='top' className="Primary">
+				          { validObjectWithParameterKeys(selectedUser, ['id']) ? 'Edit Profile' : 'Add New Profile' }
+                </Header>
+                <Segment attached>
+                  <AccountModal
+                    account={this.account}
+                    selectedUser={selectedUser}
+                    handleEditUserCancel={this.handleEditUserCancel}
                   />
-                }
-              </Modal.Description>
-            </Modal.Content>
-            <Modal.Actions>
-              {
-                openRepoFile &&
-                <Button positive onClick={handleSubmit(this.setFile)}>
-                  <i aria-hidden='true' className='save icon' />Save
-                </Button>
-              }
-              {
-                !openRepoFile &&
-                <Button primary onClick={ () => this.modalOpen(false) }>
-                  <i aria-hidden='true' className='edit icon' />Edit
-                </Button>
-              }
-              <Button
-                primary
-                content="Cancel"
-                onClick={this.modalClose}
-              />
-            </Modal.Actions>
-          </Modal>
+                </Segment>
+              </Grid.Column>
+            </Grid.Row>
+          </Grid>
         }
-      </div>
-    );
+      </AuthenticatedUser>
+	  );
   }
 }
-

@@ -57,12 +57,6 @@ class NavBar extends Component {
             <Menu borderless>
 						  {
 							  user.role === 1 &&
-                <Menu.Item active={ currentLocation === '/accounts' } onClick={ () => this.loadRoute('/accounts') }>
-                  Accounts
-                </Menu.Item>
-						  }
-						  {
-							  user.role === 1 &&
                 <Menu.Item active={ currentLocation === '/dashboard' } onClick={ () => this.loadRoute('/dashboard') }>
                   Dashboard
                 </Menu.Item>

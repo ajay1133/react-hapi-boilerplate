@@ -3,7 +3,7 @@ const config = require('config');
 const settings = config.db;
 const globalHooks = require('./globalHooks');
 
-const Op = Sequelize.Op;
+const Op = sequelize.Op;
 
 const operatorsAliases = {
   $eq: Op.eq,
@@ -43,15 +43,15 @@ const operatorsAliases = {
 };
 
 const db = new sequelize(settings.database, settings.username, settings.password, {
-  host: settings.host,
-  dialect: 'mysql',
-  port: settings.port || 3306,
-  pool: {
-    max: 5,
-    min: 0,
-  },
-  operatorsAliases,
-  define: globalHooks
+    host: settings.host,
+    dialect: 'mysql',
+    port: settings.port || 3306,
+    pool: {
+      max: 5,
+      min: 0,
+    },
+    operatorsAliases,
+    define: globalHooks
   }
 );
 

@@ -30,8 +30,9 @@
 		"googleApiError": "Google place api failure",
 		"invalidRequest": "Invalid Request",
 		"accountService": {
-			"missingUserPayload": "userPayload is required",
-			"missingProfilePayload": "profilePayload is required",
+			"missingUserPayload": "UserPayload is required",
+			"missingProfilePayload": "ProfilePayload is required",
+			"missingUserEmail": "Email is required",
 			"emailExists": "Email already exists"
 		},
 		"sessionService": {
@@ -82,6 +83,11 @@
 		},
 		"familyMembers": {
 			"Exist": "Duplicate family member record"
+		}
+	},
+	"constants": {
+		"missing": {
+			"DEFAULT_USER_REGISTRATION_ROLE": "constants.missing.DEFAULT_USER_REGISTRATION_ROLE"
 		}
 	}
 }

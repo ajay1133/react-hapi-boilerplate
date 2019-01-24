@@ -4,7 +4,7 @@ const path = require('path');
 module.exports = {
   api: {
     host: 'localhost',
-    port: 5000,
+    port: 8000,
     secret: 'fdgwVtghrt5345gfdgfd653245235232v2rcra'
   },
   db: db.development,
@@ -32,7 +32,7 @@ module.exports = {
     host: ''
   },
   BasePath:{
-    host: "http://localhost:3000"
+    host: "http://localhost:4000"
   },
   profileImage:{
     maxPayloadSize: 5242880,

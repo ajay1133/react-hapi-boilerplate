@@ -21,7 +21,7 @@
 
 * Run API: npm run dev-api
 
-* Swagger API: http://localhost:5000/documentation
+* Swagger API: http://localhost:8000/documentation
 
 * Admin User Details: superAdmin@test.com/admin123
 

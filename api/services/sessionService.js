@@ -6,7 +6,7 @@ const cryptoHelper = require('../helpers/cryptoHelper');
 const jwtHelper = require('../helpers/jwtHelper');
 const constants = require('../constants');
 const { forgotPassword } = require('../mailer');
-const User = db.models.User;
+const { users } = db.models;
 
 /**
  * Find session user on basis of sessionData from JWT
@@ -14,7 +14,7 @@ const User = db.models.User;
  */
 exports.findSessionUser = (sessionData) =>
   new Promise((resolve, reject) => {
-    User
+    users
       .findOne({
         where: { id: sessionData.id },
         attributes: ['id']
@@ -33,7 +33,7 @@ exports.authenticate = async (email, password) => {
   assert(email, i18n('services.sessionService.missingEmail'));
   assert(password, i18n('services.sessionService.missingPassword'));
   
-  let userDetails = await User.findOne({
+  let userDetails = await users.findOne({
     where: { email: email },
     attributes: constants.USER_AUTHENTICATION_ATTRIBUTES
   });
@@ -67,8 +67,9 @@ exports.authenticate = async (email, password) => {
  */
 exports.forgotPassword = async (email) => {
   assert(email, i18n('services.sessionService.missingEmail'));
+  
   let updatedData = {};
-  let userDetails = await User.findOne({ where: { email }, attributes: constants.USER_AUTHENTICATION_ATTRIBUTES });
+  let userDetails = await users.findOne({ where: { email }, attributes: constants.USER_AUTHENTICATION_ATTRIBUTES });
   
   if (userDetails) {
     const user = userDetails.toJSON();
@@ -80,11 +81,12 @@ exports.forgotPassword = async (email) => {
     updatedData.inviteStatus = 0;
   
     // Update in DB
-    await User.update(updatedData, { where: { id: user.id } });
+    await users.update(updatedData, { where: { id: user.id } });
     
     // Send Forgot Password Email
     user.token = updatedData.inviteToken;
     await forgotPassword(user);
+    
     return true;
   } else {
     return false;

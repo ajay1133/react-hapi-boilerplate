@@ -28,11 +28,6 @@ const Dashboard = Loadable({
     loading: Loading,
 });
 
-const Accounts = Loadable({
-    loader: () => import('../containers/Accounts'),
-    loading: Loading,
-});
-
 const Profile = Loadable({
     loader: () => import('../containers/Profile'),
     loading: Loading,
@@ -79,20 +74,12 @@ class MainRoute extends React.Component {
           <Route path="/" component={Home} />
 	      }
         {
-	        isUserLoggedInFlag && user.role === 1 &&
-          <Route path="/accounts" component={Accounts} />
-        }
-	      {
 		      isUserLoggedInFlag && user.role === 1 &&
           <Route path="/dashboard" component={Dashboard} />
 	      }
 	      {
 		      isUserLoggedInFlag && user.role === 1 &&
           <Route path="/contactUs" component={ContactUs} />
-	      }
-	      {
-		      isUserLoggedInFlag && user.role === 1 &&
-          <Route path="/" component={Accounts} />
 	      }
 	      {
 		      isUserLoggedInFlag && user.role !== 1 &&

@@ -1,10 +1,9 @@
 exports.ROLES = [
-  'free',
-  'basic',
-  'standard',
-  'pro',
-  'enterprise'
+  'admin',
+  'user'
 ];
+
+exports.DEFAULT_USER_REGISTRATION_ROLE = 2;
 
 exports.DEFAULT_USER_ATTRIBUTES = [
 	'id',
@@ -12,16 +11,12 @@ exports.DEFAULT_USER_ATTRIBUTES = [
 	'email',
 	'firstName',
 	'lastName',
-	'title',
 	'address',
 	'state',
 	'city',
 	'zip',
 	'phone',
-	'website',
-	'description',
 	'image',
-	'featuredVideo',
 	'status'
 ];
 
@@ -42,3 +37,4 @@ exports.DEFAULT_USER_SERVICES_ATTRIBUTES = [
 	'name',
 	'status'
 ];
+

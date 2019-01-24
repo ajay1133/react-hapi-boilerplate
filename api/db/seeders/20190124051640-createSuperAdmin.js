@@ -7,7 +7,8 @@ module.exports = {
       password: "admin123",
       role: 1,
       firstName: "Super",
-      lastName: "Admin"
+      lastName: "Admin",
+      status: 1
     };
     
     accountService
@@ -16,5 +17,5 @@ module.exports = {
       .catch(reject);
   }),
 
-  down: () => { }
+  down: () => {}
 };
