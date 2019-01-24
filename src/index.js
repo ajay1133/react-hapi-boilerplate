@@ -7,15 +7,15 @@ import createStore from './redux/createStore';
 import Moment from 'moment'
 import momentLocalizer from 'react-widgets-moment'
 
-Moment.locale('en')
-momentLocalizer()
+Moment.locale('en');
+momentLocalizer();
 
 const history = createHistory();
 const store = createStore(history, {});
 
 ReactDOM.render(
   <Provider store={store} >
-      <App history={history} />
+    <App history={history} />
   </Provider>,
   document.getElementById('root')
 );

@@ -1,11 +1,12 @@
 const uuid = require('node-uuid');
 const aws = require('aws-sdk');
-const config = require('config');
+const db = require('../../config/db');
 const fs = require('fs');
 const internals = {};
+
 const s3Options = {
-  accessKeyId: config.aws.accessKeyId,
-  secretAccessKey: config.aws.secretAccessKey
+  accessKeyId: db.aws.key,
+  secretAccessKey: db.aws.secret
 };
 
 const async = require("async");

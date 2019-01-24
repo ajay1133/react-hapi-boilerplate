@@ -2,7 +2,7 @@
 source /home/ec2-user/.bash_profile
 PATH=$PATH:/usr/local/bin
 user=ec2-user
-app_name=fan
+app_name=compass
 app_home=/home/$user/$app_name
 
 . $app_home/bin/live/tag-env-vars

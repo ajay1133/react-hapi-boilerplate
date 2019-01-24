@@ -1,5 +1,6 @@
 const db = require('./db');
 const path = require('path');
+
 module.exports = {
   api: {
     host: 'localhost',
@@ -10,11 +11,22 @@ module.exports = {
   redis: {
     host: db.redis.host,
     port: db.redis.port,
-    prefix: 'fan_'
+    prefix: 'com_'
   },
-  aws: {
-    accessKeyId: db.aws.key,
-    secretAccessKey: db.aws.secret,
+  bitBucket: {
+    username: db.bitBucket.username,
+    password: db.bitBucket.password,
+    basePath: db.bitBucket.basePath
+  },
+	aws: {
+		s3: {
+			bucketWrite: 'compass-development-storage',
+			bucket: 'compass-development-storage'
+		}
+	},
+  stripe: {
+    secretKey: 'sk_test_3akdpHjSXOigyyxlkwn91lMw',
+    planId: 'plan_EMHodgPZFnpPvS'
   },
   emailUrl:{
     host: ''
@@ -28,3 +40,4 @@ module.exports = {
   },
   debugLog : 1, //Set 0 to disable and 1 to enable error logg
 };
+

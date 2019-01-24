@@ -1,6 +1,7 @@
 const joi = require('joi');
 const Boom = require('boom');
 const jwtHelper = require('../../helpers/jwtHelper');
+const accountService = require('../../services/accountService');
 
 module.exports = {
   plugins: {
@@ -21,16 +22,26 @@ module.exports = {
 
   handler: async (request, h) => {
     const payload = request.payload;
+    
     try {
       let userdata = await jwtHelper.verify(payload.inviteToken);
+	    
       if (userdata.email) {
-        return h.response({ tokenValid: true });
+        const res = await accountService.getUserByEmail( userdata.email );
+        
+        if (res.inviteStatus === 0) {
+	        return h.response({ tokenValid: true });
+        }
+        
+        return h.response({ tokenValid: false });
       } else {
         return h.response({ tokenValid: false });
       }
     } catch(err) {
       if (err && err.message === 'jwt expired') {
         return Boom.badRequest("Link is expired");
+      } else {
+	      return Boom.badRequest(JSON.stringify(err));
       }
     }
   }

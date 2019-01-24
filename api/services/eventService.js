@@ -16,7 +16,7 @@ const csvHelper = require('../helpers/csvHelper');
 
 exports.getAllEvents = (userId) => new Promise( ( resolve, reject ) => {
   Event.findAndCountAll(
-    { 
+    {
       where: { userId: userId },
       distinct: true,
       include: [
@@ -43,7 +43,7 @@ exports.getAllEvents = (userId) => new Promise( ( resolve, reject ) => {
 exports.getEventDetail = async (whereCondition) => {
   try {
     let eventDetails = await Event.findOne(
-      { 
+      {
         where: whereCondition,
         include: [
           {
@@ -67,19 +67,19 @@ exports.getEventDetail = async (whereCondition) => {
 };
 /**
  * Return event participants on basis of publicUrl-uuid
- * @param id 
+ * @param id
  */
 exports.getEventParticipants = async (id) => {
   try {
-    let eventFan = await EventFan.findOne({ 
+    let eventFan = await EventFan.findOne({
       attributes: [ 'id', 'eventId', 'phoneNumber', 'score', 'publicUrl', 'createdAt', 'updatedAt' ],
       where: {publicUrl: id}
     });
     if (eventFan && eventFan.dataValues) {
       let event = await Event.findOne({where: { id: eventFan.eventId }});
       if (event && event.dataValues) {
-        let eventParticipants = await EventParticipant.findAll({ 
-            where: { eventId: event.id, status: 1 }               
+        let eventParticipants = await EventParticipant.findAll({
+            where: { eventId: event.id, status: 1 }
         });
       //Calculate fan points and position array
       let positionArray = [];
@@ -91,10 +91,10 @@ exports.getEventParticipants = async (id) => {
       });
       positionArray = csvHelper.getPositions(groupedList, eventFan.dataValues.id);
       return {
-        id: eventFan.dataValues.id, 
+        id: eventFan.dataValues.id,
         updatedAt: eventFan.dataValues.updatedAt,
-        score: eventFan.dataValues.score, 
-        eventDetails: event, 
+        score: eventFan.dataValues.score,
+        eventDetails: event,
         participants: eventParticipants,
         calculatedPoints: calculatedPoints ? calculatedPoints : 0,
         positionArray: positionArray
@@ -157,8 +157,8 @@ exports.updateEvent = async (eventPayload) => {
 
 exports.addParticipant = async (participantPayload) => {
   try {
-    let addedParticipant = await EventParticipant.create({ 
-      name: participantPayload.name, 
+    let addedParticipant = await EventParticipant.create({
+      name: participantPayload.name,
       eventId: participantPayload.eventId,
       status: participantPayload.status });
     return addedParticipant;
@@ -172,36 +172,36 @@ exports.addParticipant = async (participantPayload) => {
  */
 
 exports.updateParticipantStatus = async (payload) => {
-  try {                                                                                
+  try {
     const nextParticipantId = payload.nextParticipantId;
     delete payload.nextParticipantId;
     let result = await EventParticipant.update(
-      { status:payload.status, updatedAt: new Date(), score: payload.score }, 
-      { where: { id: payload.activeParticipantId }} 
-    );    
+      { status:payload.status, updatedAt: new Date(), score: payload.score },
+      { where: { id: payload.activeParticipantId }}
+    );
     if(result)
-    { 
+    {
       if(payload.status === 2){
         // update admin score to db and csv as well
         await updatePoints({
-          eventId: payload.eventId, 
+          eventId: payload.eventId,
           participantId:payload.activeParticipantId,
           score: payload.score,
           scoreInterval: payload.scoreInterval});
       }
-      if(nextParticipantId > 0){  
+      if(nextParticipantId > 0){
         await EventParticipant.update(
-          { status: (payload.status === 2 || payload.status === 0) ? 1 : 0, updatedAt: new Date() }, 
+          { status: (payload.status === 2 || payload.status === 0) ? 1 : 0, updatedAt: new Date() },
           { where: { id: nextParticipantId } });
-      }  
-      let participants = await EventParticipant.findAll({ 
-        where: { eventId: payload.eventId }         
+      }
+      let participants = await EventParticipant.findAll({
+        where: { eventId: payload.eventId }
       });
-      return { participants: participants};        
+      return { participants: participants};
     }
-    else { 
+    else {
       //@@TODO
-    }      
+    }
   } catch(err) {
     return err;
   }
@@ -225,9 +225,9 @@ exports.updateParticipant = async (participantPayload) => {
     });
 
     if(res){
-      if(!participantPayload.isDeleted){ // check if request was to update score or isdelete        
+      if(!participantPayload.isDeleted){ // check if request was to update score or isdelete
           await updatePoints({
-            eventId: participantPayload.eventId, 
+            eventId: participantPayload.eventId,
             participantId:participantPayload.id,
             score: participantPayload.score,
             scoreInterval: participantPayload.scoreInterval});
@@ -241,9 +241,9 @@ exports.updateParticipant = async (participantPayload) => {
         //   {
         //     const participantFansList = list.filter(x => Number(x.ParticipantId) === participantPayload.id);
         //     participantFansList.forEach(async element => {
-        //       let participantFan = await EventFan.findOne({ 
-        //           attributes: ['score','id'], 
-        //           where: { id: Number(element.FanId)}                
+        //       let participantFan = await EventFan.findOne({
+        //           attributes: ['score','id'],
+        //           where: { id: Number(element.FanId)}
         //       });
         //       const data = {
         //         Path: path,
@@ -256,8 +256,8 @@ exports.updateParticipant = async (participantPayload) => {
         //       };
         //       csvService.updateCsv(data);
         //     });
-        //   };           
-        // }  
+        //   };
+        // }
       }
       if(nextParticipantId !== undefined){
         await EventParticipant.update({status: 1, updatedAt: new Date()}, {where: { id: nextParticipantId}});
@@ -292,7 +292,7 @@ exports.createEventFan = async (eventPayload) => {
     let To = eventPayload.To.replace('+1', '');
     let Body = eventPayload.Body;
     let event  = await Event.findOne({
-      where: { number: Body }, 
+      where: { number: Body },
       attributes: ['id'],
       include: [{
         model: User,
@@ -343,44 +343,44 @@ exports.createEventFan = async (eventPayload) => {
     });
 
     if (eventParticipants.dataValues.updatedAt < eventFan.dataValues.updatedAt) {
-      let fanPointData = await FanPoints.findOne({ 
+      let fanPointData = await FanPoints.findOne({
         attributes : ['id','eventId','participantId','fanId'],
         where: { participantId: payload.activeParticipantId, fanId: payload.id }
       });
       points = csvHelper.calculatePoints(0,payload.score,payload.scoreInterval);
-      if(fanPointData) {     
+      if(fanPointData) {
         await FanPoints.update({ points: points }, { where: { id: fanPointData.dataValues.id } });
       } else {
         await FanPoints.create({
-          eventId: payload.eventId, 
+          eventId: payload.eventId,
           participantId: payload.activeParticipantId,
           fanId: payload.id,
           points: points
         });
       }
-    } 
+    }
     return {calculatedPoints: points};
   } catch(err) {
-    console.log('ERROR',err);    
+    console.log('ERROR',err);
     return Boom.internal(err);
   }
  }
 
  exports.getAllEventFans = (eventId) => new Promise( ( resolve, reject ) => {
   EventFan.findAndCountAll({
-    where: { 
-      eventId 
+    where: {
+      eventId
     },
     limit: 10,
     attributes: [ 'id', 'eventId', 'phoneNumber', 'score', 'publicUrl', 'createdAt', 'updatedAt',
     [Sequelize.literal('(SELECT SUM(`fan_points`.`points`) from `fan_points` where  `fan_points`.`fanId`=  `event_fans`.`id`)'), 'fanPoints']
-  ], 
+  ],
   order: [Sequelize.literal('fanPoints DESC')]
   }).then((events) => {
     resolve({events});
   }).catch ((err) => {
     reject(err);
-  }); 
+  });
 });
 
  /**
@@ -404,7 +404,7 @@ exports.findUserIdByEventId = async (eventId) => {
  * Gets list of all fans of an event(grouping by fanId and aggregating score)
  * @package eventId
  */
-exports.getGroupedFanPointList  = (eventId) => {  
+exports.getGroupedFanPointList  = (eventId) => {
   try
   {
     let list = FanPoints.findAll({

@@ -2,7 +2,7 @@
 source /home/ec2-user/.bash_profile
 PATH=$PATH:/usr/local/bin
 user=ec2-user
-app_name=fan
+app_name=compass
 app_home=/home/$user/$app_name
 
 . $app_home/bin/stage/tag-env-vars
@@ -11,7 +11,7 @@ if pm2 list | grep $app_name-api > /dev/null
 then
     pm2 restart all --update-env
 else
-    NODE_ENV=staging pm2 start $app_home/api.js --name $app_name-api -u $user
+    NODE_ENV=staging pm2 start $app_home/api.js --name $app_name-api
 fi
 
 pm2 save

@@ -1,17 +1,55 @@
 /* eslint-disable */
 import './objectExtensions';
+import { VALID_ACCESSIBLE_FILE_FORMATS, DEFAULT_PASSWORD_MIN_LENGTH } from '../utils/constants';
+import { strictValidString, validFileName, strictValidArrayWithLength } from '../utils/commonutils';
 
 const isEmpty = value => value === undefined || value === null || value === '';
+
 const join = rules => (value, data) => rules
   .map(rule => rule(value, data))
   .filter(error => !!error)[0];
 /* first error */
 
 export function email(value) {
-  // Let's not start a debate on email regex. This is just for an example app!
-  if (!isEmpty(value) && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(value)) {
-    return !isEmpty(value) && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(value) && 'Wrong email';
+  const reExp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
+  if (!isEmpty(value) && !reExp.test(value)) {
+    return !isEmpty(value) && !reExp.test(value) && 'Wrong Email';
   }
+}
+
+export function url(value) {
+  const reExp = /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
+  if (!isEmpty(value) && !reExp.test(value)) {
+    return !isEmpty(value) && !reExp.test(value) && 'Wrong Url';
+  }
+}
+
+export function phone(value) {
+  const reExp = /^\d{10}$/;
+  if (!isEmpty(value) && !reExp.test(value)) {
+    return !isEmpty(value) && !reExp.test(value) && 'Wrong Phone';
+  }
+}
+
+export function normalizePhone (value) {
+  if (!value) {
+    return value;
+  }
+  
+  const onlyNums = value.replace(/[^\d]/g, '');
+  if (onlyNums.length <= 3) {
+    return onlyNums;
+  }
+  
+  if (onlyNums.length <= 7) {
+    return `${onlyNums.slice(0, 3)}-${onlyNums.slice(3)}`;
+  }
+  
+  if (onlyNums.length <= 10) {
+    return `${onlyNums.slice(0, 3)}-${onlyNums.slice(3, 6)}-${onlyNums.slice(6, 10)}`;
+  }
+  
+  return `${onlyNums.slice(0, 3)}-${onlyNums.slice(3, 6)}-${onlyNums.slice(6, 10)} x${onlyNums.slice(10, 16)}`;
 }
 
 export function required(value) {
@@ -120,4 +158,29 @@ export function createValidator(rules) {
     });
     return errors;
   };
+}
+
+export function fileNameValidator(fileName) {
+  if (!validFileName(fileName, VALID_ACCESSIBLE_FILE_FORMATS)) {
+	  return
+    'Invalid File Name, a valid file must start with \'_\' or alphanumeric character and have a \'.md\' extension';
+  }
+}
+
+export function passwordValidator(password) {
+  const validPasswordFlag = strictValidString(password) && password.length >= DEFAULT_PASSWORD_MIN_LENGTH &&
+    new RegExp('^[a-z|A-Z|0-9|!|@|#|$|%|^|&|*|(|)]+$').test(password);
+  
+	if (!validPasswordFlag) {
+		return 'Invalid Password, a valid password can only contain alphanumeric and special characters and must be at' +
+      ` least ${DEFAULT_PASSWORD_MIN_LENGTH} characters long`;
+	}
+}
+
+export function isValidZip(zip) {
+	const isValidZipFlag = /^\d{5}(-\d{4})?$/.test(zip);
+	
+	if (!isValidZipFlag) {
+	  return 'Invalid Zip';
+  }
 }

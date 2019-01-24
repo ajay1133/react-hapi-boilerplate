@@ -7,16 +7,21 @@ module.exports = {
       payloadType: 'form',
     },
   },
+  
   auth: 'default',
+  
   tags: ['api', 'session'],
+  
   description: 'GET session user',
+  
   notes: 'Returns logged in session user',
+  
   handler: async (request, h) => {
     try {
-      let user = await accountService.getUser( request.auth.credentials.id);
+      let user = await accountService.getUser(request.auth.credentials.id);
       return h.response(user);
     } catch(err) {
-      return boom.badRequest(err)
+      return boom.badRequest(typeof err === 'string' ? err : JSON.stringify(err));
     }
   },
 };

@@ -1,16 +1,23 @@
+const prefix = '/sessions';
+
 module.exports = [
   {
-    path: '/sessions',
+    path: prefix,
     method: 'POST',
     config: require('./sessionsCreate'),
   },
   {
-    path: '/sessions',
+    path: `${prefix}/forgotPassword`,
+    method: 'POST',
+    config: require('./forgotPassword'),
+  },
+  {
+    path: prefix,
     method: 'GET',
     config: require('./sessionsGet'),
   },
   {
-    path: '/sessions',
+    path: prefix,
     method: 'DELETE',
     config: require('./sessionsDestroy'),
   }

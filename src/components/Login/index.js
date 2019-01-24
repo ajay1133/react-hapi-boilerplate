@@ -1,24 +1,25 @@
-import React, { Component } from 'react'
-import { Button, Form, Segment, Message, Header } from 'semantic-ui-react'
-import { Redirect } from 'react-router';
-import PropTypes from 'prop-types'
-import { login, load } from '../../redux/modules/auth'
-import { connect } from 'react-redux'
-import { reduxForm } from 'redux-form/immutable'
-import Input from '../../components/Form/Input'
+import React, { Component } from 'react';
+import { Button, Form, Segment, Message } from 'semantic-ui-react';
+import PropTypes from 'prop-types';
+import { login, forgotPassword, load } from '../../redux/modules/auth';
+import { connect } from 'react-redux';
+import { reduxForm } from 'redux-form/immutable';
+import { Input } from '../../components/Form';
 import { required, email } from '../../utils/validations';
+import '../../style/css/style.css';
 
 @connect(state => ({
-  me: state.get('auth').get('user'),
+  user: state.get('auth').get('user'),
   isLoading: state.get('auth').get('isLoad'),
   loginBusy: state.get('auth').get('isLogin'),
   loginError: state.get('auth').get('loginErr'),
+	passwordUpdated: state.get('account').get('passwordUpdated'),
+	passwordUpdatedMsg: state.get('account').get('passwordUpdatedMsg'),
+  loginMsg: state.get('auth').get('loginMsg'),
 }))
-
 @reduxForm({
-  form: 'login',
+  form: 'loginForm',
 })
-
 export default class Login extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
@@ -26,8 +27,15 @@ export default class Login extends Component {
     isLoading: PropTypes.bool,
     loginBusy: PropTypes.bool,
     loginError: PropTypes.string,
+	  passwordUpdated: PropTypes.bool,
+	  passwordUpdatedMsg: PropTypes.string,
+    loginMsg: PropTypes.string
   };
-
+  
+  state = {
+    showForgotPasswordFlag: false
+  };
+  
   static defaultProps = {
     dispatch: null,
     handleSubmit: null,
@@ -36,55 +44,91 @@ export default class Login extends Component {
     loginError: ''
   };
 
-  componentWillMount() {
+  componentDidMount() {
     const { dispatch } = this.props;
     dispatch(load());
-  }
+  };
 
-  _login = (formData) => {
+  _login = async (formData) => {
+    const { showForgotPasswordFlag } = this.state;
     const { dispatch } = this.props;
-    const user = formData.toJS();
-    dispatch(login(user.email, user.password));
-  }
-
-  render() {
-    const { handleSubmit, isLoading, loginBusy, loginError, me } = this.props;
-    if (me && me.id) {
-      return <Redirect to= {'/dashboard'} />;
+    const { email, password } = formData.toJS() || {};
+    
+    if (showForgotPasswordFlag) {
+      await dispatch(forgotPassword(email));
+    } else {
+      await dispatch(login(email, password));
     }
+  };
+  
+  showForgotPassword = () => {
+    const { showForgotPasswordFlag } = this.state;
+    this.setState({
+	    showForgotPasswordFlag: !showForgotPasswordFlag
+    });
+  };
+  
+  render() {
+    const {
+      handleSubmit, isLoading, loginBusy, loginError, passwordUpdated, passwordUpdatedMsg, loginMsg
+    } = this.props;
+    const { showForgotPasswordFlag } = this.state;
+    
     return (
-      <Segment className="mainLogin centered">
+      <Segment className="centered loginOuter">
+        {
+          ((passwordUpdated && passwordUpdatedMsg) || loginMsg) &&
+          <Message>
+            <span style={{ color: 'green' }}>{ passwordUpdatedMsg || loginMsg }</span>
+          </Message>
+        }
         <Form className="login-form" onSubmit={handleSubmit(this._login)}>
-          <Header as='h3' className="side">LOGIN</Header>
           <Input
             className="username"
             name="email"
-            icon="user"
-            iconPosition="left"
-            placeholder="Username"
+            placeholder="Enter Your Email"
             type="text"
             size="large"
             validate={[required, email]}
-
           />
-          <Input
-            name="password"
-            icon="key"
-            iconPosition="left"
-            placeholder="Password"
-            type="password"
-            size="large"
-            validate={[required]}
+          {
+            !showForgotPasswordFlag &&
+            <Input
+              name="password"
+              placeholder="Enter Your Password"
+              type="password"
+              size="large"
+              validate={[required]}
+            />
+          }
+          <Button
+            fluid
+            primary
+            type="submit"
+            className={ showForgotPasswordFlag ? 'mb-10' : '' }
+            loading={isLoading || loginBusy}
+            content={ !showForgotPasswordFlag ? 'Login' : 'Submit' }
           />
-          <Button className="ui large primary button front" type="submit"  primary loading={isLoading || loginBusy}>
-            Login
-            <i aria-hidden="true" className="chevron right icon"></i>
-          </Button>
+          {
+	          showForgotPasswordFlag &&
+            <Button
+              fluid
+              primary
+              content='Cancel'
+              onClick={ this.showForgotPassword }
+            />
+          }
         </Form>
         {
-          loginError && (
-            <Message error content={loginError} />
-          )
+          loginError && <Message error content={loginError} />
+        }
+        {
+          !showForgotPasswordFlag &&
+          <p className="pt-1 m-0 text-center">
+            <div clasName="hand-pointer" onClick={ this.showForgotPassword }>
+              Forgot your password ?
+            </div>
+          </p>
         }
       </Segment>
     );

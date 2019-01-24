@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Container, Menu, Button, Icon } from 'semantic-ui-react'; 
+import { Container, Menu, Button, Icon } from 'semantic-ui-react';
 
 export default class Pagination extends React.Component {
   static propTypes = {
@@ -8,7 +8,7 @@ export default class Pagination extends React.Component {
     offset: PropTypes.number,
     currentPage: PropTypes.number,
     navigate: PropTypes.func
-  }
+  };
 
   static defaultProps = {
     totalEntries: 0,
@@ -16,8 +16,7 @@ export default class Pagination extends React.Component {
     currentPage: 0,
     navigate: null
   };
-
-
+  
   renderButton = (v, isCurrent, isClick) => {
     const { navigate } = this.props;
 
@@ -33,7 +32,7 @@ export default class Pagination extends React.Component {
         <span>{isClick ? v : '...'}</span>
       </Button>
     );
-  }
+  };
 
   renderNavigateButton = (disableBtn, page, text) => {
     const { navigate, offset } = this.props;
@@ -49,7 +48,7 @@ export default class Pagination extends React.Component {
         {text}
       </Button>
     );
-  }
+  };
 
   render() {
     const { totalEntries, offset, currentPage } = this.props;

@@ -1,4 +1,6 @@
-export const OFFSET = 20;
+import moment from 'moment';
+
+export const OFFSET = 10;
 
 export const SCORE_INTERVAL_OPTIONS =[
   { value:.01, text: .01 },
@@ -10,3 +12,174 @@ export const SCORE_INTERVAL_OPTIONS =[
 
 export const SCORE_ERROR_MESSAGE = 'There must be at least 10 options for fans to score by, please adjust the Min, Max, and Score Interval';
 
+export const DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES = 3000;
+
+export const ROOT_BRANCH = 'master';
+
+export const REPO_PATH = 'content/blog';
+
+export const USER_PROFILE_PATH = 'content/profile';
+
+export const DEFAULT_ACCESSIBLE_ROOT_PATH = `/${ROOT_BRANCH}/${REPO_PATH}`;
+
+export const PROFILE_ROOT_PATH = `/${ROOT_BRANCH}/${USER_PROFILE_PATH}`;
+
+export const MD_FILE_META_DATA_KEYS = [
+	'email',
+	'firstName',
+	'lastName',
+	'title',
+	'address',
+	'city',
+	'state',
+	'zip',
+	'phone',
+	'website',
+	'description',
+	'image',
+	'featuredVideo',
+	'draft'
+];
+
+export const KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS = [
+	'id',
+	'fileName',
+	'filePath',
+	'content',
+	'serviceType',
+	'hash',
+	'salt',
+	'role',
+	'status',
+	'isDeleted',
+	'inviteToken',
+	'inviteStatus',
+	'updatedAt',
+	'createdAt',
+	'otherDetails',
+	'userServices'
+];
+
+export const MD_FILE_DRAFT_OPTIONS_LIST = [
+	{
+		value: 'true',
+		text: 'true',
+		className: 'radioBtn',
+		readOnly: false
+	},
+	{
+		value: 'false',
+		text: 'false',
+    className: 'radioBtn',
+		readOnly: false
+	}
+];
+
+export const VALID_ACCESSIBLE_FILE_FORMATS = ['md', 'MD'];
+
+export const VALID_ACCESSIBLE_IMAGE_FILE_FORMATS = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG', 'gif', 'GIF'];
+
+export const DEFAULT_BITBUCKET_LIST_FILTERS = {
+	path: DEFAULT_ACCESSIBLE_ROOT_PATH,
+	page: 1
+};
+
+export const DEFAULT_HOME_PAGE_ROUTES = [];
+
+DEFAULT_HOME_PAGE_ROUTES[1] = '/accounts';
+DEFAULT_HOME_PAGE_ROUTES[2] = '/profile';
+
+export const DEFAULT_PASSWORD_MIN_LENGTH = 6;
+
+export const USER_PROFILE_TABS = [
+	'profileDetails',
+	'userServices',
+	'password',
+	'userSearch'
+];
+
+export const USER_PROFILE_DETAILS_FORM_KEYS = [
+	'title',
+	'firstName',
+	'lastName',
+	'email',
+	'phone',
+	'website',
+	'description',
+	'address',
+	'city',
+	'state',
+	'zip'
+];
+
+export const USER_PASSWORD_SECTION_FORM_KEYS = [
+	'password',
+	'confirmPassword'
+];
+
+export const DEFAULT_USER_PROFILE_IMAGE_URL = 'images/default_User_Profile_Image.jpg';
+
+export const DEFAULT_BLOG_IMAGE_URL = 'images/default_Blog_Image.jpg';
+
+export const VALID_BEGIN_FILE_NAME = '^[_|0-9|a-z|A-Z]+';
+
+export const IMAGE_FILE_NAME_BEGIN_REG_EXP = '^[_|0-9|a-z|A-Z|//|-]+';
+
+export const BLOG_MD_META_INITIAL_VALUES = {
+	draft: 'false',
+	image: DEFAULT_BLOG_IMAGE_URL,
+	date: moment().format()
+};
+
+export const PROFILE_MD_META_INITIAL_VALUES = {
+	draft: 'false',
+	image: DEFAULT_USER_PROFILE_IMAGE_URL,
+	date: moment().format()
+};
+
+export const DEFAULT_OPTION = 'SELECT';
+
+export const USER_SERVICES_LIST = [];
+
+USER_SERVICES_LIST[1] = [
+  'Residential Treatment Centers/Rehabs',
+  'Luxury/Executive Rehabs',
+  'Partial Hospitalization Programs (PHP)',
+  'Intensive Outpatient Programs (IOP)',
+  'Supportive Outpatient Programs (SOP)',
+  'Ambulatory Detox',
+  'Dual Diagnosis',
+  'Psychiatrists',
+  'Nurse Practioners/Physician Assistants',
+  'Counselors',
+  'Suboxone Clinics',
+  'Support Groups'
+];
+
+USER_SERVICES_LIST[2] = [
+	'Test Service Of Type Of Services 1',
+	'Test Service Of Type Of Services 2',
+	'Test Service Of Type Of Services 3'
+];
+
+USER_SERVICES_LIST[3] = [
+	'Test Service Of Level Of Care 1',
+	'Test Service Of Level Of Care 2',
+	'Test Service Of Level Of Care 3'
+];
+
+USER_SERVICES_LIST[4] = [
+	'Test Service Of Treatment Focus 1',
+	'Test Service Of Treatment Focus 2',
+	'Test Service Of Treatment Focus 3'
+];
+
+export const US_STATES_LIST = [
+	"Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona", "California", "Colorado", "Connecticut",
+	"District of Columbia", "Delaware", "Florida", "Georgia", "Guam", "Hawaii", "Iowa", "Idaho", "Illinois",
+	"Indiana", "Kansas", "Kentucky", "Louisiana", "Massachusetts", "Maryland", "Maine", "Michigan", "Minnesota",
+	"Missouri", "Mississippi", "Montana", "North Carolina", "North Dakota", "Nebraska", "New Hampshire", "New Jersey",
+	"New Mexico", "Nevada", "New York", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island",
+	"South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Virginia", "Virgin Islands", "Vermont", "Washington",
+	"Wisconsin", "West Virginia", "Wyoming"
+];

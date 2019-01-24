@@ -4,9 +4,9 @@ orig_path=`pwd`
 source_dir=$(cd "$(dirname "$0")"; pwd)
 
 
-bucket="deploy.fan.com"
+bucket="deploy.compassrecoverynetwork.com"
 
-app_name=fan
+app_name=compass
 build_version=`date +"%Y-%m-%d-%H%M%S"`
 build_dir=./build_dir
 build_file=$app_name-$build_version.zip
@@ -34,7 +34,7 @@ cp ./.babelrc $build_dir
 
 echo "Creating a new revision..."
 
-aws --profile fan-deploy \
+aws --profile compass-deploy \
   deploy push \
   --no-ignore-hidden-files \
   --application-name $app_name \
@@ -46,12 +46,12 @@ rm -rf $build_dir
 echo "*** Revision: s3://$bucket/$app_name/$build_file"
 
 echo "Creating Deployment"
-aws --profile fan-deploy deploy create-deployment \
+aws --profile compass-deploy deploy create-deployment \
   --application-name $app_name \
   --deployment-config-name CodeDeployDefault.AllAtOnce \
   --deployment-group-name Live \
   --s3-location bundleType=zip,bucket=$bucket,key=$app_name/$build_file
 
-aws --profile fan-deploy s3 sync build/ s3://app.fan.com  --cache-control max-age=3600
+aws --profile compass-deploy s3 sync build/ s3://app.compass.com  --cache-control max-age=3600
 
 cd $orig_path

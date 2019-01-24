@@ -1,4 +1,4 @@
-## Fan Engagement
+## Compass
 
 ### Local Environment Setup
 * Use Node Version: 10.x.x
@@ -13,13 +13,11 @@
 
 * Create MySQL Database:  <your_db_name>
 
+* Run Command (create db, migration, seeders): npm run db
+
 * Change in db file
 
-* Run Migrations:  sequelize db:migrate
-
-* Create Admin User: sequelize db:seed:all
-
-* Run Client App: npm start   
+* Run Client App: npm start
 
 * Run API: npm run dev-api
 
@@ -30,7 +28,7 @@
 
 #### Development process for new tasks:
 
-* Create task specific branch from staging always. For example: git checkout -b FAN-<TASKNO>
+* Create task specific branch from staging always. For example: git checkout -b com-<TASKNO>
 
 * Send Pull Request to staging branch.
 

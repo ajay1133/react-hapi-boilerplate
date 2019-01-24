@@ -1,4 +1,5 @@
 const prefix = '/account';
+
 module.exports = [
   {
     path: `${prefix}/all`,
@@ -31,8 +32,13 @@ module.exports = [
     config: require('./accountUpdatePassword'),
   },
   {
-    path: `${prefix}`,
+    path: `${prefix}/{id}`,
     method: 'PUT',
     config: require('./accountUpdate'),
   },
+	{
+		path: `${prefix}/update/passwordWithoutToken`,
+		method: 'PUT',
+		config: require('./accountUpdatePasswordWithoutToken'),
+	},
 ];

@@ -3,7 +3,9 @@ const i18n = require('../helpers/i18nHelper');
 const Boom = require('boom');
 const db = require('../db');
 const cryptoHelper = require('../helpers/cryptoHelper');
-
+const jwtHelper = require('../helpers/jwtHelper');
+const constants = require('../constants');
+const { forgotPassword } = require('../mailer');
 const User = db.models.User;
 
 /**
@@ -12,17 +14,13 @@ const User = db.models.User;
  */
 exports.findSessionUser = (sessionData) =>
   new Promise((resolve, reject) => {
-    User.findOne(
-      {
+    User
+      .findOne({
         where: { id: sessionData.id },
         attributes: ['id']
-      },
-    )
-    .then((userDetails) => {
-      resolve(userDetails);
-    }).catch ((err) => {
-      reject(err);
-    });
+      })
+      .then(resolve)
+      .catch (reject);
 });
 
 
@@ -35,21 +33,60 @@ exports.authenticate = async (email, password) => {
   assert(email, i18n('services.sessionService.missingEmail'));
   assert(password, i18n('services.sessionService.missingPassword'));
   
-  let userDetails = await User.findOne({where: {email: email }, attributes: ['id', 'email', 'hash', 'salt', 'firstName', 'lastName', 'role']});
+  let userDetails = await User.findOne({
+    where: { email: email },
+    attributes: constants.USER_AUTHENTICATION_ATTRIBUTES
+  });
+  
   let user;
+  
   if (userDetails) {
     user = userDetails.toJSON();
+    
     if (user.salt) {
       let hashData = await cryptoHelper.hashStringWithSalt(password, user.salt);
+      
       if (user.hash !== hashData.hash) {
         return Boom.badRequest(i18n('services.sessionService.wrongUsernamePassword'));
       }
     } else {
       return Boom.badRequest(i18n('services.sessionService.wrongUsernamePassword'));
     }
+    
     // Sanitize user and return
     delete user.hash;
     delete user.salt;
   }
+  
   return user;
+};
+
+/**
+ * forgotPassword: Authenticate a user by its email and send reset link
+ * @param email
+ */
+exports.forgotPassword = async (email) => {
+  assert(email, i18n('services.sessionService.missingEmail'));
+  let updatedData = {};
+  let userDetails = await User.findOne({ where: { email }, attributes: constants.USER_AUTHENTICATION_ATTRIBUTES });
+  
+  if (userDetails) {
+    const user = userDetails.toJSON();
+    
+    delete user.hash;
+    delete user.salt;
+    
+    updatedData.inviteToken = await jwtHelper.sign(user, '48h', 'HS512');
+    updatedData.inviteStatus = 0;
+  
+    // Update in DB
+    await User.update(updatedData, { where: { id: user.id } });
+    
+    // Send Forgot Password Email
+    user.token = updatedData.inviteToken;
+    await forgotPassword(user);
+    return true;
+  } else {
+    return false;
+  }
 };
