@@ -3,9 +3,7 @@
 ### Local Environment Setup
 * Use Node Version: 10.x.x
 
-* Clone Project: git clone git@bitbucket.org:simsaw/fan-engagement.git
-
-* Switch to staging Branch: git checkout staging
+* Clone Project: git clone https://github.com/ajay1133/shareCabs.git
 
 * Install Node Packages: npm install
 
@@ -13,7 +11,9 @@
 
 * Copy config/db_bak.js => config/db.js
 
-* Create MySQL Database:  fan
+* Create MySQL Database:  <your_db_name>
+
+* Change in db file
 
 * Run Migrations:  sequelize db:migrate
 
