@@ -23,7 +23,7 @@
 
 * Swagger API: http://localhost:5000/documentation
 
-* Admin User Details: admin@simsaw.com/admin123
+* Admin User Details: superAdmin@test.com/admin123
 
 
 #### Development process for new tasks:

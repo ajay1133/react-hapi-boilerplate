@@ -1,4 +1,5 @@
 'use strict';
+
 module.exports = {
   up: (queryInterface, Sequelize) => queryInterface.createTable(
     'users',
@@ -9,15 +10,16 @@ module.exports = {
       salt: { type: Sequelize.TEXT },
       firstName: { type: Sequelize.STRING, allowNull: true },
       lastName: { type: Sequelize.STRING, allowNull: true },
-      title: { type: Sequelize.TEXT },
       address: { type: Sequelize.TEXT },
+	    state: { type: Sequelize.STRING, allowNull: true },
+	    city: { type: Sequelize.STRING, allowNull: true },
+	    zip: { type: Sequelize.STRING, allowNull: true },
       phone: { type: Sequelize.STRING, allowNull: true },
-      url: { type: Sequelize.STRING, allowNull: true },
-      description: { type: Sequelize.TEXT },
       image: { type: Sequelize.STRING, allowNull: true },
-      status: { type: Sequelize.TINYINT, allowNull: true, comment: '1=Active, 2=Pending, 3=Denied' },
-      role: {type: Sequelize.INTEGER(2), allowNull: true },
-      isDeleted: { type: Sequelize.BOOLEAN, defaultValue: 0 },
+      status: { type: Sequelize.TINYINT, allowNull: true, comment: '0=Inactive, 1=Active'},
+      role: { type: Sequelize.INTEGER(2), allowNull: true },
+      inviteToken: { type: Sequelize.STRING, allowNull: true },
+      inviteStatus: { type: Sequelize.TINYINT, allowNull: false, comment: '0: Uninvited, 1=Invited' },
       createdAt: { type: Sequelize.DATE },
       updatedAt: { type: Sequelize.DATE }
     }),

@@ -2,17 +2,14 @@
 	"db": {
 		"error": "Some DB error has occurred",
 		"user": {
-			"emailExists": "Email exists"
+			"emailExists": "Email already exists"
 		}
 	},
 	"controllers": {
-		"organisations": {
-			"nameExists": "Organisation with same name already exists"
-		},
 		"account": {
-			"forgotPasswordTokenSent": "Forgot password token has been sent on your email.",
-			"forgotPasswordInvalidEmail": "Invalid email.",
-			"forgotPasswordUnableToSendEmail": "System failed to send email."
+			"forgotPasswordTokenSent": "Forgot password token has been sent on your email",
+			"forgotPasswordInvalidEmail": "Invalid email",
+			"forgotPasswordUnableToSendEmail": "System failed to send email"
 		}
 	},
 	"plugins": {
@@ -26,129 +23,65 @@
 		}
 	},
 	"services": {
-		"accessDeniedUpdate": "Access denied to update.",
-		"accessDeniedDelete": "Access denied to delete.",
-		"unableUpdate": "Unable to update.",
-		"unableDelete": "Unable to delete.",
-		"googleApiError": "Google place api failure.",
-		"invalidRequest": "Invalid Request.",
+		"accessDeniedUpdate": "Access denied to update",
+		"accessDeniedDelete": "Access denied to delete",
+		"unableUpdate": "Unable to update",
+		"unableDelete": "Unable to delete",
+		"googleApiError": "Google place api failure",
+		"invalidRequest": "Invalid Request",
 		"accountService": {
-			"missingUserPayload": "userPaylod is required",
+			"missingUserPayload": "userPayload is required",
 			"missingProfilePayload": "profilePayload is required",
-			"userEmailExists": "Email is already registered.",
-			"userMobileExists": "Mobile no is already registered.",
-			"userNameExists": "services.accountService.userNameExists",
-			"inviteEmailExists": "services.accountService.inviteEmailExists",
-			"emailExists": "Email Already Exisits"
+			"emailExists": "Email already exists"
 		},
 		"sessionService": {
-			"missingUsername": "Missing Username",
-			"missingPassword": "Missing Password",
+			"missingUsername": "Missing username",
+			"missingPassword": "Missing password",
 			"wrongUsernamePassword": "Wrong username or password",
-			"missingEmail": "services.sessionService.missingEmail"
-		},
-		"groupService": {
-			"missingGroupName": "Groupname is required",
-			"groupNameExist": "Groupname already exists.",
-			"infoMissed": "Something went wrong.",
-			"groupNotFound": "Group not found.",
-			"invalidUser": "Invalid request.",
-			"invalidRequest": "Invalid Request."
-		},
-		"groupMemberService": {
-			"Exist": "Dplicate request.",
-			"wrongUser": "User does not exist.",
-			"userNotActive": "Invited user is not active.",
-			"groupNotExist": "Group does not exists.",
-			"groupNotActive": "Group is not active.",
-			"invalidRequest": "Invalid Request."
+			"missingEmail": "Missing email"
 		},
 		"locationService": {
 			"missingCategoryName": "category is required",
-			"exist": "category already exists.",
-			"duplicate": "Duplicate location name.",
-			"infoMissed": "Something went wrong.",
-			"locationNotFound": "Location not found.",
-			"invalidRequest": "Invalid Request.",
-			"locationError": "Location service api error, please retry.",
-			"reviewsNotFound": "Location reviews not found.",
-			"locationDetailsNotFound": "Location details not found.",
+			"exist": "category already exists",
+			"duplicate": "Duplicate location name",
+			"infoMissed": "Something went wrong",
+			"locationNotFound": "Location not found",
+			"invalidRequest": "Invalid request",
+			"locationError": "Location service api error, please retry",
+			"reviewsNotFound": "Location reviews not found",
+			"locationDetailsNotFound": "Location details not found",
 			"wrongCategory": "Wrong category id",
-			"timeError": "Time difference between Opening and Closing time must be 1 hour"
+			"timeError": "Time difference between opening and closing time must be 1 hour"
 		},
 		"checkInsService": {
-			"exist": "Duplicate record.",
-			"infoMissed": "Something went wrong.",
-			"checkInsNotFound": "CheckIns not found.",
-			"invalidRequest": "Invalid Request."
+			"exist": "Duplicate record",
+			"infoMissed": "Something went wrong",
+			"checkInsNotFound": "CheckIns not found",
+			"invalidRequest": "Invalid request"
 		},
 		"reviewService": {
-			"exist": "Duplicate record.",
-			"infoMissed": "Something went wrong.",
-			"reviewNotFound": "Review not found.",
-			"invalidRequest": "Invalid Request.",
-			"invalidLocationid": "services.reviewService.invalidLocationid"
+			"exist": "Duplicate record",
+			"infoMissed": "Something went wrong",
+			"reviewNotFound": "Review not found",
+			"invalidRequest": "Invalid request",
+			"invalidLocationId": "Invalid location id"
 		},
 		"amenityService": {
-			"exist": "Duplicate record.",
-			"infoMissed": "Something went wrong.",
-			"amenityNotFound": "Amenity not found.",
-			"invalidRequest": "Invalid Request."
+			"exist": "Duplicate record",
+			"infoMissed": "Something went wrong",
+			"amenityNotFound": "Amenity not found",
+			"invalidRequest": "Invalid request"
 		},
 		"familyService": {
-			"invalidRequest": "Invalid Request",
-			"infoMissed": "Something went wrong.",
-			"Exist": "Duplicate record."
+			"invalidRequest": "Invalid request",
+			"infoMissed": "Something went wrong",
+			"Exist": "Duplicate record"
 		},
 		"favourite": {
-			"infoMissed": "Information missed in form request."
+			"infoMissed": "Information missed in form request"
 		},
 		"familyMembers": {
-			"Exist": "Duplicate family member record."
-		},
-		"categoryService": {
-			"infoMissed": "services.categoryService.infoMissed",
-			"Exist": "services.categoryService.Exist",
-			"wrongParent": "Wrong parent id",
-			"invalidRequest": "services.categoryService.invalidRequest"
-		},
-		"amenitiesService": {
-			"invalidRequest": "services.amenitiesService.invalidRequest"
-		},
-		"tagService": {
-			"duplicate": "services.tagService.duplicate",
-			"alreadyExists": "tag already exists"
-		},
-		"campaignService": {
-			"missingCampaignPayload": "services.campaignService.missingCampaignPayload",
-			"campaignNameExists": "campaign name already exists",
-			"notFound": "services.campaignService.notFound",
-			"campaignQuestionExists": "campaign question already exists."
-		},
-		"authorisationFailed": "services.authorisationFailed",
-		"duplicateRequest": "services.duplicateRequest"
-	},
-	"func": {
-		"missingArg": {
-			"services": {
-				"accountService": {
-					"userPayload": {
-						"email": "Email missing.",
-						"password": "Password missing.",
-						"role": "Role missing."
-					},
-					"profilePayload": {
-						"firstName": "First missing.",
-						"lastName": "Last name missing."
-					},
-					"notFound": "User not found"
-				}
-			}
+			"Exist": "Duplicate family member record"
 		}
-	},
-	"transaction": {
-		"failed": "Transaction failed."
-	},
-	"Repeated Comment!": "Repeated Comment!",
-	"email already exist": "email already exist"
+	}
 }

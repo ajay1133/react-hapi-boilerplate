@@ -1,9 +1,10 @@
-const Sequelize = require('sequelize');
+const sequelize = require('sequelize');
 const config = require('config');
 const settings = config.db;
 const globalHooks = require('./globalHooks');
 
 const Op = Sequelize.Op;
+
 const operatorsAliases = {
   $eq: Op.eq,
   $ne: Op.ne,
@@ -41,7 +42,7 @@ const operatorsAliases = {
   $col: Op.col
 };
 
-const db = new Sequelize(settings.database, settings.username, settings.password, {
+const db = new sequelize(settings.database, settings.username, settings.password, {
   host: settings.host,
   dialect: 'mysql',
   port: settings.port || 3306,
@@ -55,35 +56,7 @@ const db = new Sequelize(settings.database, settings.username, settings.password
 );
 
 db.models = {};
-db.models.User = db.import('./models/User');
-
-db.models.ServiceTypes = db.import('./models/servicetypes');
-db.models.Services = db.import('./models/services');
-
-db.models.AgeGroup = db.import('./models/agegroup');
-db.models.AgeType = db.import('./models/agetype');
-
-db.models.GenderGroup = db.import('./models/gendergroup');
-db.models.GenderType = db.import('./models/gendertype');
-
-db.models.TreatmentFocus = db.import('./models/treatmentfocus');
-db.models.TreatmentFocusTypes = db.import('./models/treatmentfocustypes');
-
-db.models.Search = db.import('./models/search');
-db.models.SearchKeyword = db.import('./models/searchkeyword');
-
-db.models.Blogs = db.import('./models/blogs');
-db.models.ContactUs = db.import('./models/contactus');
-
-
-// Associations
-const models = db.models;
-//Hooks
-
-//User Hooks
-models.User.addHook('afterCreate', 'sendInviteLink', (user, options) => {
-  console.log("User Created");
-});
+db.models.users = db.import('./models/users');
 
 // Export
 module.exports = db;
