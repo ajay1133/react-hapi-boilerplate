@@ -13,9 +13,9 @@
 
 * Create MySQL Database:  <your_db_name>
 
-* Run Command (create db, migration, seeders): npm run db
-
 * Change in db file
+
+* Run Command (create db, migration, seeders): npm run db
 
 * Run Client App: npm start
 
