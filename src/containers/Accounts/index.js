@@ -51,8 +51,7 @@ const TableRow = ({row, editAccount, typeAction}) => (
 	itemsCount: state.get('account').get('itemsCount'),
   loadErr: state.get('account').get('loadErr'),
   accountErr: state.get('account').get('accountErr'),
-  message: state.get('bitBucketRepo').get('message') || state.get('account').get('accountMsg'),
-  isLoad: state.get('bitBucketRepo').get('isLoad')
+  message: state.get('account').get('accountMsg')
 }))
 @reduxForm({
   form: 'listAccountFiltersForm',

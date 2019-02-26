@@ -7,8 +7,6 @@ import { push } from 'connected-react-router';
 import { strictValidObjectWithKeys, validObjectWithParameterKeys } from '../../utils/commonutils';
 
 class NavBar extends Component {
-  state = { activeItem: 'dashboard' };
-  
   static propTypes = {
     user: PropTypes.object,
     dispatch: PropTypes.func
@@ -58,12 +56,6 @@ class NavBar extends Component {
 							  user.role === 1 &&
                 <Menu.Item active={ currentLocation === '/accounts' } onClick={ () => this.loadRoute('/accounts') }>
                   Accounts
-                </Menu.Item>
-						  }
-						  {
-							  user.role === 1 &&
-                <Menu.Item active={ currentLocation === '/dashboard' } onClick={ () => this.loadRoute('/dashboard') }>
-                  Dashboard
                 </Menu.Item>
 						  }
 						  {

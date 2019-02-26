@@ -21,11 +21,6 @@ const PrivacyPolicy = Loadable({
 	loading: Loading,
 });
 
-const Dashboard = Loadable({
-    loader: () => import('../containers/Dashboard'),
-    loading: Loading,
-});
-
 const Accounts = Loadable({
     loader: () => import('../containers/Accounts'),
     loading: Loading,
@@ -72,10 +67,6 @@ class MainRoute extends React.Component {
             {
                 isUserLoggedInFlag && user.role === 1 &&
                 <Route path="/accounts" component={Accounts} />
-            }
-            {
-                isUserLoggedInFlag && user.role === 1 &&
-                <Route path="/dashboard" component={Dashboard} />
             }
             {
                 isUserLoggedInFlag && user.role === 1 &&

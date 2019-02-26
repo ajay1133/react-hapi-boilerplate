@@ -20,7 +20,7 @@ import {
 	RELATIONAL_MAPPING_INFO_LIST
 } from '../../utils/constants';
 import { verifyUser } from '../../redux/modules/auth';
-import { loadUserProfileRelatedData, updateUserProfile } from '../../redux/modules/account';
+import { updateUserProfile } from '../../redux/modules/account';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
 import _ from 'lodash';
 import '../../style/css/style.css';
@@ -80,25 +80,13 @@ export default class Profile extends Component {
 	};
 	
 	componentDidMount = async () => {
-		const { dispatch, location } = this.props;
+		const { location } = this.props;
 		const { q } = (validObjectWithParameterKeys(location, ['search']) &&
 			queryString.parse(location.search.substring(1))) || {};
-		
-		try {
-			const res = await dispatch(loadUserProfileRelatedData());
-			if (validObjectWithParameterKeys(res, ['serviceType'])) {
-				this.setState({ serviceTypesFieldArray: res.serviceType });
-			}
-			this.setState({
-				loading: false,
-				activeTabIndex: this.getActiveTabIndex(q)
-			});
-		} catch (e) {
-			this.setState({
-				loading: false,
-				activeTabIndex: this.getActiveTabIndex(q)
-			});
-		}
+		this.setState({
+			loading: false,
+			activeTabIndex: this.getActiveTabIndex(q)
+		});
 	};
 	
 	shouldComponentUpdate = async (nextProps) => {
@@ -106,7 +94,6 @@ export default class Profile extends Component {
 		const { activeTabIndex } = this.state;
 		const { q } = (validObjectWithParameterKeys(location, ['search']) &&
 			queryString.parse(location.search.substring(1))) || {};
-		
 		if (this.getActiveTabIndex(q) !== activeTabIndex) {
 			this.setState({ activeTabIndex: this.getActiveTabIndex(q) });
 		}

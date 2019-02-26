@@ -2,7 +2,6 @@ import Immutable from 'immutable';
 import store from 'store2';
 import { push } from 'react-router-redux';
 import { flush as flushAccount } from './account';
-import { flush as flushBitBucketRepo } from './bitBucketRepo';
 import { validObjectWithParameterKeys, typeCastToString } from '../../utils/commonutils';
 
 const LOAD = 'auth/LOAD';
@@ -187,7 +186,6 @@ export const logout = () => (dispatch) => {
   
   dispatch({ type: FLUSH });
   dispatch(flushAccount());
-  dispatch(flushBitBucketRepo());
   
   dispatch(push('/'));
 };
