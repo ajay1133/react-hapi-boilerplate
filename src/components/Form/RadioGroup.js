@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Form, Radio } from 'semantic-ui-react';
 
-
 export default class RadioGroup extends React.Component {
   static get propTypes () {
     return {

@@ -18,7 +18,9 @@ import {
 	PROFILE_ROOT_PATH,
 	PROFILE_MD_META_INITIAL_VALUES,
 	DEFAULT_USER_PROFILE_IMAGE_URL,
-	OFFSET
+	OFFSET,
+	USER_SERVICES_LIST,
+	RELATIONAL_MAPPING_INFO_LIST
 } from '../../utils/constants';
 
 const LOAD = 'account/LOAD';
@@ -64,16 +66,22 @@ const initialState = Immutable.fromJS({
 	passwordUpdated: false,
 	passwordUpdatedMsg: null,
   serviceTypes: [],
-  userServices: [],
-	genderTypes: [],
+  userServiceGroups: [],
 	userDetails: {},
-	userGenderGroups: [],
 	ageTypes: [],
 	userAgeGroups: [],
+	genderTypes: [],
+	userGenderGroups: [],
 	treatmentFocusTypes: [],
 	userTreatmentFocusGroups: [],
-	searchKeywordTypes: [],
-	userSearchKeywordGroups: []
+	paymentTypes: [],
+	userPaymentGroups: [],
+	accreditationTypes: [],
+	userAccreditationGroups: [],
+	smokingPolicyTypes: [],
+	userSmokingPolicyGroups: [],
+	languageTypes: [],
+	userLanguageGroups: []
 });
 
 const internals = {};
@@ -172,15 +180,21 @@ export default function reducer(state = initialState, action) {
     case LOAD_USER_PROFILE_RELATED_DATA:
       return state
         .set('serviceTypes', action.serviceTypes)
-        .set('userServices', action.userServices)
+        .set('userServiceGroups', action.userServiceGroups)
         .set('genderTypes', action.genderTypes)
         .set('userGenderGroups', action.userGenderGroups)
         .set('ageTypes', action.ageTypes)
         .set('userAgeGroups', action.userAgeGroups)
         .set('treatmentFocusTypes', action.treatmentFocusTypes)
         .set('userTreatmentFocusGroups', action.userTreatmentFocusGroups)
-        .set('searchKeywordTypes', action.searchKeywordTypes)
-        .set('userSearchKeywordGroups', action.userSearchKeywordGroups)
+        .set('paymentTypes', action.paymentTypes)
+        .set('userPaymentGroups', action.userPaymentGroups)
+        .set('accreditationTypes', action.accreditationTypes)
+        .set('userAccreditationGroups', action.userAccreditationGroups)
+        .set('smokingPolicyTypes', action.smokingPolicyTypes)
+        .set('userSmokingPolicyGroups', action.userSmokingPolicyGroups)
+        .set('languageTypes', action.languageTypes)
+        .set('userLanguageGroups', action.userLanguageGroups)
         .set('userDetails', action.userDetails);
       
 	  case RESET_MESSAGE:
@@ -258,7 +272,7 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
 		    1
 	    ));
 	    dispatch(loadAccounts());
-	    dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully !!' });
+	    dispatch({ type: ACCOUNT_SUCCESS, message: 'Added Successfully' });
 	    dispatch(internals.resetMessage());
     }
 	  
@@ -272,7 +286,6 @@ export const saveAccount = (accountDetails) => async (dispatch, getState, api) =
 /**
  * updateAccount: used to update account details
  * @param accountDetails
- * @param isAllow
  */
 export const updateAccount = (accountDetails) => async (dispatch, getState, api) => {
   dispatch({ type: ACCOUNT });
@@ -316,7 +329,7 @@ export const updateAccount = (accountDetails) => async (dispatch, getState, api)
 	    type: ACCOUNT_SUCCESS,
 	    users,
 	    selectedUser: !accountDetails.isDeleted ? selectedUser : {},
-	    message: 'Updated Successfully !!'
+	    message: 'Updated Successfully'
     });
 	  dispatch(internals.resetMessage());
    
@@ -332,50 +345,45 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 	
 	try {
 		const { id, email, status } = getState().get('auth').get('user');
-		const userServices = getState().get('account').get('userServices');
+		const userServiceGroups = getState().get('account').get('userServiceGroups');
 		const serviceTypes = getState().get('account').get('serviceTypes');
 		
-		if (strictValidObjectWithKeys(formData) && (strictValidObjectWithKeys(formData.profileDetails) ||
-			strictValidObjectWithKeys(formData.otherDetails))) {
+		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.profileDetails)) {
 			const fileContentObj = Object.assign(
 				{ active: status === 1 ? 'true' : 'false' },
 				formData.profileDetails,
-				{ otherDetails: formData.otherDetails || {} },
 				{ id }
 			);
 			await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			await api.put(`/account/${id}`, { data: formData.profileDetails });
-			await Promise.all(Object.keys(formData.otherDetails).map(detail =>
-				dispatch(internals.addAndDeleteMultipleTypes(formData.otherDetails[detail], detail))
-			));
     } else if (strictValidObjectWithKeys(formData) && strictValidArrayWithLength(formData.userServices)) {
 			const toAddServicesList = [];
 			const toDeleteServicesList = [];
 			
 			formData.userServices.forEach((serviceList, indexOfServiceType) => {
-				const serviceTypesId = serviceTypes[indexOfServiceType].id;
+				const servicetypeId = serviceTypes[indexOfServiceType].id;
 				
 				serviceList.forEach(service => {
 					let isPresentFlag = false;
-					userServices.forEach(serviceType => {
-						if (serviceType.name === service && serviceType.serviceTypesId === serviceTypesId) {
+					userServiceGroups.forEach(serviceType => {
+						if (serviceType.name === service && serviceType.servicetypeId === servicetypeId) {
 							isPresentFlag = true;
 						}
 					});
 					if (!isPresentFlag) {
 						toAddServicesList.push({
 							service,
-							serviceTypesId
+							servicetypeId
 						});
 					}
 				});
 			});
 			
-			userServices.forEach(service => {
+			userServiceGroups.forEach(service => {
 				let indexOfServiceType = -1;
 				
 				serviceTypes.forEach((serviceType, idx) => {
-					if (serviceType.id === service.serviceTypesId) {
+					if (serviceType.id === service.servicetypeId) {
 						indexOfServiceType = idx;
 					}
 				});
@@ -389,7 +397,7 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 				strictValidArrayWithLength(toDeleteServicesList);
 			
 			if (strictValidArrayWithLength(toAddServicesList)) {
-				await api.post(`/services`, { data: { usersId: id, services: toAddServicesList } });
+				await api.post(`/services`, { data: { userId: id, services: toAddServicesList } });
 			}
 			if (strictValidArrayWithLength(toDeleteServicesList)) {
 				await api.post(`/services/delete`, { data: { serviceIds: toDeleteServicesList } });
@@ -403,26 +411,31 @@ export const updateUserProfile = (formData) => async (dispatch, getState, api) =
 				);
 				await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
 			}
-		} else if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.password)) {
-		  const updatePasswordObj = {
-		    email,
-        password: formData.password.password
-      };
-		  
-			await dispatch(updatePassword(updatePasswordObj, true));
-		} else if (strictValidObjectWithKeys(formData) && strictValidArrayWithLength(formData.userSearch)) {
+		} else if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.otherDetails)) {
 			const fileContentObj = Object.assign(
 				{ active: status === 1 ? 'true' : 'false' },
-				{ otherDetails: { searchKeywordType: formData.userSearch } },
+				{ otherDetails: formData.otherDetails || {} },
 				{ id }
 			);
 			await dispatch(internals.updateBitBucketFile(fileContentObj, 2));
-			await Promise.all(dispatch(internals.addAndDeleteMultipleTypes(formData.userSearch, 'searchKeywordType')));
+			await Promise.all(Object.keys(formData.otherDetails).map(detail =>
+				dispatch(internals.addAndDeleteMultipleTypes(formData.otherDetails[detail], detail))
+			));
+		}
+		
+		// Update password if password field is present in formData object
+		if (strictValidObjectWithKeys(formData) && strictValidObjectWithKeys(formData.password)) {
+			const updatePasswordObj = {
+				email,
+				currentPassword: formData.password.currentPassword,
+				newPassword: formData.password.password
+			};
+			await dispatch(updatePassword(updatePasswordObj, true));
 		}
 		
 		await dispatch(loadUserProfileRelatedData());
 		dispatch({ type: LOAD_SUCCESS });
-		dispatch({ type: UPDATED_PROFILE, message: 'Updated Successfully !!' });
+		dispatch({ type: UPDATED_PROFILE, message: 'Updated Successfully' });
 		dispatch(internals.resetMessage());
 	} catch (err) {
 		dispatch({ type: ACCOUNT_FAIL, error: err.message || typeCastToString(err) });
@@ -460,68 +473,38 @@ export const loadUserProfileRelatedData = () => async (dispatch, getState, api) 
 	dispatch({ type: LOAD });
 	
 	try {
-	  const { id } = getState().get('auth').get('user');
-	  
-	  const serviceTypes = await api.get(`/serviceTypes`);
-		const userServices = await api.get(`/services/byUser/${id}`);
-		const genderTypes = await api.get(`/genderTypes`);
-		const userGenderGroups = await api.get(`/genderGroup/byUser/${id}`);
-		const ageTypes = await api.get(`/ageTypes`);
-		const userAgeGroups = await api.get(`/ageGroup/byUser/${id}`);
-		const treatmentFocusTypes = await api.get(`/treatmentFocusTypes`);
-		const userTreatmentFocusGroups = await api.get(`/treatmentFocusGroup/byUser/${id}`);
-		const searchKeywordTypes = await api.get(`/searchKeywordTypes`);
-		const userSearchKeywordGroups = await api.get(`/searchKeywordGroup/byUser/${id}`);
-		
-		dispatch({ type: LOAD_SUCCESS });
-		
-		const userDetailsObj = {
-			serviceTypes: (strictValidObjectWithKeys(serviceTypes) && serviceTypes.rows) || [],
-			userServices: (strictValidObjectWithKeys(userServices) && userServices.rows) || [],
-			genderTypes: (strictValidObjectWithKeys(genderTypes) && genderTypes.rows) || [],
-			userGenderGroups: (strictValidObjectWithKeys(userGenderGroups) && userGenderGroups.rows) || [],
-			ageTypes: (strictValidObjectWithKeys(ageTypes) && ageTypes.rows) || [],
-			userAgeGroups: (strictValidObjectWithKeys(userAgeGroups) && userAgeGroups.rows) || [],
-			treatmentFocusTypes: (strictValidObjectWithKeys(treatmentFocusTypes) && treatmentFocusTypes.rows) || [],
-			userTreatmentFocusGroups:
-			  (strictValidObjectWithKeys(userTreatmentFocusGroups) && userTreatmentFocusGroups.rows) || [],
-			searchKeywordTypes: (strictValidObjectWithKeys(searchKeywordTypes) && searchKeywordTypes.rows) || [],
-			userSearchKeywordGroups:
-				(strictValidObjectWithKeys(userSearchKeywordGroups) && userSearchKeywordGroups.rows) || []
-		};
-		
+		const { id } = getState().get('auth').get('user');
+		let relationalMappedData = await api.get('/common/relationalMappedData', { params: { userId: id } });
+		const userDetailsObj = dispatch (internals.formatRelationalMappedData(relationalMappedData));
+		// for user services do separate processing
 		const serviceType = [];
-		
-		userDetailsObj.userServices.forEach(service => {
-			const indexOfServiceType = service.serviceTypesId - 1;
+		userDetailsObj.userServiceGroups.forEach(service => {
+			const indexOfServiceType = service.servicetypeId - 1;
 			if (!(indexOfServiceType in serviceType)) {
 				serviceType[indexOfServiceType] = [];
 			}
 			serviceType[indexOfServiceType].push(service.name);
 		});
-		
-		const genderType = userDetailsObj.genderTypes
-			.map(v => !!userDetailsObj.userGenderGroups.filter(g => v.status && g.gendertypeId === v.id).length);
-		const ageType = userDetailsObj.ageTypes
-			.map(v => !!userDetailsObj.userAgeGroups.filter(g => v.status && g.agetypeId === v.id).length);
-		const treatmentFocusType = userDetailsObj.treatmentFocusTypes
-			.map(v =>
-				!!userDetailsObj.userTreatmentFocusGroups.filter(g => v.status && g.treatmentfocustypeId === v.id).length
-			);
-		const searchKeywordType = userDetailsObj
-			.searchKeywordTypes
-			.map(v =>
-				!!userDetailsObj.userSearchKeywordGroups.filter(g => v.status && g.searchkeywordtypeId === v.id).length
-			);
-		
-		userDetailsObj.userDetails = Object.assign({}, {
-			serviceType: [],
-			genderType,
-			ageType,
-			treatmentFocusType,
-			searchKeywordType
+		const formValueServiceType = [];
+		USER_SERVICES_LIST.forEach((serviceValuesList, idx) => {
+			if (strictValidArrayWithLength(serviceValuesList) && (idx - 1) in serviceType) {
+				formValueServiceType[idx - 1] = serviceValuesList.map(v => serviceType[idx - 1].indexOf(v) > -1);
+			}
 		});
-		
+		// for other relational data process autonomously
+		const formValuesObj = {};
+		RELATIONAL_MAPPING_INFO_LIST.forEach(v => {
+			// if valid object: v && is not related to serviceTypes
+			const isValidEntryFlag = validObjectWithParameterKeys(
+					v,
+					['primaryTable', 'targetKey', 'formValuesKey', 'reduxStateKey']
+				) && v.primaryTable !== 'serviceTypes';
+			if (isValidEntryFlag) {
+				formValuesObj[v.formValuesKey] = userDetailsObj[v.primaryTable]
+					.map(r => !!userDetailsObj[v.reduxStateKey].filter(g => r.status && g[v.targetKey] === r.id).length);
+			}
+		});
+		userDetailsObj.userDetails = Object.assign({}, { serviceType: formValueServiceType }, formValuesObj);
 		dispatch(Object.assign({}, { type: LOAD_USER_PROFILE_RELATED_DATA }, userDetailsObj));
 		return { serviceType };
   } catch (error) {
@@ -570,24 +553,31 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 		if (!strictValidString(content)) {
 			//Create a new user profile md file
 			dataObj = Object.assign(PROFILE_MD_META_INITIAL_VALUES, fileContentObj);
+		
+			// Transform relative image url to absolute path if relative url exists
+			dataObj.image = dataObj.image
+				? getAbsoluteS3FileUrl(dataObj.image)
+				: DEFAULT_USER_PROFILE_IMAGE_URL;
+		
 			const extraMetaDataKeys = Object
 				.keys(dataObj)
 				.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
 			const validMetaDataKeys = Object.keys(dataObj).filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
-			
 			content = '---\n';
-			
 			validMetaDataKeys.forEach(k => {
 				content += addKeyValuePairAsString(k, dataObj[k], '\n');
 			});
-			
 			extraMetaDataKeys.forEach(k => {
 				content += addKeyValuePairAsString(k, dataObj[k], '\n');
 			});
-			
-			content += addKeyValuePairAsString('gender', '[]', '\n');
-			content += addKeyValuePairAsString('age', '[]', '\n');
-			content += addKeyValuePairAsString('searchKeyword', '[]', '\n');
+			RELATIONAL_MAPPING_INFO_LIST.forEach(v => {
+				// if valid object: v && is not related to serviceTypes
+				const isValidEntryFlag = validObjectWithParameterKeys(v, ['primaryTable', 'secondaryTable']) &&
+					['serviceTypes', 'treatmentFocusTypes'].indexOf(v.primaryTable) <= -1;
+				if (isValidEntryFlag) {
+					content += addKeyValuePairAsString(v.secondaryTable, '[]', '\n');
+				}
+			});
 			content += '---\n\n\n\n';
 		} else {
 			//Replace old file with active true/false
@@ -606,46 +596,20 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 			? getAbsoluteS3FileUrl(sessionUser.image)
 			: (fileContentObj.image ? getAbsoluteS3FileUrl(fileContentObj.image) : DEFAULT_USER_PROFILE_IMAGE_URL);
 		
-		//save other fields from stored state
+		// process serviceTypes & treatmentFocusTypes separately
 		const serviceTypes = getState().get('account').get('serviceTypes');
-		const genderTypes = getState().get('account').get('genderTypes');
-		const ageTypes = getState().get('account').get('ageTypes');
-		const searchKeywordTypes = getState().get('account').get('searchKeywordTypes');
 		const treatmentFocusTypes = getState().get('account').get('treatmentFocusTypes');
-		const userGenderGroups = getState().get('account').get('userGenderGroups');
-		const userAgeGroups = getState().get('account').get('userAgeGroups');
 		const userTreatmentFocusGroups = getState().get('account').get('userTreatmentFocusGroups');
-		const userSearchKeywordGroups = getState().get('account').get('userSearchKeywordGroups');
 		const userServicesValues = (strictValidArrayWithLength(userServices) && userServices) || [];
-		const userGenderValues = await dispatch(internals.getTypeArrayValues('genderType', otherDetails)) ||
-			userGenderGroups.map(g => Object.assign(
-				g,
-				{ checked: true },
-				strictValidArrayWithLength(genderTypes.filter(t => t.id === g.gendertypeId))
-					? genderTypes.filter(t => t.id === g.gendertypeId)[0] : {}
-			));
-		const userAgeValues = await dispatch(internals.getTypeArrayValues('ageType', otherDetails)) ||
-			userAgeGroups.map(g => Object.assign(
-				g,
-				{ checked: true },
-				strictValidArrayWithLength(ageTypes.filter(t => t.id === g.agetypeId))
-					? ageTypes.filter(t => t.id === g.agetypeId)[0] : {}
-			));
-		const userTreatmentFocusValues = await dispatch(internals.getTypeArrayValues('treatmentFocusType', otherDetails)) ||
+		const userTreatmentFocusValues = dispatch(internals.getTypeArrayValues('treatmentFocusType', otherDetails)) ||
 			userTreatmentFocusGroups.map(g => Object.assign(
 				g,
 				{ checked: true },
 				strictValidArrayWithLength(treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId))
 					? treatmentFocusTypes.filter(t => t.id === g.treatmentfocustypeId)[0] : {}
 			));
-		const userSearchKeywordValues = await dispatch(internals.getTypeArrayValues('searchKeywordType', otherDetails)) ||
-			userSearchKeywordGroups.map(g => Object.assign(
-				g,
-				{ checked: true },
-				strictValidArrayWithLength(searchKeywordTypes.filter(t => t.id === g.searchkeywordtypeId))
-					? searchKeywordTypes.filter(t => t.id === g.searchkeywordtypeId)[0] : {}
-			));
 		
+		// save other fields autonomously
 		const extraMetaDataKeys = Object.keys(dataObj)
 			.filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) <= -1 && KEYS_TO_IGNORE_IN_EXTRA_META_FIELDS.indexOf(k) <= -1);
 		const validMetaDataKeys = Object.keys(dataObj).filter(k => MD_FILE_META_DATA_KEYS.indexOf(k) > -1);
@@ -655,26 +619,32 @@ internals.getFileContent = (fileContentObj) => async (dispatch, getState, api) =
 		validMetaDataKeys.forEach(k => {
 			content += addKeyValuePairAsString(k, dataObj[k], '\n');
 		});
-		
 		extraMetaDataKeys.forEach(k => {
 			content += addKeyValuePairAsString(k, dataObj[k], '\n');
 		});
-		
-		content += addKeyValuePairAsString(
-			'gender',
-			`[${userGenderValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
-			'\n'
-		);
-		content += addKeyValuePairAsString(
-			'age',
-			`[${userAgeValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
-			'\n'
-		);
-		content += addKeyValuePairAsString(
-			'searchKeyword',
-			`[${userSearchKeywordValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
-			'\n'
-		);
+		RELATIONAL_MAPPING_INFO_LIST.forEach(v => {
+			// if valid object: v && is not related to serviceTypes
+			const isValidEntryFlag = validObjectWithParameterKeys(
+					v,
+					['primaryTable', 'secondaryTable', 'formValuesKey', 'reduxStateKey', 'targetKey']
+				) && ['serviceTypes', 'treatmentFocusTypes'].indexOf(v.primaryTable) <= -1;
+			if (isValidEntryFlag) {
+				const reduxStateTypeValues = getState().get('account').toJSON()[v.primaryTable];
+				const reduxStateGroupValues = getState().get('account').toJSON()[v.reduxStateKey];
+				const typeValues = dispatch(internals.getTypeArrayValues(v.formValuesKey, otherDetails)) ||
+					reduxStateGroupValues.map(g => Object.assign(
+						g,
+						{ checked: true },
+						strictValidArrayWithLength(reduxStateTypeValues.filter(t => t.id === g[v.targetKey]))
+							? reduxStateTypeValues.filter(t => t.id === g[v.targetKey])[0] : {}
+					));
+				content += addKeyValuePairAsString(
+					v.secondaryTable,
+					`[${typeValues.filter(v => v.checked).map(v => v.name).join(', ')}]`,
+					'\n'
+				);
+			}
+		});
 		content += '---\n\n\n\n';
 		
 		if (strictValidArrayWithLength(serviceTypes)) {
@@ -731,7 +701,7 @@ internals.getBitBucketFileData = (path) => async (dispatch, getState, api) => {
 	}
 };
 
-internals.getTypeArrayValues = (type, dataObj) => async (dispatch, getState) => (
+internals.getTypeArrayValues = (type, dataObj) => (dispatch, getState) => (
 	validObjectWithParameterKeys(dataObj, [type]) &&
 	strictValidArrayWithLength(dataObj[type]) &&
 	dataObj[type].map((v, k) => Object.assign(
@@ -750,7 +720,8 @@ internals.addAndDeleteMultipleTypes = (formTypeValuesList, type) => async (dispa
 		
 		if (isValidDataFlag) {
 			const currentTypeValuesList = getState().get('account').get('userDetails')[type] || [];
-			const urlFragment = type.substr(0, type.length - 4) + 'Group';
+			const indexOfRelation = RELATIONAL_MAPPING_INFO_LIST.findIndex(r => r.formValuesKey === type);
+			const relation = RELATIONAL_MAPPING_INFO_LIST[indexOfRelation];
 			
 			formTypeValuesList.forEach((formTypeValue, idx) => {
 				const typeId = (strictValidObjectWithKeys(typesList[idx]) && typesList[idx].id) || -1;
@@ -762,15 +733,65 @@ internals.addAndDeleteMultipleTypes = (formTypeValuesList, type) => async (dispa
 					}
 				}
 			});
+			
 			if (strictValidArrayWithLength(addList)) {
-				await api.post(`/${urlFragment}`, { data: { userId: id, ids: addList } });
+				const dataListOfObjects = addList.map(v => ({ userId: id, [relation.targetKey]: v }));
+				await api.post(`/common/bulkInsert`, { data: { table: relation.secondaryTable, dataListOfObjects } });
 			}
 			if (strictValidArrayWithLength(deleteList)) {
-				await api.post(`/${urlFragment}/delete`, { data: { userId: id, typeIds: deleteList } });
+				const whereObj = { userId: id, [relation.targetKey]: { $in: deleteList } };
+				await api.post(`/common/bulkDelete`, { data: { table: relation.secondaryTable, whereObj } });
 			}
 			return true;
 		}
 	} catch (err) {
 		return false;
 	}
+};
+
+internals.formatRelationalMappedData = relationalMappedData => () => {
+	let groupsKeyObject = {};
+	let groupsValuesObject = {};
+	
+	if (strictValidArrayWithLength(relationalMappedData)) {
+		relationalMappedData.forEach((v, k) => {
+			const isValidEntryObjectFlag = validObjectWithParameterKeys(v, ['count', 'rows']) &&
+				validObjectWithParameterKeys(
+					RELATIONAL_MAPPING_INFO_LIST[k],
+					['primaryTable', 'reduxStateKey', 'dataIncludeKey']
+				);
+			
+			if (isValidEntryObjectFlag) {
+				const { primaryTable, reduxStateKey, dataIncludeKey } = RELATIONAL_MAPPING_INFO_LIST[k];
+				const uniqueValidIds = [...new Set(v
+					.rows
+					.filter((r, i) => validObjectWithParameterKeys(r, ['id', 'name']))
+					.map(r => r.id)
+				)];
+				groupsKeyObject[primaryTable] = [];
+				v.rows.forEach((r, i) => {
+					if (uniqueValidIds.indexOf(r.id) > -1) {
+						let toPushFlag = true;
+						if (i && r.id === v.rows[i - 1].id) {
+							toPushFlag = false;
+						}
+						if (toPushFlag) {
+							const toPushObject = Object.assign({}, r);
+							delete toPushObject[dataIncludeKey];
+							groupsKeyObject[primaryTable].push(toPushObject);
+						}
+					}
+				});
+				groupsValuesObject[reduxStateKey] = [...new Set(v
+					.rows
+					.filter(r =>
+						validObjectWithParameterKeys(r, ['id', dataIncludeKey]) &&
+						validObjectWithParameterKeys(r[dataIncludeKey], ['id'])
+					)
+					.map(r => r[dataIncludeKey])
+				)];
+			}
+		});
+	}
+	return Object.assign({}, groupsKeyObject, groupsValuesObject);
 };

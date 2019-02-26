@@ -1,7 +1,7 @@
 const joi = require('joi');
-const Boom = require('boom');
-const jwtHelper = require('../../helpers/jwtHelper');
+const boom = require('boom');
 const accountService = require('../../services/accountService');
+const jwtHelper = require('../../helpers/jwtHelper');
 
 module.exports = {
   plugins: {
@@ -39,9 +39,9 @@ module.exports = {
       }
     } catch(err) {
       if (err && err.message === 'jwt expired') {
-        return Boom.badRequest("Link is expired");
+        return boom.badRequest("Link is expired");
       } else {
-	      return Boom.badRequest(JSON.stringify(err));
+	      return boom.badRequest(JSON.stringify(err));
       }
     }
   }

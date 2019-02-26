@@ -94,6 +94,8 @@ module.exports = {
       return boom.badRequest(err);
     };
 	  
+    payload.sendInvitationEmailFlag = true;
+    
     return accountService
       .createUser(payload)
       .then((data) => h.response(data))

@@ -14,16 +14,18 @@ module.exports = {
   },
   aws: {
     s3: {
-      bucketWrite: 'compass-original',
-      bucket: 'compass-production'
+      bucketWrite: '',
+      bucket: '',
+	    s3Url: ``
     }
   },
 	stripe: {
-		secretKey: 'sk_test_3akdpHjSXOigyyxlkwn91lMw',
-		planId: 'plan_EMHodgPZFnpPvS'
+		secretKey: '',
+		planId_Individual: '',
+		planId_Facility: ''
 	},
   BasePath:{
-    host: "https://app.fan.com"
+    host: ""
   },
   emailUrl:{
     host: 'smtps://username:password@smtp.example.com/?pool=true'

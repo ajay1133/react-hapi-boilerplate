@@ -11,10 +11,25 @@ export default class S3FileUploader extends React.Component {
       signingUrl: PropTypes.string.isRequired,
       onFileUpload: PropTypes.func.isRequired,
       resetOnComplete: PropTypes.func,
-	    toShowContent: PropTypes.string
+	    toShowContent: PropTypes.oneOfType([ PropTypes.string, PropTypes.object ]),
+	    toShowContentIcon: PropTypes.bool
     };
   }
-  
+	
+	static defaultProps = {
+		toShowContentIcon: true,
+		toShowContent: ' Drag & Drop or Select a file to upload',
+    toShowContentStyle: {
+	    borderWidth: '2px',
+	    borderColor: '#000',
+	    borderStyle: 'dashed',
+	    borderRadius: '2px',
+	    padding: '5px',
+	    width: '73%',
+	    margin: '15px auto',
+    }
+  };
+	
   static get contextTypes () {
     return {
       store: PropTypes.object
@@ -55,31 +70,19 @@ export default class S3FileUploader extends React.Component {
   };
   
   render () {
-    const { fileName, signingUrl, onFileUpload, toShowContent } = this.props;
+    const { fileName, signingUrl, onFileUpload, toShowContentIcon, toShowContent, toShowContentStyle } = this.props;
     const { files } = this.state;
-    
-    const style = {
-      borderWidth: '2px',
-      borderColor: '#000',
-      borderStyle: 'dashed',
-      borderRadius: '2px',
-      padding: '5px',
-	    width: '73%',
-	    margin: '15px auto',
-    };
-    
-    const defaultContent = ' Drag & Drop or Select a file to upload';
     
     return (
       <div style={{ cursor: 'cross-hair' }}>
         <DropZone
           multiple={ false }
           onDrop={ this.onDrop }
-          style={ style }
+          style={ toShowContentStyle }
         >
           <div className="text-center">
-            <Icon size="big" name="cloud upload" />
-            { toShowContent || defaultContent }
+            { toShowContentIcon && <Icon size="big" name="cloud upload" /> }
+            { toShowContent }
           </div>
         </DropZone>
         {

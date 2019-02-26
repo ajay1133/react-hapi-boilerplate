@@ -1,6 +1,7 @@
 const db = require('../db');
 const logger = require('./logHelper');
 
+
 exports.checkDbConnection = () => new Promise((resolve, reject) => {
   db
     .authenticate()

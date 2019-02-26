@@ -47,12 +47,15 @@ a, i {
 .minWidth130{
 	min-width: 130px !important;
 }
-.full-height {
-	height: 100%;
-}
+/*.full-height {*/
+	/*height: 100%;*/
+/*}*/
 .ui.visible.left.overlay.sidebar {
 	position: fixed !important;
 	height: 100% !important;
+}
+.ui.segment:last-child {
+	margin: 1rem 0em;
 }
 .mainLogin {
 	text-align: center;
@@ -93,7 +96,7 @@ a, i {
 	padding: 10px 0;
 	color: #fff;
 }
-.centered.loginOuter {
+.loginForm .ui.segment.centered.loginOuter {
 	border: transparent;
 	box-shadow: unset;
 }
@@ -156,11 +159,11 @@ a, i {
 .bg-danger{
 	box-shadow: 11px 0px 0px -6px #E22B2B inset;
 }
-.ui.thin.left.sidebar, .ui.thin.right.sidebar {
+.pushable .ui.thin.left.sidebar, .ui.thin.right.sidebar {
 	width: 300px;
 	background: linear-gradient(205deg, #3D74FF 0%, #0142E5 100%);
 }
-.ui.visible.thin.left.sidebar ~ .fixed, .ui.visible.thin.left.sidebar ~ .pusher {
+.pushable .ui.visible.thin.left.sidebar ~ .pusher{
 	-webkit-transform: translate3d(150px, 0, 0);
 	transform: translate3d(300px, 0, 0);
 	padding-right: 310px;
@@ -169,9 +172,11 @@ button.ui.button.hide {
 	display: none;
 }
 .ui.segment.pushable {
+	height: auto;
 	margin: 0;
+	min-height: 100%;
 }
-.ui.menu {
+.ui.borderless.menu {
 	display: -ms-flexbox;
 	display: flex;
 	margin: 1rem 0em;
@@ -184,6 +189,12 @@ button.ui.button.hide {
 	box-shadow: 0px 1px 2px 0 rgba(34, 36, 38, 0);
 	border-radius: 0;
 	min-height: 3.857143em;
+}
+.pusher .ui.segment:last-child {
+	margin: 0;
+}
+.full-height{
+	height:100%;
 }
 .innerData .row {
 	margin: 0;
@@ -364,6 +375,9 @@ span.statusPending, .statusDenied, .statusActive {
 }
 .hand-pointer:hover div {
 	color: #000;
+}
+.radioBtn {
+	margin-right: 30px;
 }
 @media only screen and (max-width: 767px) {
 	.blueBg {

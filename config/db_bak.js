@@ -2,14 +2,14 @@ module.exports = {
     development: {
       username: 'root',
       password: 'root',
-      database: 'compass',
+      database: 'shareCabs',
       host: 'localhost',
       dialect: 'mysql'
     },
     test: {
       username: 'root',
       password: null,
-      database: 'compass_test',
+      database: 'shareCabs_test',
       host: '127.0.0.1',
       dialect: 'mysql'
     },

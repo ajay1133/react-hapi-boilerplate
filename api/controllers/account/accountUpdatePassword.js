@@ -1,8 +1,8 @@
 const joi = require('joi');
-const Boom = require('boom');
-const jwtHelper = require('../../helpers/jwtHelper');
+const boom = require('boom');
 const accountService = require('../../services/accountService');
-const config = require("config");
+const jwtHelper = require('../../helpers/jwtHelper');
+const i18n = require('../../helpers/i18nHelper');
 
 module.exports = {
   plugins: {
@@ -28,17 +28,22 @@ module.exports = {
 
   handler: async (request, h) => {
     const payload = request.payload;
+    
     try {
       let userdata = await jwtHelper.verify(payload.inviteToken);
       if (userdata.email) {
-        let result = await accountService.updatePassword({password: payload.password, email: userdata.email, inviteToken: '', inviteStatus: 1 });
-        return result;
+        return await accountService.updatePassword({
+          password: payload.password,
+          email: userdata.email,
+          inviteToken: '',
+          inviteStatus: 1
+        });
       }
     } catch(err) {
       if (err && err.message === 'jwt expired') {
-        return Boom.badImplementation(i18n('plugins.auth.expired'));
+        return boom.badImplementation(i18n('plugins.auth.expired'));
       }
-      return Boom.badImplementation(err);
+      return boom.badImplementation(err);
     }
   }
 };

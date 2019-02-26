@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import { Button, Form, Segment, Message } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
-import { login, forgotPassword, load } from '../../redux/modules/auth';
+import queryString from 'query-string';
+import { login, forgotPassword } from '../../redux/modules/auth';
 import { connect } from 'react-redux';
 import { reduxForm } from 'redux-form/immutable';
 import { Input } from '../../components/Form';
+import { validObjectWithParameterKeys } from '../../utils/commonutils';
 import { required, email } from '../../utils/validations';
 import '../../style/css/style.css';
 
@@ -29,7 +31,8 @@ export default class Login extends Component {
     loginError: PropTypes.string,
 	  passwordUpdated: PropTypes.bool,
 	  passwordUpdatedMsg: PropTypes.string,
-    loginMsg: PropTypes.string
+    loginMsg: PropTypes.string,
+	  match: PropTypes.object
   };
   
   state = {
@@ -44,12 +47,18 @@ export default class Login extends Component {
     loginError: ''
   };
 
-  componentDidMount() {
-    const { dispatch } = this.props;
-    dispatch(load());
+  componentDidMount = async () => {
+    const { dispatch, location } = this.props;
+	  const { token } = (
+	    validObjectWithParameterKeys(location, ['search']) && location.search &&
+      queryString.parse(location.search)
+    ) || {};
+    if (token) {
+	    await dispatch(login({ token }));
+    }
   };
-
-  _login = async (formData) => {
+	
+	handleLogin = async (formData) => {
     const { showForgotPasswordFlag } = this.state;
     const { dispatch } = this.props;
     const { email, password } = formData.toJS() || {};
@@ -57,7 +66,7 @@ export default class Login extends Component {
     if (showForgotPasswordFlag) {
       await dispatch(forgotPassword(email));
     } else {
-      await dispatch(login(email, password));
+      await dispatch(login({ email, password }));
     }
   };
   
@@ -70,11 +79,12 @@ export default class Login extends Component {
   
   render() {
     const {
-      handleSubmit, isLoading, loginBusy, loginError, passwordUpdated, passwordUpdatedMsg, loginMsg
+      handleSubmit, isLoading, loginBusy, loginError, passwordUpdated, passwordUpdatedMsg, loginMsg, user
     } = this.props;
     const { showForgotPasswordFlag } = this.state;
     
     return (
+      !validObjectWithParameterKeys(user, ['id']) &&
       <Segment className="centered loginOuter">
         {
           ((passwordUpdated && passwordUpdatedMsg) || loginMsg) &&
@@ -82,7 +92,7 @@ export default class Login extends Component {
             <span style={{ color: 'green' }}>{ passwordUpdatedMsg || loginMsg }</span>
           </Message>
         }
-        <Form className="login-form" onSubmit={handleSubmit(this._login)}>
+        <Form className="login-form" onSubmit={handleSubmit(this.handleLogin)}>
           <Input
             className="username"
             name="email"
@@ -125,7 +135,7 @@ export default class Login extends Component {
         {
           !showForgotPasswordFlag &&
           <p className="pt-1 m-0 text-center">
-            <div clasName="hand-pointer" onClick={ this.showForgotPassword }>
+            <div className="hand-pointer" onClick={ this.showForgotPassword }>
               Forgot your password ?
             </div>
           </p>

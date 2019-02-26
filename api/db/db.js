@@ -1,10 +1,12 @@
-const sequelize = require('sequelize');
+const Sequelize = require('sequelize');
 const config = require('config');
 const settings = config.db;
 const globalHooks = require('./globalHooks');
+const constants = require('../constants');
+const path = require('path');
+const fs = require('fs');
 
-const Op = sequelize.Op;
-
+const Op = Sequelize.Op;
 const operatorsAliases = {
   $eq: Op.eq,
   $ne: Op.ne,
@@ -42,21 +44,51 @@ const operatorsAliases = {
   $col: Op.col
 };
 
-const db = new sequelize(settings.database, settings.username, settings.password, {
-    host: settings.host,
-    dialect: 'mysql',
-    port: settings.port || 3306,
-    pool: {
-      max: 5,
-      min: 0,
-    },
-    operatorsAliases,
-    define: globalHooks
-  }
-);
+const db = new Sequelize(settings.database, settings.username, settings.password, {
+  host: settings.host,
+  dialect: 'mysql',
+  port: settings.port || 3306,
+  pool: {
+    max: 5,
+    min: 0,
+  },
+  operatorsAliases,
+  define: globalHooks
+});
 
 db.models = {};
-db.models.users = db.import('./models/users');
+const dbModelsDirAbsPath = path.resolve(__dirname, './models');
+
+// Read ./models directory in db folder and assign to db.models object
+fs.readdirSync(dbModelsDirAbsPath).forEach(file => {
+	const fileName = path.parse(file).name;
+	const fileExt = path.parse(file).ext;
+	if (fileName && fileExt.toLowerCase() === '.js') {
+		db.models[fileName] = db.import(`./models/${fileName}`);
+	}
+});
+
+console.log('db.models => ', db.models);
+// Associations
+constants.RELATIONAL_MAPPING_LIST.forEach(v => {
+  const parameterKeysList = [v.primaryTable, v.secondaryTable];
+  // Check if primaryTable & secondaryTable exists in db.models object
+  if (Object.keys(db.models).filter(r => parameterKeysList.indexOf(r) > -1).length === parameterKeysList.length) {
+	  // create association
+	  db.models[`${v.secondaryTable}`]
+		  .hasMany(db.models[`${v.secondaryTable}`], { foreignKey: 'id' });
+	  db.models[`${v.primaryTable}`]
+		  .belongsTo(db.models[`${v.secondaryTable}`], { foreignKey: 'id', targetKey: v.targetKey });
+  } else {
+    console.log('Invalid db models entry in Relational Mapping List', v.primaryTable, v.secondaryTable);
+  }
+});
+
+//Hooks
+//User Hooks
+db.models.users.addHook('afterCreate', 'sendInviteLink', (user, options) => {
+  console.log("User Created");
+});
 
 // Export
 module.exports = db;

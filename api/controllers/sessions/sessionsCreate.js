@@ -1,5 +1,5 @@
 const joi = require('joi');
-const Boom = require('boom');
+const boom = require('boom');
 const sessionService = require('../../services/sessionService');
 const jwtHelper = require('../../helpers/jwtHelper');
 
@@ -12,33 +12,47 @@ module.exports = {
 
   tags: ['api', 'session'],
 
-  description: 'Create session',
+  description: 'Create session either via token or by email/password',
 
-  notes: 'User web login or mobile login',
+  notes: 'User login through token generation or input email/password',
 
   validate: {
     query: {
-      jwt: joi.number().valid(0, 1).default(0).description('set 1 to get jwt token'),
+      jwt: joi.number()
+              .valid(0, 1)
+              .default(0)
+              .description('set 1 to get jwt token'),
     },
     
     payload: {
-      email: joi.string().email().max(250).required(),
-      password: joi.string().max(250).required(),
+	    token: joi.string()
+	              .optional(),
+      email: joi.string()
+                .optional()
+                .allow(['', null]),
+      password: joi.string()
+                   .optional()
+                   .allow(['', null])
     },
     
     options: { abortEarly: false },
   },
 
   handler: async (request, h) => {
-    const payload = request.payload;
+    const { token, email, password } = request.payload;
     
     const onError = (err) => {
-      throw Boom.badRequest(err);
+      throw boom.badRequest(err);
     };
-
+	
+	  let user = {};
     try {
-      let user = await sessionService.authenticate(payload.email, payload.password);
-      
+	    if (token) {
+	      const decryptedData = await jwtHelper.verify(token);
+		    user = await sessionService.authenticate(decryptedData.email, decryptedData.password);
+      } else if (email && password) {
+	      user = await sessionService.authenticate(email, password);
+      }
       if (user && user.id) {
         let scope = ['user'];
         
@@ -67,7 +81,5 @@ module.exports = {
     } catch(err) {
       onError("Invalid Email or Password");
     }
-
   },
-
 };

@@ -7,7 +7,7 @@ const ChkBox = ({ input, label, meta, ...custom }) => {
   const name = (input && input.name) || custom.name;
   const value = ((input && input.value) || custom.value || custom.defaultValue || '').toString();
   const onChange = (input && input.onChange) || custom.onChange;
-
+  
   const handleChange = (e, { checked }) => {
     if (onChange) {
       onChange(checked);

@@ -1,8 +1,9 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
+import queryString from 'querystring';
 import { Field, reduxForm, formValueSelector, SubmissionError } from 'redux-form/immutable';
-import { Grid, Message, Loader, Tab, Header, Button, Form, Image } from  'semantic-ui-react';
+import { Grid, Message, Loader, Header, Button, Form } from  'semantic-ui-react';
 import { TextBox, TextArea, CheckBox, DropDown } from '../../components/Form';
 import { required, email, normalizePhone, url, passwordValidator, isValidZip } from '../../utils/validations';
 import {
@@ -10,27 +11,17 @@ import {
 	typeCastToString,
 	strictValidArrayWithLength,
 	validObjectWithParameterKeys,
-	getAbsoluteS3FileUrl,
-	validFileName,
-	strictValidString,
 	getOptionsListFromArray
 } from '../../utils/commonutils';
 import {
-	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
+	DEFAULT_ACTIVE_TAB_INDEX,
+	STATES_LIST,
 	USER_PROFILE_TABS,
-	USER_PROFILE_DETAILS_FORM_KEYS,
-	USER_PASSWORD_SECTION_FORM_KEYS,
-	VALID_ACCESSIBLE_IMAGE_FILE_FORMATS,
-	DEFAULT_USER_PROFILE_IMAGE_URL,
-	IMAGE_FILE_NAME_BEGIN_REG_EXP,
-	USER_SERVICES_LIST,
-	US_STATES_LIST
+	RELATIONAL_MAPPING_INFO_LIST
 } from '../../utils/constants';
 import { verifyUser } from '../../redux/modules/auth';
 import { loadUserProfileRelatedData, updateUserProfile } from '../../redux/modules/account';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
-import S3FileUploader from '../../components/S3FileUploader';
-import config from '../../config';
 import _ from 'lodash';
 import '../../style/css/style.css';
 
@@ -47,37 +38,9 @@ const selector = formValueSelector('profileForm');
 	loadErr: state.get('auth').get('loadErr'),
 	accountMsg: state.get('account').get('accountMsg'),
 	accountErr: state.get('account').get('accountErr'),
-	serviceTypes: state.get('account').get('serviceTypes'),
-	userServices: state.get('account').get('userServices'),
-	genderTypes: state.get('account').get('genderTypes'),
-	userGenderGroups: state.get('account').get('userGenderGroups'),
-	ageTypes: state.get('account').get('ageTypes'),
-	userAgeGroups: state.get('account').get('userAgeGroups'),
-	treatmentFocusTypes: state.get('account').get('treatmentFocusTypes'),
-	userTreatmentFocusGroups: state.get('account').get('userTreatmentFocusGroups'),
-	searchKeywordTypes: state.get('account').get('searchKeywordTypes'),
-	userSearchKeywordGroups: state.get('account').get('userSearchKeywordGroups'),
 	currentPassword: selector(state, 'currentPassword'),
-	serviceTypesValuesList: (
-		selector(state, 'serviceType') &&
-		strictValidObjectWithKeys(selector(state, 'serviceType')) &&
-		selector(state, 'serviceType').toJSON()) || [],
-	genderTypesValuesList: (
-		selector(state, 'genderType') &&
-		strictValidObjectWithKeys(selector(state, 'genderType')) &&
-		selector(state, 'genderType').toJSON()) || [],
-	ageTypesValuesList: (
-		selector(state, 'ageType') &&
-		strictValidObjectWithKeys(selector(state, 'ageType')) &&
-		selector(state, 'ageType').toJSON()) || [],
-	treatmentFocusTypesValuesList: (
-		selector(state, 'treatmentFocusType') &&
-		strictValidObjectWithKeys(selector(state, 'treatmentFocusType')) &&
-		selector(state, 'treatmentFocusType').toJSON()) || [],
-	searchKeywordTypesValuesList: (
-		selector(state, 'searchKeywordType') &&
-		strictValidObjectWithKeys(selector(state, 'searchKeywordType')) &&
-		selector(state, 'searchKeywordType').toJSON()) || [],
+	password: selector(state, 'password'),
+	confirmPassword: selector(state, 'confirmPassword')
 }))
 @reduxForm({
 	form: 'profileForm',
@@ -93,21 +56,9 @@ export default class Profile extends Component {
 		accountMsg: PropTypes.string,
 		accountErr: PropTypes.string,
 		error: PropTypes.string,
-		serviceTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		userServices: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		genderTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		userGenderGroups: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		ageTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		userAgeGroups: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		treatmentFocusTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		userTreatmentFocusGroups: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		searchKeywordTypes: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		userSearchKeywordGroups: PropTypes.oneOfType([ PropTypes.array, PropTypes.object ]),
-		serviceTypesValuesList: PropTypes.array,
-		genderTypesValuesList: PropTypes.array,
-		ageTypesValuesList: PropTypes.array,
-		treatmentFocusTypesValuesList: PropTypes.array,
-		searchKeywordTypesValuesList: PropTypes.array
+		currentPassword: PropTypes.string,
+		password: PropTypes.string,
+		confirmPassword: PropTypes.string
 	};
 	
 	static defaultProps = {
@@ -117,95 +68,63 @@ export default class Profile extends Component {
 	
 	state = {
 		loading: true,
-		imageLoading: false,
 		showMessageFlag: true,
-		userVerifiedFlag: false,
-		activeTab: USER_PROFILE_TABS[0] || null,
+		activeTabIndex: DEFAULT_ACTIVE_TAB_INDEX,
 		serviceTypesFieldArray: [],
-		serviceErrorStr: null,
-		uploadProfileImageUrl: null,
-		uploadProfileImageName: null,
-		uploadProfileImageError: null
+		serviceErrorStr: null
 	};
 	
 	constructor(props) {
 		super(props);
 		this.handleSubmit = this.handleSubmit.bind(this);
-		this.handleProfileImageFinishedUpload = this.handleProfileImageFinishedUpload.bind(this);
-		this.resetProfileImageOnComplete = this.resetProfileImageOnComplete.bind(this);
 	};
 	
 	componentDidMount = async () => {
-		const { dispatch, user } = this.props;
+		const { dispatch, location } = this.props;
+		const { q } = (validObjectWithParameterKeys(location, ['search']) &&
+			queryString.parse(location.search.substring(1))) || {};
+		
 		try {
-			this.setState({ uploadProfileImageUrl: user.image });
 			const res = await dispatch(loadUserProfileRelatedData());
-			if (strictValidObjectWithKeys(res) && strictValidArrayWithLength(res.serviceType)) {
+			if (validObjectWithParameterKeys(res, ['serviceType'])) {
 				this.setState({ serviceTypesFieldArray: res.serviceType });
 			}
-			this.setState({ loading: false });
+			this.setState({
+				loading: false,
+				activeTabIndex: this.getActiveTabIndex(q)
+			});
 		} catch (e) {
-			this.setState({ loading: false });
+			this.setState({
+				loading: false,
+				activeTabIndex: this.getActiveTabIndex(q)
+			});
 		}
 	};
 	
-	messageDismiss = () => this.setState({showMessageFlag: false});
-	
-	addRemoveInput = async (e, action, serviceTypeIndex, idx) => {
-		const { serviceTypes = [], serviceTypesValuesList } = this.props;
-		let { serviceTypesFieldArray } = this.state;
+	shouldComponentUpdate = async (nextProps) => {
+		const { location } = nextProps;
+		const { activeTabIndex } = this.state;
+		const { q } = (validObjectWithParameterKeys(location, ['search']) &&
+			queryString.parse(location.search.substring(1))) || {};
 		
-		if (!(serviceTypeIndex in serviceTypes)) {
-			return false;
+		if (this.getActiveTabIndex(q) !== activeTabIndex) {
+			this.setState({ activeTabIndex: this.getActiveTabIndex(q) });
 		}
-		
-		let serviceErrorStr = null;
-		
-		if (action === 'add') {
-			const newServiceToAdd = serviceTypesValuesList[serviceTypeIndex];
-			if (!(serviceTypeIndex in serviceTypesFieldArray)) {
-				serviceTypesFieldArray[serviceTypeIndex] = [];
-			}
-			
-			const servicesData = strictValidArrayWithLength(serviceTypesFieldArray) &&
-			serviceTypeIndex in serviceTypesFieldArray ? serviceTypesFieldArray[serviceTypeIndex] : [];
-			
-			const isValidNewServiceFlag = !!newServiceToAdd && !servicesData.filter(s => s === newServiceToAdd).length;
-			
-			if (isValidNewServiceFlag) {
-				serviceTypesFieldArray[serviceTypeIndex].push(newServiceToAdd);
-			} else {
-				if (!newServiceToAdd) {
-					serviceErrorStr = 'Service cannot be empty';
-				} else if (!!servicesData.filter(s => s === newServiceToAdd).length) {
-					serviceErrorStr = 'Service already exists';
-				}
-			}
-		} else if (action === 'remove') {
-			if (!(idx in serviceTypesFieldArray[serviceTypeIndex])) {
-				return false;
-			}
-			serviceTypesFieldArray[serviceTypeIndex].splice(idx, 1);
-		}
-		
-		this.setState({
-			serviceTypesFieldArray,
-			serviceErrorStr
-		});
-		
-		setTimeout(() => this.setState({ serviceErrorStr: null }), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
-		this.props.change('serviceType', []);
 	};
-
-	getProfileTabsSection = () => {
-		const { genderTypes = [], ageTypes = [], treatmentFocusTypes = [] } = this.props;
-		const { uploadProfileImageError, uploadProfileImageUrl, imageLoading } = this.state;
-		
+	
+	getActiveTabIndex = q => {
+		const qIndex = USER_PROFILE_TABS.findIndex(v => strictValidObjectWithKeys(v, ['tabName']) && v.tabName === q);
+		return qIndex > -1 ? qIndex : DEFAULT_ACTIVE_TAB_INDEX;
+	};
+	
+	messageDismiss = () => this.setState({ showMessageFlag: false });
+	
+	getPersonalInfoSection = () => {
 		return (
 		  <Grid>
 			  <Grid.Row>
 				  <Grid.Column computer="10">
-					  <Header size='medium'>Profile Details</Header>
+					  <Header size='medium'>Personal Info</Header>
 					  <Grid>
 						  <Grid.Row columns={2}>
 							  <Grid.Column>
@@ -213,7 +132,6 @@ export default class Profile extends Component {
 									  name="title"
 									  placeholder="Title"
 									  component={TextBox}
-									  validate={required}
 								  />
 							  </Grid.Column>
 							  <Grid.Column>
@@ -270,7 +188,7 @@ export default class Profile extends Component {
 									  noResultsMessage="No results found"
 									  name="state"
 									  placeholder="State"
-									  options={ getOptionsListFromArray(US_STATES_LIST) }
+									  options={ getOptionsListFromArray(STATES_LIST) }
 									  component={DropDown}
 								  />
 							  </Grid.Column>
@@ -301,319 +219,62 @@ export default class Profile extends Component {
 								  />
 							  </Grid.Column>
 						  </Grid.Row>
-						  <Grid.Row celled="internally">
-							  <Grid.Column width="16" className="mb-10">
-								  <h4>Gender :</h4>
-							  </Grid.Column>
-							  <Grid.Column width="16">
-								  <Grid columns="3">
-									  <Grid.Row className="newServices">
-										  {
-											  genderTypes.map((genderType, idx) => (
-												  <Grid.Column key={idx}>
-													  <Field
-														  name={ `genderType[${idx}]` }
-														  component={CheckBox}
-														  label={ genderType.name }
-													  />
-												  </Grid.Column>
-											  ))
-										  }
-									  </Grid.Row>
-								  </Grid>
-							  </Grid.Column>
-						  </Grid.Row>
-						  <Grid.Row>
-							  <Grid.Column width="16" className="mb-10">
-								  <h4>Age :</h4>
-							  </Grid.Column>
-							  <Grid.Column width="16">
-								  <Grid columns="3">
-									  <Grid.Row className="newServices">
-										  {
-											  ageTypes.map((ageType, idx) => (
-											    <Grid.Column>
-													  <Field
-														  name={ `ageType[${idx}]` }
-														  component={CheckBox}
-														  label={ ageType.name }
-													  />
-												  </Grid.Column>
-											  ))
-										  }
-									  </Grid.Row>
-								  </Grid>
-							  </Grid.Column>
-						  </Grid.Row>
-						  <Grid.Row>
-							  <Grid.Column width="16" className="mb-10">
-								  <h4>Insurance :</h4>
-							  </Grid.Column>
-							  <Grid.Column width="16">
-								  <Grid columns="3">
-									  <Grid.Row className="newServices">
-										  {
-											  treatmentFocusTypes.map((treatmentFocusType, idx) => (
-												  <Grid.Column>
-													  <Field
-														  name={ `treatmentFocusType[${idx}]` }
-														  component={CheckBox}
-														  label={ treatmentFocusType.name }
-													  />
-												  </Grid.Column>
-											  ))
-										  }
-									  </Grid.Row>
-								  </Grid>
-							  </Grid.Column>
-						  </Grid.Row>
 					  </Grid>
-				  </Grid.Column>
-				  <Grid.Column computer="6">
-					  {
-						  !!uploadProfileImageError &&
-						  <Grid.Row columns="1" className="mb-10">
-							  <Grid.Column>
-								  <span style={{ color: 'red' }}>{ uploadProfileImageError }</span>
-							  </Grid.Column>
-						  </Grid.Row>
-					  }
-					  <Grid.Row>
-						  <Grid.Column>
-							  {
-								  imageLoading &&
-								  <Loader active inline='centered'>Loading...</Loader>
-							  }
-							  {
-							  	!imageLoading &&
-								  <Image
-									  src={ getAbsoluteS3FileUrl(uploadProfileImageUrl) || DEFAULT_USER_PROFILE_IMAGE_URL }
-									  size="medium"
-									  rounded
-									  alt="image"
-									  centered
-								  />
-							  }
-						  </Grid.Column>
-					  </Grid.Row>
-					  <Grid.Row>
-						  <Grid.Column computer="4" className="profileUploader">
-							  <S3FileUploader
-								  signingUrl={`${config.apiHost}/aws/uploadFile/profileImages`}
-								  onFileUpload={ this.handleProfileImageFinishedUpload }
-								  resetOnComplete={ this.resetProfileImageOnComplete }
-								  toShowContent={ ' Change Photo' }
-							  />
-						  </Grid.Column>
-					  </Grid.Row>
 				  </Grid.Column>
 			  </Grid.Row>
 		  </Grid>
 		);
 	};
 	
-	getUserServicesSection = () => {
-  	const { serviceTypes = [] } = this.props;
-  	const { serviceTypesFieldArray, serviceErrorStr } = this.state;
+	getRelationalDataSection = (relationDataListIndex) => {
+		const userTabInfoObject = (USER_PROFILE_TABS
+			.find(v =>
+				validObjectWithParameterKeys(v, ['tabName', 'relationalMappingInfoListIndex']) &&
+				v.relationalMappingInfoListIndex === relationDataListIndex
+			)) || {};
+		const relationalDataObject = (
+				strictValidArrayWithLength(RELATIONAL_MAPPING_INFO_LIST) &&
+				relationDataListIndex in RELATIONAL_MAPPING_INFO_LIST &&
+				validObjectWithParameterKeys(
+					RELATIONAL_MAPPING_INFO_LIST[relationDataListIndex],
+					['primaryTable', 'formValuesKey']
+				) &&
+				RELATIONAL_MAPPING_INFO_LIST[relationDataListIndex]
+			) || {};
 		
-  	const renderServiceTypesSection = strictValidArrayWithLength(serviceTypes) &&
-		  serviceTypes.map((serviceType, idx) => {
-			  const secondLastOrLastIdx = (!(serviceTypes.length % 2) && idx >= serviceTypes.length - 2) ||
-				  (!!(serviceTypes.length % 2) && idx === serviceTypes.length - 1);
-			
-			  if (!validObjectWithParameterKeys(serviceType, ['name'])) {
-			  	return (
-			  		<Grid.Column></Grid.Column>
-				  );
-			  }
-			  
-			  const validServiceFlag = strictValidArrayWithLength(serviceTypesFieldArray) &&
-				  idx in serviceTypesFieldArray && strictValidArrayWithLength(serviceTypesFieldArray[idx]);
-			  
-			  return (
-				  <Grid.Column className={ secondLastOrLastIdx ? 'mb-20' : '' }>
-					  <Form.Group>
-						  <Field
-							  search
-							  fluid
-							  multiple={ false }
-							  selection
-							  selectOnBlur={ true }
-							  noResultsMessage="No results found"
-							  label={ serviceType.name }
-							  name={ `serviceType[${idx}]` }
-							  placeholder={ `Add ${serviceType.name} Service` }
-							  options={ getOptionsListFromArray(USER_SERVICES_LIST[idx + 1], true, 'SELECT TO ADD A SERVICE') }
-							  component={ DropDown }
-						  />
-					  </Form.Group>
-					  <Button type="button" icon='add' onClick={(e) => this.addRemoveInput(e, 'add', idx)} />
-					  {
-						  validServiceFlag &&
-						  serviceTypesFieldArray[idx].map((v, k) => {
-							  return (
-								  <Form.Group className="deleteContent" key={k}>
-									  <label className="m-10">{v}</label>
-									  <Button type="button" icon='minus' onClick={(e) => this.addRemoveInput(e, 'remove', idx, k)}/>
-								  </Form.Group>
-							  );
-						  })
-					  }
-				  </Grid.Column>
-			  );
-	  });
-  	
 		return (
 			<Grid>
-				<Grid.Column computer="10">
-					<Header size='medium'>User Services</Header>
-					<Grid>
-						{
-							!strictValidArrayWithLength(serviceTypes) &&
-							<Grid.Row columns={1} className="serviceListing">
-								<Grid.Column>
-									<span style={{ color: 'red' }}>No Service Types Found</span>
-								</Grid.Column>
-							</Grid.Row>
-						}
-						{
-							!!serviceErrorStr &&
-							<Grid.Row columns={1} className="serviceListing">
-								<Grid.Column>
-									<span style={{ color: 'red' }}>{ serviceErrorStr }</span>
-								</Grid.Column>
-							</Grid.Row>
-						}
-						{
-							strictValidArrayWithLength(serviceTypes) &&
-							<Grid.Row columns={2} className="serviceListing">
-								{ renderServiceTypesSection }
-							</Grid.Row>
-						}
-					</Grid>
+				<Grid.Column computer={ relationalDataObject.computerWidth || 10 }>
+					<Header size='medium'>{ userTabInfoObject.tabName || '' }</Header>
+					<Grid.Row celled="internally">
+						<Grid.Column width={16}>
+							<Grid columns={ relationalDataObject.gridColumns || 3 }>
+								<Grid.Row className="newServices">
+									{
+										this.props[relationalDataObject.primaryTable].map((type, idx) => (
+											<Grid.Column key={idx}>
+												<Field
+													name={ `${relationalDataObject.formValuesKey}[${idx}]` }
+													component={CheckBox}
+													label={ type.name }
+												/>
+											</Grid.Column>
+										))
+									}
+								</Grid.Row>
+							</Grid>
+						</Grid.Column>
+					</Grid.Row>
 				</Grid.Column>
 			</Grid>
 		);
 	};
 	
-	getPasswordSection = () => {
-  	const { userVerifiedFlag } = this.state;
-  	
-		return (
-			<Grid>
-				<Grid.Column computer="10">
-					<Header size='medium'>Password</Header>
-					<Grid>
-						<Grid.Row columns={ userVerifiedFlag ? 2 : 1 } className="serviceListing">
-							{
-								!userVerifiedFlag &&
-								<Grid.Column>
-									<Field
-										name="currentPassword"
-										placeholder="Verify Your Current Password"
-										type="password"
-										component={TextBox}
-									/>
-								</Grid.Column>
-							}
-							{
-								userVerifiedFlag &&
-								<Grid.Column>
-									<Field
-										name="password"
-										placeholder="Enter New Password"
-										type="password"
-										component={TextBox}
-										validate={passwordValidator}
-									/>
-								</Grid.Column>
-							}
-							{
-								userVerifiedFlag &&
-								<Grid.Column>
-									<Field
-										name="confirmPassword"
-										placeholder="Confirm New Password"
-										type="password"
-										component={TextBox}
-										validate={required}
-									/>
-								</Grid.Column>
-							}
-						</Grid.Row>
-					</Grid>
-				</Grid.Column>
-			</Grid>
-		);
-	};
-  
-  getSearchSection = () => {
-  	const { searchKeywordTypes } = this.props;
-  	let tempIdx = 0;
-  	let typesArrayObject = { otherTypes: [] };
-	  
-	  searchKeywordTypes.forEach((searchKeywordType, idx) => {
-	  	if (searchKeywordType.type) {
-	  		if (!strictValidArrayWithLength(typesArrayObject[searchKeywordType.type])) {
-				  typesArrayObject[searchKeywordType.type] = [];
-			  }
-			  typesArrayObject[searchKeywordType.type].push(searchKeywordType);
-		  } else {
-			  typesArrayObject['otherTypes'].push(searchKeywordType);
-		  }
-	  });
-	  
-    return (
-      <Grid>
-        <Grid.Column computer="10">
-          <Header size='medium'>Search Keyword (s)</Header>
-          <Grid>
-	          {
-		          Object.keys(typesArrayObject).map(type => {
-		          	const validTypeFlag = strictValidString(type) && type !== 'otherTypes';
-			          return (
-				          <Grid.Row columns="1" className="serviceListing">
-					          <Grid.Column>
-						          {
-							          validTypeFlag && <Header size='small'>{ type }</Header>
-						          }
-						          {
-							          strictValidArrayWithLength(typesArrayObject[type]) &&
-							          typesArrayObject[type].map(searchKeywordType => {
-								          tempIdx++;
-								          return (
-									          <Field
-										          name={ `searchKeywordType[${tempIdx}]` }
-										          component={CheckBox}
-										          label={ searchKeywordType.name }
-									          />
-								          );
-							          })
-						          }
-					          </Grid.Column>
-				          </Grid.Row>
-			          );
-		          })
-	          }
-          </Grid>
-        </Grid.Column>
-      </Grid>
-    );
-  };
-  
 	renderTabs = () => {
 		const { handleSubmit } = this.props;
-  	const { activeTab, userVerifiedFlag } = this.state;
-	  const activeIndex = USER_PROFILE_TABS.indexOf(activeTab) >= -1 ? USER_PROFILE_TABS.indexOf(activeTab) : 0;
+  	const { activeTabIndex } = this.state;
 	  
-		const tabContent = {
-			profileDetails: this.getProfileTabsSection(),
-			userServices: this.getUserServicesSection(),
-			password: this.getPasswordSection(),
-			userSearch: this.getSearchSection(),
-		};
-
-		const descContent = (
+  	const descContent = (
 			<Grid>
 				<Grid.Row >
 					<Grid.Column computer="16">
@@ -629,188 +290,151 @@ export default class Profile extends Component {
 			</Grid>
 		);
   
-		const pane = (type) => {
+		const showPane = (activeIndex) => {
+			const { currentPassword, password, confirmPassword } = this.props;
 			let contentSection = <div></div>;
-			let buttonContent = null;
+			let showSubmitButtonFlag = true;
 			
-			switch (type) {
-				case 'profileDetails':
+			switch (activeIndex) {
+				case 0:
+					const attemptToChangePasswordFlag = currentPassword || password || confirmPassword;
 					contentSection = (
 						<div className="editContent">
-							<Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
-							<Tab.Pane attached={ false }>{ descContent }</Tab.Pane>
+							<div>{ this.getPersonalInfoSection() }</div>
+							<div className="mt-10">{ descContent }</div>
+							<div className="mt-10">
+								<Grid>
+									<Grid.Column computer="10">
+										<Header size='medium'>Change Password</Header>
+										<Grid>
+											<Grid.Row columns={1} className="serviceListing">
+												<Grid.Column>
+													<Field
+														name="currentPassword"
+														placeholder="Verify Your Current Password"
+														type="password"
+														component={TextBox}
+													/>
+												</Grid.Column>
+											</Grid.Row>
+											{
+												attemptToChangePasswordFlag &&
+												<Grid.Row columns={2} className="serviceListing">
+													<Grid.Column>
+														<Field
+															name="password"
+															placeholder="Enter New Password"
+															type="password"
+															component={TextBox}
+															validate={passwordValidator}
+														/>
+													</Grid.Column>
+													<Grid.Column>
+														<Field
+															name="confirmPassword"
+															placeholder="Confirm New Password"
+															type="password"
+															component={TextBox}
+															validate={required}
+														/>
+													</Grid.Column>
+												</Grid.Row>
+											}
+											{
+												!attemptToChangePasswordFlag &&
+												<Grid.Row columns={2} className="serviceListing">
+													<Grid.Column>
+														<Field
+															name="password"
+															placeholder="Enter New Password"
+															type="password"
+															component={TextBox}
+														/>
+													</Grid.Column>
+													<Grid.Column>
+														<Field
+															name="confirmPassword"
+															placeholder="Confirm New Password"
+															type="password"
+															component={TextBox}
+														/>
+													</Grid.Column>
+												</Grid.Row>
+											}
+										</Grid>
+									</Grid.Column>
+								</Grid>
+							</div>
 						</div>
 					);
-					buttonContent = 'Update Profile';
-					break;
-				
-				case 'userServices':
-					contentSection = (
-						<div className="editContent">
-							<Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
-						</div>
-					);
-					buttonContent = 'Update Services';
-					break;
-				
-				case 'password':
-					contentSection = (
-						<div className="editContent">
-							<Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
-						</div>
-					);
-					buttonContent = !userVerifiedFlag ? 'Verify Password' : 'Update Password';
-					break;
-					
-        case 'userSearch':
-					contentSection = (
-						<div className="editContent">
-							<Tab.Pane attached={ false }>{ tabContent[type] }</Tab.Pane>
-						</div>
-					);
-					buttonContent = 'Update Search';
-					break;
-					
-				default:
-					contentSection = (<div></div>);
 					break;
 			}
 			
 			return (
 				<Form onSubmit={ handleSubmit(this.handleSubmit) }>
 					{ contentSection }
-					<Button type="submit" primary className='updated'>{ buttonContent }</Button>
+					{
+						showSubmitButtonFlag &&
+						<Button type="submit" primary className='updated'>Save Changes</Button>
+					}
 				</Form>
 			);
 		};
 		
-		const panes = [
-			{
-        menuItem: {
-        	key: 'profileDetails',
-	        icon: 'user',
-	        content: 'PROFILE DETAILS',
-	        onClick: () => this.handleTabClick('profileDetails')
-        },
-				render: () => pane('profileDetails')
-			},
-			{
-        menuItem: {
-        	key: 'userServices',
-	        icon: 'sign language',
-	        content: 'USER SERVICES',
-	        onClick: () => this.handleTabClick('userServices')
-        },
-				render: () => pane('userServices')
-			},
-			{
-        menuItem: {
-        	key: 'password',
-	        icon: 'key',
-	        content: 'PASSWORD',
-	        onClick: () => this.handleTabClick('password')
-        },
-				render: () => pane('password')
-			},
-      {
-        menuItem: {
-        	key: 'userSearch',
-	        icon: 'search',
-	        content: 'SEARCH',
-	        onClick: () => this.handleTabClick('userSearch')
-        },
-				render: () => pane('userSearch')
-			},
-		];
-
 		return (
-			<Tab
-				menu={{secondary: true, pointing: true}}
-				panes={ panes }
-        activeIndex={activeIndex}
-			/>
+			showPane(activeTabIndex)
 		);
 	};
 
-  handleTabClick = (activeTab) => {
-  	this.setState({ activeTab });
-  	
-  	if (activeTab === 'password') {
-		  this.setState({ userVerifiedFlag: false });
-		  this.props.change('currentPassword', '');
-	  }
-  };
-  
-	handleSubmit = async(data) => {
-		const {
-			dispatch, genderTypesValuesList, ageTypesValuesList, treatmentFocusTypesValuesList, searchKeywordTypesValuesList
-		} = this.props;
-	  const {
-	  	userVerifiedFlag, activeTab, serviceTypesFieldArray, uploadProfileImageName, uploadProfileImageUrl
-	  } = this.state;
-		
+  handleSubmit = async(data) => {
+		const { dispatch, user } = this.props;
+	  const { activeTabIndex } = this.state;
 		this.props.change('_error', null);
-		
 		const dataObj = (strictValidObjectWithKeys(data.toJSON()) && data.toJSON()) || {};
-		
-		const inValidImageFileFlag = uploadProfileImageName && uploadProfileImageUrl &&
-			!validFileName(uploadProfileImageUrl, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS, IMAGE_FILE_NAME_BEGIN_REG_EXP);
-		if (inValidImageFileFlag) {
-			throw new SubmissionError({ _error:
-				'Invalid File Name, a valid image file should only have' +
-				'\'.jpg\', \'.jpeg\', \'.png\' or \'.gif\'  extension(s)'
-			});
-		}
 			
 	  try {
 		  if (strictValidObjectWithKeys(dataObj)) {
 			  this.setState({ loading: true });
 			  let formData = {};
-			
-			  if (activeTab === 'password' && !userVerifiedFlag) {
-				  const res = await this.handleVerifyUser();
-				  if (!res) {
-					  throw new SubmissionError({
-						  _error: 'User verification failed'
-					  });
-				  }
-				  this.setState({ loading: false });
-				  return;
-			  } else if (activeTab === 'password' && userVerifiedFlag) {
-				  const validPasswordFlag = dataObj.password === dataObj.confirmPassword &&
-					  !passwordValidator(dataObj.password);
-				
-				  if (!validPasswordFlag) {
-					  throw new SubmissionError({
-						  _error: passwordValidator(dataObj.password) || 'Password & Confirm Password do not match'
-					  });
-				  }
-				
-				  formData = { password: _.pick(dataObj, USER_PASSWORD_SECTION_FORM_KEYS) };
-			  } else if (activeTab === 'profileDetails') {
-				  formData = {
-					  profileDetails: uploadProfileImageUrl
-						  ? Object.assign({}, _.pick(dataObj, USER_PROFILE_DETAILS_FORM_KEYS), { image: uploadProfileImageUrl })
-						  : _.pick(dataObj, USER_PROFILE_DETAILS_FORM_KEYS),
-					  otherDetails: {
-					  	genderType: genderTypesValuesList,
-						  ageType: ageTypesValuesList,
-						  treatmentFocusType: treatmentFocusTypesValuesList
-					  }
-				  };
-			  } else if (activeTab === 'userServices') {
-				  formData = {
-					  userServices: serviceTypesFieldArray
-				  };
-			  } else if (activeTab === 'userSearch') {
-			  	formData = {
-			  		userSearch: searchKeywordTypesValuesList
-				  }
+		
+			  /*
+			  ** formData is the final object passed to reducer
+			  ** Information that should update 'users' table should go in profileDetails
+			  ** Information related to passwords should go into password
+			  ** Other information should go into otherDetails
+			  */
+		    if (activeTabIndex === 0) {
+		    	const attemptToChangePassword = !!dataObj.currentPassword || !!dataObj.password || !!dataObj.confirmPassword;
+			    if (attemptToChangePassword) {
+				    const validNewPasswordFlag = dataObj.password === dataObj.confirmPassword &&
+					    !passwordValidator(dataObj.password);
+				    const userVerificationData = await dispatch(verifyUser(user.email, dataObj.currentPassword));
+				    const isUserVerifiedFlag = validObjectWithParameterKeys(userVerificationData, ['user']) &&
+					    validObjectWithParameterKeys(userVerificationData.user, ['id']) &&
+					    userVerificationData.user.id === user.id;
+				    if (!validNewPasswordFlag || !isUserVerifiedFlag) {
+				    	throw new SubmissionError({
+						    _error: !validNewPasswordFlag
+							    ? passwordValidator(dataObj.password) || 'Password & Confirm Password do not match'
+							    : 'User verification failed due to invalid password'
+					    });
+				    }
+			    }
+			    formData = {
+				    profileDetails: _.pick(dataObj, USER_PROFILE_TABS[activeTabIndex].associatedFormKeys)
+			    };
+			    if (attemptToChangePassword) {
+			    	formData.password = _.pick(dataObj, ['currentPassword', 'password', 'confirmPassword'])
+			    }
 			  }
 			  
 			  this.setState({ loading: true });
 			  await dispatch(updateUserProfile(formData));
-			  this.handleTabClick(activeTab);
+			  if (activeTabIndex === 2) {
+				  this.props.change('currentPassword', '');
+				  this.props.change('password', '');
+				  this.props.change('confirmPassword', '');
+			  }
 			  this.setState({
 				  loading: false,
 				  uploadProfileImageName: null
@@ -819,71 +443,21 @@ export default class Profile extends Component {
 			  throw new SubmissionError({ _error: 'Invalid data object' });
 		  }
 	  } catch (e) {
-		  if (!userVerifiedFlag) {
-		  	this.handleTabClick(activeTab);
-		  } else {
-		  	this.setState({ activeTab });
+		  this.setState({
+			  loading: false
+		  });
+		  if (activeTabIndex === 2) {
+			  this.props.change('currentPassword', '');
+			  this.props.change('password', '');
+			  this.props.change('confirmPassword', '');
 		  }
-		  
-	  	this.setState({ loading: false });
-		  
 		  throw new SubmissionError({
-			  _error: activeTab === 'password'
-				  ? (userVerifiedFlag ? (passwordValidator(dataObj.password) || 'Password & Confirm Password do not match')
-						  : 'User verification failed')
+			  _error: validObjectWithParameterKeys(e, ['errors']) && validObjectWithParameterKeys(e.errors, ['_error'])
+				  ? typeCastToString(e.errors._error)
 				  : typeCastToString(e) || 'Error updating profile'
 		  });
 	  }
   };
-	
-	handleVerifyUser = async () => {
-		const { dispatch, currentPassword, user } = this.props;
-		
-		try {
-			const res = await dispatch(verifyUser(user.email, currentPassword));
-			const areUsersSameFlag = strictValidObjectWithKeys(res) && strictValidObjectWithKeys(res.user) &&
-				res.user.id === user.id;
-			this.setState({ userVerifiedFlag: areUsersSameFlag });
-			return areUsersSameFlag;
-		} catch (e) {
-			return false;
-		}
-	};
-	
-	handleProfileImageFinishedUpload = async ({ name, s3Key }) => {
-		if (!validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
-			this.setState({ uploadProfileImageError: 'Invalid File Name, a valid image file should only have' +
-			'\'.jpg\', \'.jpeg\', \'.png\' or \'.gif\'  extension(s)' });
-			setTimeout(() => this.setState({ uploadProfileImageError: null }), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
-			return;
-		}
-		
-		this.setState({ uploadProfileImageUrl: s3Key });
-	};
-	
-	resetProfileImageOnComplete = async ({ name }) => {
-		const { dispatch } = this.props;
-		const { activeTab, uploadProfileImageUrl } = this.state;
-		
-		try {
-			if (validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS)) {
-				this.setState({ imageLoading: true });
-				const formData = {
-					profileDetails: { image: uploadProfileImageUrl }
-				};
-				await dispatch(updateUserProfile(formData));
-				this.handleTabClick(activeTab);
-				this.setState({
-					imageLoading: false,
-					uploadProfileImageName: name
-				});
-			}
-		} catch (err) {
-			throw new SubmissionError({
-				_error: typeCastToString(err) || 'Error updating profile image'
-			});
-		}
-	};
 	
 	render() {
     const { isLoad, loadErr, accountMsg, error } = this.props;
@@ -907,9 +481,6 @@ export default class Profile extends Component {
 				}
 
 				<Grid>
-					<div className="ui left floated column innerAdjust">
-						<h3 className="mainHeading"> Profile</h3>
-					</div>
 					<Grid.Row>
 						<Grid.Column mobile={16} tablet={8} computer={12}>
               { !loadingCompleteFlag && <Loader active inline='centered'>Loading...</Loader> }

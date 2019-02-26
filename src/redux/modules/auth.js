@@ -3,7 +3,7 @@ import store from 'store2';
 import { push } from 'react-router-redux';
 import { flush as flushAccount } from './account';
 import { flush as flushBitBucketRepo } from './bitBucketRepo';
-import { typeCastToString } from '../../utils/commonutils';
+import { validObjectWithParameterKeys, typeCastToString } from '../../utils/commonutils';
 
 const LOAD = 'auth/LOAD';
 const LOAD_SUCCESS = 'auth/LOAD_SUCCESS';
@@ -136,11 +136,11 @@ export const load = (forced) => async (dispatch, getState, api) => {
   }
 };
 
-export const login = (email, password) => async (dispatch, getState, api) => {
+export const login = data => async (dispatch, getState, api) => {
   dispatch({ type: LOGIN });
   
   try {
-    const res = await api.post('/sessions?jwt=1', { data: { email: email, password:  password} });
+    const res = await api.post('/sessions?jwt=1', { data });
     
     // set authToken to local storage
     store('authToken', res.accessToken);
@@ -150,7 +150,11 @@ export const login = (email, password) => async (dispatch, getState, api) => {
     
     return res;
   } catch (err) {
-    dispatch({ type: LOGIN_FAIL, error: err.message });
+    dispatch({
+      type: LOGIN_FAIL,
+      error: (validObjectWithParameterKeys(err, ['response']) && validObjectWithParameterKeys(err.response, ['data']) &&
+        validObjectWithParameterKeys(err.response.data, ['message']) && err.response.data.message) || 'System Error'
+    });
   }
 };
 
@@ -170,14 +174,14 @@ export const verifyUser = (email, password) => async (dispatch, getState, api) =
 	dispatch({ type: LOGIN });
 	
 	try {
-		const res = await api.post('/sessions?jwt=1', { data: { email: email, password:  password} });
+		const res = await api.post('/sessions?jwt=1', { data: { email, password } });
     return res;
 	} catch (err) {
 		return typeCastToString(err);
 	}
 };
 
-export const logout = () => (dispatch, getState, api) => {
+export const logout = () => (dispatch) => {
   store.remove('authToken');
   store.remove('refreshToken');
   

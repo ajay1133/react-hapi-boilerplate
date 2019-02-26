@@ -1,15 +1,20 @@
 {
-  "name": "compass-backend",
+  "name": "shareCabs",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "autoprefixer": "7.1.6",
     "aws-sdk": "^2.291.0",
+    "axios": "^0.18.0",
+    "babel-cli": "^6.26.0",
     "babel-core": "6.26.0",
     "babel-eslint": "7.2.3",
     "babel-jest": "20.0.3",
     "babel-loader": "7.1.2",
+    "babel-plugin-transform-decorators-legacy": "^1.3.5",
+    "babel-preset-env": "^1.7.0",
     "babel-preset-react-app": "^3.1.1",
+    "babel-register": "^6.26.0",
     "babel-runtime": "6.26.0",
     "bcrypt": "^3.0.0",
     "case-sensitive-paths-webpack-plugin": "2.1.1",
@@ -111,7 +116,7 @@
     "db": "sequelize db:create && sequelize db:migrate && sequelize db:seed:all",
     "migrate": "sequelize db:migrate",
     "seedAll": "sequelize db:seed:all",
-    "dev-api": "nodemon api",
+    "dev-api": "nodemon --exec node api",
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom"
@@ -150,15 +155,8 @@
       "mjs"
     ]
   },
-  "babel": {
-    "presets": [
-      "react-app"
-    ]
-  },
   "eslintConfig": {
     "extends": "react-app"
   },
-  "devDependencies": {
-    "babel-plugin-transform-decorators-legacy": "^1.3.5"
-  }
+  "devDependencies": {}
 }

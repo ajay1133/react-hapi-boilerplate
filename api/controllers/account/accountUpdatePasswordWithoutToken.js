@@ -1,8 +1,7 @@
 const joi = require('joi');
-const Boom = require('boom');
-const jwtHelper = require('../../helpers/jwtHelper');
+const boom = require('boom');
 const accountService = require('../../services/accountService');
-const config = require("config");
+const sessionService = require('../../services/sessionService');
 
 module.exports = {
   plugins: {
@@ -13,29 +12,38 @@ module.exports = {
   // auth: 'default',
   tags: ['api', 'account'],
   description: 'Update user',
-
   notes: 'update password',
-
-
   validate: {
     payload: {
 	    email: joi.string()
-	              .email()
-	              .allow(['', null])
+	              .required()
 	              .description('Email of User'),
-      password: joi.string()
+	    currentPassword: joi.string()
+	                        .required()
+	                        .description('Current Password of User'),
+      newPassword: joi.string()
+                      .required()
+                      .description('New Password of User'),
     },
     options: { abortEarly: false },
   },
 
   handler: async (request, h) => {
-    const payload = request.payload;
-    
-    try {
-	    let result = await accountService.updatePassword({ password: payload.password, email: payload.email });
-	    return result;
+    const { email, currentPassword, newPassword } = request.payload;
+	
+	  try {
+	    const user = await sessionService.authenticate(email, currentPassword);
+	    if (user && user.id) {
+		    let result = await accountService.updatePassword({
+			    email,
+			    password: newPassword
+		    });
+		    return h.response({ success: result });
+	    } else {
+	    	return boom.badRequest('Invalid Email or Password');
+	    }
     } catch(err) {
-      return Boom.badImplementation(err);
+      return boom.badImplementation(err);
     }
   }
 };

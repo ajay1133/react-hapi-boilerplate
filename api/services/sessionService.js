@@ -34,7 +34,7 @@ exports.authenticate = async (email, password) => {
   assert(password, i18n('services.sessionService.missingPassword'));
   
   let userDetails = await users.findOne({
-    where: { email: email },
+    where: { email },
     attributes: constants.USER_AUTHENTICATION_ATTRIBUTES
   });
   
@@ -67,7 +67,6 @@ exports.authenticate = async (email, password) => {
  */
 exports.forgotPassword = async (email) => {
   assert(email, i18n('services.sessionService.missingEmail'));
-  
   let updatedData = {};
   let userDetails = await users.findOne({ where: { email }, attributes: constants.USER_AUTHENTICATION_ATTRIBUTES });
   
@@ -86,7 +85,6 @@ exports.forgotPassword = async (email) => {
     // Send Forgot Password Email
     user.token = updatedData.inviteToken;
     await forgotPassword(user);
-    
     return true;
   } else {
     return false;

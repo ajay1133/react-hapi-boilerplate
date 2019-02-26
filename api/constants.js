@@ -1,21 +1,16 @@
-exports.ROLES = [
-  'admin',
-  'user'
-];
-
-exports.DEFAULT_USER_REGISTRATION_ROLE = 2;
-
 exports.DEFAULT_USER_ATTRIBUTES = [
 	'id',
 	'role',
 	'email',
 	'firstName',
 	'lastName',
+	'title',
 	'address',
 	'state',
 	'city',
 	'zip',
 	'phone',
+	'description',
 	'image',
 	'status'
 ];
@@ -30,11 +25,12 @@ exports.USER_AUTHENTICATION_ATTRIBUTES = [
 	'role'
 ];
 
-exports.DEFAULT_USER_SERVICES_ATTRIBUTES = [
-	'id',
-	'usersId',
-	'serviceTypesId',
-	'name',
-	'status'
-];
+exports.DEFAULT_USER_ROLES = [ 2 ];
 
+exports.RELATIONAL_MAPPING_LIST = [
+	/*{
+		primaryTable: 'primaryTable',
+		secondaryTable: 'secondaryTable',
+		targetKey: 'targetKey'
+	}*/
+];

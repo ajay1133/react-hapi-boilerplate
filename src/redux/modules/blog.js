@@ -68,7 +68,7 @@ export const saveBlog = (blogDetails) => async (dispatch, getState, api) => {
   
   try {
     await api.post('/blog', { data: blogDetails });
-    dispatch({ type: LOAD_SUCCESS, message: 'Added Successfully !!' });
+    dispatch({ type: LOAD_SUCCESS, message: 'Added Successfully' });
     dispatch(internals.resetMessage());
   } catch (err) {
     dispatch({ type: ERROR, error: err.message });
@@ -86,7 +86,7 @@ export const updateBlog = (fileName, blogDetails) => async (dispatch, getState, 
   
   try {
     await api.put(`/blog/${fileName}`, { data: blogDetails });
-    dispatch({ type: LOAD_SUCCESS, message: 'Updated Successfully !!' });
+    dispatch({ type: LOAD_SUCCESS, message: 'Updated Successfully' });
     dispatch(internals.resetMessage());
   } catch (err) {
     dispatch({ type: ERROR, error: err.message });

@@ -14,7 +14,7 @@ const PrivacyPolicy = withRouter(({ location, user }) => {
             <div className="blueBg">
               <Image src='images/logo.png' size='medium' as="a" href="/"/>
               <h1 className="pt-15  text-white">Welcome To</h1>
-              <p>Compass Recovery Network</p>
+              <p>ShareCabs</p>
             </div>
           </Grid.Column>
           <Grid.Column mobile={16} tablet={8} computer={7} style={{ padding: 0}}>

@@ -1,6 +1,7 @@
 const joi = require('joi');
 const accountService = require('../../services/accountService');
-const { genericReply } = require('../../helpers');
+const genericReply = require('../../helpers/responseHelper');
+
 module.exports = {
   plugins: {
     'hapi-swagger': {
@@ -20,7 +21,7 @@ module.exports = {
     },
     payload: {
       email: joi.string()
-                .email()
+                .optional()
                 .allow(['', null])
                 .description('Email of User'),
       
@@ -66,11 +67,6 @@ module.exports = {
                 .allow(['', null])
                 .description('Phone of User'),
       
-      website: joi.string()
-                  .optional()
-                  .allow(['', null])
-                  .description('Url of User'),
-      
       description: joi.string()
                       .optional()
                       .allow(['', null])
@@ -80,23 +76,13 @@ module.exports = {
                 .optional()
                 .allow(['', null])
                 .description('Image of User'),
-      
-      featuredVideo: joi.string()
-                        .optional()
-                        .allow(['', null])
-                        .description('FeaturedVideo of User'),
-      
+	    
       status: joi.number()
                  .optional()
                  .valid([1,2,3])
                  .allow(['', null])
                  .description('1=Active, 2=Pending, 3=Denied'),
       
-      isDeleted: joi.boolean()
-                    .valid(true, false)
-                    .default(false)
-                    .description('0 = not deleted, 1 = deleted'),
-	
 	    role: joi.number()
 	              .optional()
 	              .description('Role of User')
@@ -105,8 +91,9 @@ module.exports = {
   },
   handler: async (request, h) => {
     const { params, payload } = request;
-    return accountService.updateUser(params.id, payload)
-                         .then((data) => genericReply.put(h, data))
-                         .catch(err => genericReply.onError(h, 'There was an error. Please Try Again', err));
+    return accountService
+	    .updateUser(params.id, payload)
+	    .then((data) => genericReply.put(h, data))
+	    .catch(err => genericReply.onError(h, 'There was an error. Please Try Again', err));
   }
 };

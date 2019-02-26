@@ -4,35 +4,22 @@ const path = require('path');
 module.exports = {
   api: {
     host: 'localhost',
-    port: 8000,
+    port: 5000,
     secret: 'fdgwVtghrt5345gfdgfd653245235232v2rcra'
   },
   db: db.development,
-  redis: {
-    host: db.redis.host,
-    port: db.redis.port,
-    prefix: 'com_'
-  },
-  bitBucket: {
-    username: db.bitBucket.username,
-    password: db.bitBucket.password,
-    basePath: db.bitBucket.basePath
-  },
-	aws: {
+  aws: {
 		s3: {
-			bucketWrite: 'compass-development-storage',
-			bucket: 'compass-development-storage'
+			bucketWrite: '',
+			bucket: '',
+			s3Url: ``
 		}
 	},
-  stripe: {
-    secretKey: 'sk_test_3akdpHjSXOigyyxlkwn91lMw',
-    planId: 'plan_EMHodgPZFnpPvS'
-  },
   emailUrl:{
     host: ''
   },
   BasePath:{
-    host: "http://localhost:4000"
+    host: "http://localhost:3000"
   },
   profileImage:{
     maxPayloadSize: 5242880,

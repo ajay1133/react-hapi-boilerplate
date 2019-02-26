@@ -10,7 +10,7 @@ module.exports = {
   redis: {
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT,
-    prefix: 'compass_'
+    prefix: 'shareCabs_'
   },
   bitBucket: {
     username: db.bitBucket.username,
@@ -19,16 +19,18 @@ module.exports = {
   },
   aws: {
 		s3: {
-			bucketWrite: 'compass-development-storage',
-			bucket: 'compass-development-storage'
+			bucketWrite: '',
+			bucket: '',
+			s3Url: ``
 		}
   },
 	stripe: {
-		secretKey: 'sk_test_3akdpHjSXOigyyxlkwn91lMw',
-		planId: 'plan_EMHodgPZFnpPvS'
+		secretKey: '',
+		planId_Individual: '',
+		planId_Facility: ''
 	},
   BasePath:{
-    host: "http://stagingapp.compassrecoverynetwork.com"
+    host: ""
   },
   emailUrl: {
     host: 'smtps://username:password@smtp.example.com/?pool=true'

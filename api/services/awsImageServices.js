@@ -19,7 +19,7 @@ exports.createAwsObject = (req, campaignId, options) => new Promise((resolve, re
   const mimeType = req.query.contentType;
   const filename = uuid.v4();
   const fileKey = 'campaign/banner/original/'+ campaignId +'/' + filename +'.'+ ext ;
-  const s3 = new aws.S3(s3Options);
+  const s3 = new aws.S3(options);
   const params = {
     Bucket: S3_BUCKET,
     Key: fileKey,
@@ -58,7 +58,7 @@ exports.createAwsObjectBody = (req, folder ,campaignID, options) => new Promise(
   const ext = Type.toLowerCase();
   const filename = uuid.v4();;
   const fileKey = 'campaign/'+ folder +'/original/'+ campaignID +'/' + filename +'.'+ ext ; // campaign/profile/original/filename
-  const s3 = new aws.S3(s3Options);
+  const s3 = new aws.S3(options);
   const params = {
     Bucket: S3_BUCKET,
     Body: new Buffer (req.split(',')[1], 'base64'),

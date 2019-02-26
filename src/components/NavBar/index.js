@@ -36,7 +36,6 @@ class NavBar extends Component {
 		  return;
 		}
 		dispatch(push('/'));
-    return;
 	};
   
   render() {
@@ -55,6 +54,12 @@ class NavBar extends Component {
         <div className="col-8">
           <div className="ui right floated column">
             <Menu borderless>
+						  {
+							  user.role === 1 &&
+                <Menu.Item active={ currentLocation === '/accounts' } onClick={ () => this.loadRoute('/accounts') }>
+                  Accounts
+                </Menu.Item>
+						  }
 						  {
 							  user.role === 1 &&
                 <Menu.Item active={ currentLocation === '/dashboard' } onClick={ () => this.loadRoute('/dashboard') }>

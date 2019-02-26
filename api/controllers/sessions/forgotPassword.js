@@ -29,9 +29,9 @@ module.exports = {
     try {
       const res = await sessionService.forgotPassword(email);
       if (res) {
-        return h.response({ message: 'Email sent !!' });
+        return h.response({ message: 'Successfully sent email' });
       } else {
-        return Boom.badRequest('Incorrect Email');
+        return Boom.badRequest('Incorrect email address');
       }
     } catch (err) {
       return Boom.badRequest(err);

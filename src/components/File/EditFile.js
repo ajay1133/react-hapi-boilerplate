@@ -35,7 +35,13 @@ class EditFile extends Component {
 				{
 					!imageLoading &&
 					<Image
-						src={ getAbsoluteS3FileUrl(uploadBlogImageUrl) || DEFAULT_BLOG_IMAGE_URL }
+						src={
+							(
+								uploadBlogImageUrl &&
+								uploadBlogImageUrl !== DEFAULT_BLOG_IMAGE_URL &&
+								getAbsoluteS3FileUrl(uploadBlogImageUrl)
+							) || DEFAULT_BLOG_IMAGE_URL
+						}
 						size="medium"
 						rounded
 						alt="image"

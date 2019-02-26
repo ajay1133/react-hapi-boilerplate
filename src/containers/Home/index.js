@@ -6,7 +6,7 @@ import { withRouter } from 'react-router-dom';
 import Login from '../../components/Login';
 import '../../style/css/style.css';
 
-const Home = withRouter(({ location, user }) => {
+const Home = withRouter(({ location, user, match }) => {
   return (
     <Container fluid>
       <Grid centered verticalAlign="middle">
@@ -15,12 +15,12 @@ const Home = withRouter(({ location, user }) => {
             <div className="blueBg">
               <Image src='images/logo.png' size='medium' as="a" href="/"/>
               <h1 className="pt-15  text-white">Welcome To</h1>
-              <p>Compass Recovery Network</p>
+              <p>ShareCabs</p>
             </div>
           </Grid.Column>
           <Grid.Column mobile={16} tablet={8} computer={7} style={{ padding: 0}}>
             <div className="loginForm">
-              <Login />
+              <Login location={ location } />
             </div>
             <div className="footer">
               <List horizontal>
