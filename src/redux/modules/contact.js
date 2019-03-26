@@ -2,7 +2,8 @@ import Immutable from 'immutable';
 import {
 	strictValidObjectWithKeys,
 	typeCastToString,
-	strictValidArrayWithLength,
+  strictValidArrayWithLength,
+  strictValidString,
 	validObjectWithParameterKeys,
 	strictValidArray,
 	strictValidObject,
@@ -137,17 +138,20 @@ export const getContactList = filters => async (dispatch, getState, api) => {
     }
 	  // If valid result with rows & count keys
 	  if (validObjectWithParameterKeys(res, ['rows', 'count'])) {
-		  if (itemsFilters.order) {
-			  itemsFilters.order = filters.order;
+		  if (strictValidString(itemsFilters.order)) {
+        itemsFilters.order = (
+          validObjectWithParameterKeys(filters, ['order']) && 
+          filters.order
+        ) || 
+        getState().get('contact').get('itemsFilters').order;
 		  }
 			dispatch({ type: LOAD_SUCCESS })
 			dispatch({
 				type: LOAD_CONTACTS,
 			  items: res.rows,
-			  count: res.count,
+			  itemsCount: res.count,
 			  itemsFilters
 		  });
-		  return res.rows;
 	  }
   } catch (err) {
     // If an error occurs, set error field

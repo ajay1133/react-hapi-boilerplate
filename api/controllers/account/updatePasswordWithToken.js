@@ -10,9 +10,6 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  auth: {
-    strategy: 'default'
-  },
   tags: ['api', 'account'],
   description: 'Update user password with help of token',
   notes: 'Update user password with help of token',

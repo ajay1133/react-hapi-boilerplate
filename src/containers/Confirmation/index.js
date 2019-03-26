@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { Grid, Message, Container, Loader } from  'semantic-ui-react';
 import { verifyInviteToken, updatePassword } from '../../redux/modules/account';
 import ChangePassword from '../../components/ChangePassword';
+import { validObjectWithParameterKeys, typeCastToString } from '../../utils/commonutils';
 import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
 import { push } from 'react-router-redux';
 
@@ -25,37 +26,37 @@ class Confirmation extends Component {
     isLoading: false
   };
   
-  constructor(props) {
-    super(props);
-    this.savePassword = this.savePassword.bind(this);
-  }
-
   savePassword = async (details) => {
-    const { dispatch } = this.props;
-	
+    const { dispatch, match } = this.props;
     const accountDetail = {
 		  password: details.password,
 		  confirmPassword : details.confirmPassword,
-		  inviteToken: this.props.match.params.inviteToken
+      token: (
+        validObjectWithParameterKeys(match, ['params']) && 
+        validObjectWithParameterKeys(match.params, ['inviteToken']) && 
+        typeCastToString(match.params.inviteToken)
+      ) || ''  
 	  };
-   
 	  this.setState({ loading: true });
-    await dispatch(updatePassword(accountDetail));
+    await dispatch(updatePassword(accountDetail, true));
 	  this.setState({ loading: false });
-	  
     setTimeout(() => dispatch(push('/')), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
   };
 
   componentDidMount = async () => {
-    const { dispatch } = this.props;
-    await dispatch(verifyInviteToken(this.props.match.params.inviteToken));
-	  this.setState({ loading: false });
+    const { dispatch, match } = this.props;
+    if (
+      validObjectWithParameterKeys(match, ['params']) && 
+      validObjectWithParameterKeys(match.params, ['inviteToken'])
+    ) {
+      await dispatch(verifyInviteToken(typeCastToString(match.params.inviteToken)));
+	    this.setState({ loading: false });
+    }
   };
   
   render() {
     const { tokenValid, confirmationErr, passwordUpdated, isLoading } = this.props;
     const { loading } = this.state;
-    
     return (
       <Container>
         <Grid centered verticalAlign="middle">

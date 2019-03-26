@@ -85,11 +85,7 @@ export default class Accounts extends Component {
   handleConfirm = async () => {
     const { selectedUser, type } = this.state;
     const { dispatch } = this.props;
-    
-    let accountDetails = {
-      id: selectedUser.id
-    };
-    
+    let accountDetails = { id: selectedUser.id };
     if (type === 'delete') {
       accountDetails.isDeleted = true;
     } else if (type === 'active'){
@@ -97,7 +93,6 @@ export default class Accounts extends Component {
     } else if (type === 'denied') {
       accountDetails.status = 3;
     }
-    
     this.setState({ loading: true });
     await dispatch(updateAccount(accountDetails, false));
 	  this.setState({
@@ -193,7 +188,6 @@ export default class Accounts extends Component {
   render() {
     const { items, itemsFilters, itemsCount, isLoad, message, loadErr } = this.props;
     const { loading, selectedUser, showMessageFlag, openConfirmBox, type } = this.state;
-    
 	  return (
       <AuthenticatedUser>
 			  {

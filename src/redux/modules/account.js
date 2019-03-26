@@ -185,24 +185,27 @@ export const loadAccounts = filters => async (dispatch, getState, api) => {
 		// Get users list from get api
 		const res = await api.get('/account/all', { params: itemsFilters });
     // If caught error with error message
-    if (validObjectWithParameterKeys(res, ['message'])) {
-      dispatch({ type: LOAD_FAIL, error: typeCastToString(res.message) });
-      return;
-    }
-	  // If valid result with rows & count keys
-	  if (validObjectWithParameterKeys(res, ['rows', 'count'])) {
-		  if (itemsFilters.order) {
-			  itemsFilters.order = filters.order;
-		  }
-			dispatch({ type: LOAD_SUCCESS })
+		if (validObjectWithParameterKeys(res, ['message'])) {
+			dispatch({ type: LOAD_FAIL, error: typeCastToString(res.message) });
+			return;
+		}
+		// If valid result with rows & count keys
+		if (validObjectWithParameterKeys(res, ['rows', 'count'])) {
+			if (strictValidString(itemsFilters.order)) {
+				itemsFilters.order = (
+          validObjectWithParameterKeys(filters, ['order']) && 
+          filters.order
+        ) || 
+        getState().get('contact').get('itemsFilters').order;
+			}
 			dispatch({
 				type: LOAD_ACCOUNTS,
-			  items: res.rows,
-			  count: res.count,
-			  itemsFilters
-		  });
-		  return res.rows;
-	  }
+				items: res.rows,
+				itemsCount: res.count,
+				itemsFilters
+			});
+		}
+		dispatch({ type: LOAD_SUCCESS });
   } catch (err) {
     // If an error occurs, set error field
     dispatch({ 
@@ -222,7 +225,7 @@ export const saveAccount = accountDetails => async (dispatch, getState, api) => 
   dispatch({ type: LOAD });
   try {
 		// Insert in db using post api
-    const res = await api.post('/account', { data: accountDetails });
+		const res = await api.post('/account', { data: accountDetails });
     // If result is valid
     if (validObjectWithParameterKeys(res, ['id', 'status'])) {
 			await dispatch(loadAccounts());
@@ -256,7 +259,7 @@ export const updateAccount = accountDetails => async (dispatch, getState, api) =
 		// Based on updated status value, reassign reducer users account storage list
 		// If user is deleted, remove user
 		// Else overWrite user object with the accountDetails object
-    if (accountDetails.status === 0) {
+    if (!accountDetails.status) {
     	users = users.filter(user => user.id !== id);
 	    selectedUser = strictValidArrayWithLength(users.filter(user => user.id === id)) &&
 		    users.filter(user => user.id === id)[0];
@@ -279,7 +282,7 @@ export const updateAccount = accountDetails => async (dispatch, getState, api) =
 		});
 		dispatch({
 			type: SELECT_USER,
-			selectedUser: accountDetails.status !== 0 ? selectedUser : {}
+			selectedUser: accountDetails.status ? selectedUser : {}
 		});
 		dispatch({
 			type: LOAD_SUCCESS,
