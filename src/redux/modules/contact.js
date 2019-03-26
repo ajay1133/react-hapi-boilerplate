@@ -12,7 +12,6 @@ import {
 } from '../../utils/commonutils';
 import {
 	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
-  OFFSET,
   DEFAULT_CONTACT_LIST_FILTERS
 } from '../../utils/constants';
 

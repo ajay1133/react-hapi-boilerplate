@@ -1,4 +1,4 @@
-export const OFFSET = 10;
+export const DEFAULT_LIMIT = 10;
 
 export const DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES = 3000;
 
@@ -68,7 +68,7 @@ export const DEFAULT_ACCOUNT_LIST_FILTERS = {
 	status: '',
 	keyword: '',
 	page: 1,
-	limit: OFFSET,
+	limit: DEFAULT_LIMIT,
 	order: [['firstName', 'ASC']]
 };
 
@@ -76,6 +76,6 @@ export const DEFAULT_CONTACT_LIST_FILTERS = {
 	status: '',
 	keyword: '',
 	page: 1,
-	limit: OFFSET,
+	limit: DEFAULT_LIMIT,
 	order: [['id', 'DESC']]
 };

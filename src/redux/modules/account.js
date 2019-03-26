@@ -11,7 +11,6 @@ import {
 } from '../../utils/commonutils';
 import {
 	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
-	OFFSET,
 	RELATIONAL_MAPPING_INFO_LIST,
 	DEFAULT_ACCOUNT_LIST_FILTERS
 } from '../../utils/constants';
