@@ -5,6 +5,7 @@ import { Table, Grid, Message, Loader } from  'semantic-ui-react';
 import { getContactList } from '../../redux/modules/contact';
 import Pagination from '../../components/Pagination';
 import {
+  strictValidArray,
   strictValidArrayWithLength,
   validObjectWithParameterKeys,
   strictValidArrayWithMinLength,
@@ -154,7 +155,7 @@ export default class ContactUs extends Component {
                   </Table.Body>
                 </Table>
                 {
-                  strictValidArrayWithLength(items) &&
+                  strictValidArray(items) &&
                   <Pagination
                     totalEntries={itemsCount}
                     offset={itemsFilters.limit}

@@ -62,3 +62,20 @@ export const RELATIONAL_MAPPING_INFO_LIST = [
 		dataIncludeKey: 'dataIncludeKey'
 	}*/
 ];
+
+// Reducer constants
+export const DEFAULT_ACCOUNT_LIST_FILTERS = {
+	status: '',
+	keyword: '',
+	page: 1,
+	limit: OFFSET,
+	order: [['firstName', 'ASC']]
+};
+
+export const DEFAULT_CONTACT_LIST_FILTERS = {
+	status: '',
+	keyword: '',
+	page: 1,
+	limit: OFFSET,
+	order: [['id', 'DESC']]
+};

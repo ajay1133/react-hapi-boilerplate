@@ -7,11 +7,13 @@ import {
 	validObjectWithParameterKeys,
 	strictValidArray,
 	strictValidObject,
-  strictValidArrayWithMinLength
+  strictValidArrayWithMinLength,
+  typeCastToKeyValueObject
 } from '../../utils/commonutils';
 import {
 	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
-	OFFSET
+  OFFSET,
+  DEFAULT_CONTACT_LIST_FILTERS
 } from '../../utils/constants';
 
 // Action creators
@@ -31,13 +33,7 @@ const initialState = Immutable.fromJS({
   message: null,
   items: [],
   itemsCount: 0,
-	itemsFilters: {
-  	status: '',
-		keyword: '',
-		page: 1,
-		limit: OFFSET,
-		order: [['id', 'DESC']]
-	},
+	itemsFilters: DEFAULT_CONTACT_LIST_FILTERS,
 });
 
 const internals = {};
@@ -58,7 +54,7 @@ export default function reducer(state = initialState, action) {
 					(
 						validObjectWithParameterKeys(action, ['message']) && 
 						typeCastToString(action.message)
-					) || state.message
+					) || null
 				);
     case LOAD_FAIL:
       return state
@@ -68,35 +64,39 @@ export default function reducer(state = initialState, action) {
 					(
 						validObjectWithParameterKeys(action, ['error']) && 
 						typeCastToString(action.error)
-					) || state.loadErr
+					) || null
 				);    
     // Contacts
     case LOAD_CONTACTS:
-      return state
-      .set(
-        'items', 
-        (
-          validObjectWithParameterKeys(action, ['items']) && 
-          strictValidArray(action.items) &&
-          action.items
-        ) || state.items
+    return state
+    .set(
+      'items', 
+      (
+        validObjectWithParameterKeys(action, ['items']) && 
+        strictValidArray(action.items) &&
+        action.items
+      ) || 
+      typeCastToKeyValueObject(state, ['items']).items ||
+      []
+    )
+    .set(
+      'itemsCount', 
+      (
+        validObjectWithParameterKeys(action, ['itemsCount']) 
+          ? action.itemsCount 
+          : typeCastToKeyValueObject(state, ['itemsCount']).itemsCount || 0
       )
-      .set(
-        'itemsCount', 
-        (
-          validObjectWithParameterKeys(action, ['itemsCount']) 
-            ? action.itemsCount 
-            : state.itemsCount
-        )
-      )
-      .set(
-        'itemsFilters',
-        (
-          validObjectWithParameterKeys(action, ['itemsFilters']) && 
-          strictValidObject(action.itemsFilters) &&
-          action.itemsFilters
-        ) || state.itemsFilters
-      );
+    )
+    .set(
+      'itemsFilters',
+      (
+        validObjectWithParameterKeys(action, ['itemsFilters']) && 
+        strictValidObject(action.itemsFilters) &&
+        action.itemsFilters
+      ) || 
+      typeCastToKeyValueObject(state, ['itemsFilters']).itemsFilters || 
+      DEFAULT_CONTACT_LIST_FILTERS
+    );
     // Reset Reducer
 	  case RESET_MESSAGE:
 		  return state

@@ -6,12 +6,14 @@ import {
 	strictValidString,
 	validObjectWithParameterKeys,
 	strictValidArray,
-	strictValidObject
+	strictValidObject,
+	typeCastToKeyValueObject
 } from '../../utils/commonutils';
 import {
 	DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES,
 	OFFSET,
-	RELATIONAL_MAPPING_INFO_LIST
+	RELATIONAL_MAPPING_INFO_LIST,
+	DEFAULT_ACCOUNT_LIST_FILTERS
 } from '../../utils/constants';
 
 // Action creators
@@ -40,13 +42,7 @@ const initialState = Immutable.fromJS({
   loadErr: null,
   items: [],
   itemsCount: 0,
-	itemsFilters: {
-  	status: '',
-		keyword: '',
-		page: 1,
-		limit: OFFSET,
-		order: [['firstName', 'ASC']]
-	},
+	itemsFilters: DEFAULT_ACCOUNT_LIST_FILTERS,
   selectedUser: {},
 	passwordUpdated: false,
 	passwordUpdatedMsg: null,
@@ -71,7 +67,7 @@ export default function reducer(state = initialState, action) {
 					(
 						validObjectWithParameterKeys(action, ['message']) && 
 						typeCastToString(action.message)
-					) || state.message
+					) || null
 				);
     case LOAD_FAIL:
       return state
@@ -81,7 +77,7 @@ export default function reducer(state = initialState, action) {
 					(
 						validObjectWithParameterKeys(action, ['error']) && 
 						typeCastToString(action.error)
-					) || state.loadErr
+					) || null
 				);
 		// Accounts		
 		case LOAD_ACCOUNTS:		
@@ -92,14 +88,16 @@ export default function reducer(state = initialState, action) {
 						validObjectWithParameterKeys(action, ['items']) && 
 						strictValidArray(action.items) &&
 						action.items
-					) || state.items
+					) || 
+					typeCastToKeyValueObject(state, ['items']).items ||
+					[]
 				)
 				.set(
 					'itemsCount', 
 					(
 						validObjectWithParameterKeys(action, ['itemsCount']) 
 							? action.itemsCount 
-							: state.itemsCount
+							: typeCastToKeyValueObject(state, ['itemsCount']).itemsCount || 0
 					)
 				)
 	      .set(
@@ -108,7 +106,9 @@ export default function reducer(state = initialState, action) {
 						validObjectWithParameterKeys(action, ['itemsFilters']) && 
 						strictValidObject(action.itemsFilters) &&
 						action.itemsFilters
-					) || state.itemsFilters
+					) || 
+					typeCastToKeyValueObject(state, ['itemsFilters']).itemsFilters || 
+					DEFAULT_ACCOUNT_LIST_FILTERS
 				);
 		// Verification of invite token		
     case VERIFY_TOKEN:
@@ -251,7 +251,8 @@ export const updateAccount = accountDetails => async (dispatch, getState, api) =
   dispatch({ type: LOAD });
   try {
 		// Get users object from reducer
-	  let users = getState().get('account').get('items');
+		let users = getState().get('account').get('items');
+		let usersCount = getState().get('account').get('itemsCount');
 		let selectedUser = {};
 		// Fetch user id & delete it from accountDetails object
     const { id } = accountDetails;
@@ -278,7 +279,7 @@ export const updateAccount = accountDetails => async (dispatch, getState, api) =
 		await dispatch(loadAccounts());
     dispatch({
 	    type: LOAD_ACCOUNTS,
-	    items: users
+			items: users
 		});
 		dispatch({
 			type: SELECT_USER,

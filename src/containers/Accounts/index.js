@@ -8,6 +8,7 @@ import { loadAccounts, saveAccount, updateAccount, selectUser } from '../../redu
 import AccountModal  from '../../components/AccountModal';
 import Pagination from '../../components/Pagination';
 import {
+  strictValidArray,
   strictValidArrayWithLength,
   validObjectWithParameterKeys,
   strictValidArrayWithMinLength,
@@ -294,7 +295,7 @@ export default class Accounts extends Component {
                   </Table.Body>
                 </Table>
 			          {
-				          strictValidArrayWithLength(items) &&
+				          strictValidArray(items) &&
                   <Pagination
                     totalEntries={itemsCount}
                     offset={itemsFilters.limit}

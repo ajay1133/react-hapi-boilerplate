@@ -59,49 +59,48 @@ export default class Pagination extends React.Component {
         </Container>
       );
     }
-
     const page = Math.ceil(totalEntries / offset) >= currentPage ? currentPage : 1;
     const range = [];
     for (let i = 1; i <= Math.ceil(totalEntries / offset); i++) {
       range.push(i);
     }
-
     const disablePrevBtn = page === 1;
     const disableNextBtn = page === range.length;
-    // const userStartRange = page === 1 ? 1 : ((offset * (page - 1)) + 1);
-    // const userEndRange = page === range.length ? totalEntries : (offset * page);
     const nextPage = page === range.length ? page : page + 1;
     const prevPage = page === 1 ? 1 : page - 1;
-
     return (
       <div className="row">
         <div className="col-sm-12 col-12">
           <Menu floated="right" pagination>
             {
-              this.renderNavigateButton(disablePrevBtn, prevPage, <Icon name="chevron left" />, <span>nest</span>)
+              this.renderNavigateButton(
+                disablePrevBtn, 
+                prevPage, 
+                <Icon name="chevron left" />, 
+                <span>nest</span>
+              )
             }
-
             {
               range.map((v) => {
                 const isCurrent = v === page;
-
                 if (v === page - 1 || v === page + 1 || v === page || v === 1) {
                   return (this.renderButton(v, isCurrent, true));
                 }
-
                 if (v === page + 2 || v === page - 2) {
                   return (this.renderButton(v, isCurrent, false));
                 }
-
                 if (v === range.length) {
                   return (this.renderButton(v, isCurrent, true));
                 }
                 return null;
               })
             }
-
             {
-              this.renderNavigateButton(disableNextBtn, nextPage, <Icon name="chevron right" />)
+              this.renderNavigateButton(
+                disableNextBtn, 
+                nextPage, 
+                <Icon name="chevron right" />
+              )
             }
           </Menu>
         </div>
