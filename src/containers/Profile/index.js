@@ -11,7 +11,8 @@ import {
 	typeCastToString,
 	strictValidArrayWithLength,
 	validObjectWithParameterKeys,
-	getOptionsListFromArray
+	getOptionsListFromArray,
+	typeCastToKeyValueObject
 } from '../../utils/commonutils';
 import {
 	DEFAULT_ACTIVE_TAB_INDEX,
@@ -30,14 +31,13 @@ const selector = formValueSelector('profileForm');
 @connect(state => ({
   initialValues: Object.assign(
   	{},
-	  (validObjectWithParameterKeys(state.get('auth').get('user'), ['id']) && state.get('auth').get('user')) || {},
+	  typeCastToKeyValueObject(state.get('auth').get('user')),
 	  state.get('account').get('userDetails') || {}
   ),
 	user: state.get('auth').get('user'),
 	isLoad: state.get('auth').get('isLoad'),
+	message: state.get('auth').get('message'),
 	loadErr: state.get('auth').get('loadErr'),
-	accountMsg: state.get('account').get('accountMsg'),
-	accountErr: state.get('account').get('accountErr'),
 	currentPassword: selector(state, 'currentPassword'),
 	password: selector(state, 'password'),
 	confirmPassword: selector(state, 'confirmPassword')
@@ -50,12 +50,11 @@ export default class Profile extends Component {
 	static propTypes = {
 		dispatch: PropTypes.func,
 		handleSubmit: PropTypes.func,
+		initialValues: PropTypes.object,
 		user: PropTypes.object,
-		loadErr: PropTypes.string,
 		isLoad: PropTypes.bool,
-		accountMsg: PropTypes.string,
-		accountErr: PropTypes.string,
-		error: PropTypes.string,
+		message: PropTypes.string,
+		loadErr: PropTypes.string,
 		currentPassword: PropTypes.string,
 		password: PropTypes.string,
 		confirmPassword: PropTypes.string
@@ -72,11 +71,6 @@ export default class Profile extends Component {
 		activeTabIndex: DEFAULT_ACTIVE_TAB_INDEX,
 		serviceTypesFieldArray: [],
 		serviceErrorStr: null
-	};
-	
-	constructor(props) {
-		super(props);
-		this.handleSubmit = this.handleSubmit.bind(this);
 	};
 	
 	componentDidMount = async () => {

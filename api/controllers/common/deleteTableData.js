@@ -12,8 +12,8 @@ module.exports = {
     strategy: 'default'
   },
   tags: ['api', 'common'],
-  description: 'Delete Table Data',
-  notes: 'Delete Table Data',
+  description: 'Delete table data',
+  notes: 'Delete table data',
   validate: {
     payload: {
 	    table: joi.string()
@@ -21,15 +21,13 @@ module.exports = {
 	              .description('Table to update data'),
 	    whereObj: joi.object()
 	                 .required()
-	                 .description('Where Condition Object')
+	                 .description('Where condition object')
     },
     options: { abortEarly: false },
   },
-  
   handler: async (request, h) => {
     const { payload } = request;
     const { table, whereObj } = payload;
-    
     try {
       const data = await commonService.deleteTableData(table, whereObj);
       return h.response(data);

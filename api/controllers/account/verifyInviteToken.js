@@ -2,7 +2,6 @@ const joi = require('joi');
 const boom = require('boom');
 const accountService = require('../../services/accountService');
 const jwtHelper = require('../../helpers/jwtHelper');
-const i18n = require('../../helpers/i18nHelper');
 
 module.exports = {
   plugins: {
@@ -10,40 +9,35 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  // auth: 'default',
   tags: ['api', 'account'],
-  description: 'Update user',
-
-  notes: 'update password',
-
-
+  description: 'Verify token',
+  notes: 'Verify token',
   validate: {
     payload: {
-      password: joi.string(),
-      confirmPassword: joi.string(),
       inviteToken: joi.string()
     },
     options: { abortEarly: false },
   },
-
   handler: async (request, h) => {
     const payload = request.payload;
-    
     try {
       let userdata = await jwtHelper.verify(payload.inviteToken);
+      // If thge decrytpted jwt object contains 'email' key it is a valid token if such an user exists
       if (userdata.email) {
-        return await accountService.updatePassword({
-          password: payload.password,
-          email: userdata.email,
-          inviteToken: '',
-          inviteStatus: 1
-        });
+        const res = await accountService.getUserByEmail( userdata.email );
+        if (res.inviteStatus === 0) {
+	        return h.response({ tokenValid: true });
+        }
+        return h.response({ tokenValid: false });
+      } else {
+        return h.response({ tokenValid: false });
       }
     } catch(err) {
       if (err && err.message === 'jwt expired') {
-        return boom.badImplementation(i18n('plugins.auth.expired'));
+        return boom.badRequest("Link is expired");
+      } else {
+	      return boom.badRequest(JSON.stringify(err));
       }
-      return boom.badImplementation(err);
     }
   }
 };

@@ -2,7 +2,7 @@ const prefix = '/common';
 
 module.exports = [
 	{
-		path: `${prefix}/tableData`,
+		path: `${prefix}/getTableData`,
 		method: 'GET',
 		config: require('./getTableData')
 	},

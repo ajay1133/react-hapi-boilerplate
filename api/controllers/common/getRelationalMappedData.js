@@ -12,8 +12,8 @@ module.exports = {
     strategy: 'default'
   },
   tags: ['api', 'common'],
-  description: 'Get Relational Mapped Data',
-  notes: 'Get Relational Mapped Data',
+  description: 'Get relational mapped data',
+  notes: 'Get relational mapped data',
 	validate: {
 		query: {
 			userId: joi.number()
@@ -22,7 +22,6 @@ module.exports = {
 	},
   handler: async (request, h) => {
     const { userId } = request.query;
-    
     try {
       const queryOnPrimaryTable = { status: 1 };
       const queryOnSecondaryTable = userId ? { userId } : {};

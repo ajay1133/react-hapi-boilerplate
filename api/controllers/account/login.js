@@ -11,9 +11,9 @@ module.exports = {
   auth: {
     strategy: 'default'
   },
-  tags: ['api', 'socialAccount'],
-  description: 'Create Social User',
-  notes: 'Social User registeration and login',
+  tags: ['api', 'account'],
+  description: 'User authentication',
+  notes: 'User authentication',
   validate: {
     payload: {
       email: joi.any(),
@@ -24,7 +24,7 @@ module.exports = {
   handler: async (request, h) => {
     let payload = request.payload;
     if (request.auth.credentials && request.auth.credentials.id) {
-      return {user: request.auth.credentials};
+      return { user: request.auth.credentials };
     } else {
       const userPool = request.server.plugins['cognito-auth'].userPool;
       try {

@@ -68,7 +68,6 @@ fs.readdirSync(dbModelsDirAbsPath).forEach(file => {
 	}
 });
 
-console.log('db.models => ', db.models);
 // Associations
 constants.RELATIONAL_MAPPING_LIST.forEach(v => {
   const parameterKeysList = [v.primaryTable, v.secondaryTable];

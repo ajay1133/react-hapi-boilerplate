@@ -11,7 +11,6 @@ exports.strictValidArrayWithLength = arr => arr && Array.isArray(arr) && !!arr.l
 exports.isValidTable = table => {
 	let isValidTable = false;
 	isValidTable = table && Object.keys(db.models).indexOf(table) > -1;
-	console.log(db.models);
 	const tableModel = isValidTable ? db.models[table] : {};
 	isValidTable = isValidTable && Object.keys(tableModel).indexOf('tableAttributes') > -1 &&
 		!!Object.keys(tableModel.tableAttributes).length;

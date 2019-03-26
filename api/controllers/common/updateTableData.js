@@ -12,8 +12,8 @@ module.exports = {
     strategy: 'default'
   },
   tags: ['api', 'common'],
-  description: 'Update Table Data',
-  notes: 'Update Table Data',
+  description: 'Update table data',
+  notes: 'Update table data',
   validate: {
     payload: {
 	    table: joi.string()
@@ -21,18 +21,16 @@ module.exports = {
 	              .description('Table to update data'),
       dataObj: joi.object()
                   .required()
-                  .description('Update Data Object In Table'),
+                  .description('Update data object in table'),
 	    whereObj: joi.object()
 	                .required()
-	                .description('Where Condition Object')
+	                .description('Where condition object')
     },
     options: { abortEarly: false },
   },
-  
   handler: async (request, h) => {
     const { payload } = request;
 	  const { table, updateDataObj, whereObj } = payload;
-    
     try {
       let data = await commonService.updateTableData(table, updateDataObj, whereObj);
       return h.response(data);

@@ -17,13 +17,22 @@ export const DEFAULT_USER_PROFILE_IMAGE_URL = 'images/default_User_Profile_Image
 
 export const DEFAULT_BLOG_IMAGE_URL = 'images/default_Blog_Image.jpg';
 
-export const VALID_BEGIN_FILE_NAME = '^[_|0-9|a-z|A-Z]+';
+export const DEFAULT_VALID_BEGIN_FILE_NAME_REG_EXP = '^[_|0-9|a-z|A-Z]+';
 
-export const IMAGE_FILE_NAME_BEGIN_REG_EXP = '^[_|0-9|a-z|A-Z|//|-]+';
+export const DEFAULT_IMAGE_FILE_NAME_BEGIN_REG_EXP = '^[_|0-9|a-z|A-Z|//|-]+';
 
 export const DEFAULT_OPTION = 'SELECT';
 
-export const STATES_LIST = [];
+export const STATES_LIST = [
+	'Test State'
+];
+
+export const STATUS_DROPDOWN_OPTIONS_OBJECT_LIST = [
+  { key: 0, text: 'Please select', value: '' },
+  { key: 2, text: 'Pending', value: 2, label: { color: 'yellow', empty: true, circular: true }, },
+  { key: 3, text: 'Denied', value: 3, label: { color: 'red', empty: true, circular: true }, },
+  { key: 1, text: 'Active', value: 1, label: { color: 'green', empty: true, circular: true } },
+];
 
 export const USER_PROFILE_TABS = [
 	{

@@ -12,13 +12,13 @@ module.exports = {
     strategy: 'default'
   },
   tags: ['api', 'common'],
-  description: 'Get Table Data',
-  notes: 'Get Table Data',
+  description: 'Get table data',
+  notes: 'Get table data',
 	validate: {
 		query: {
 			table: joi.string()
 			          .required()
-			          .description('Table to update data'),
+			          .description('Table to get data'),
 			page: joi.string()
 			         .allow('', null)
 			         .default('')
@@ -55,7 +55,6 @@ module.exports = {
   handler: async (request, h) => {
     const { query } = request;
     const { table } = query;
-    
     try {
       let data = await commonService.getTableData(table, query);
       return h.response(data);

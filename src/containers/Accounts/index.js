@@ -10,48 +10,42 @@ import Pagination from '../../components/Pagination';
 import {
   strictValidArrayWithLength,
   validObjectWithParameterKeys,
-  strictValidArrayWithMinLength
+  strictValidArrayWithMinLength,
+  typeCastToKeyValueObject
 } from '../../utils/commonutils';
-import { OFFSET } from '../../utils/constants';
+import { STATUS_DROPDOWN_OPTIONS_OBJECT_LIST } from '../../utils/constants';
 import AuthenticatedUser from '../../components/AuthenticatedUser';
 import '../../style/css/style.css';
 
-const rowBgColor = [];
-rowBgColor[1] = 'bg-success';
-rowBgColor[2] = 'bg-warning';
-rowBgColor[3] = 'bg-danger';
+const TableRow = ({ row, editAccount, typeAction }) => {
+  const rowBgColor = [];
+  rowBgColor[1] = 'bg-success';
+  rowBgColor[2] = 'bg-warning';
+  rowBgColor[3] = 'bg-danger';
 
-const statusDropDownArr = [
-  { key: 0, text: 'Please select', value: '' },
-  { key: 2, text: 'Pending', value: 2, label: { color: 'yellow', empty: true, circular: true }, },
-  { key: 3, text: 'Denied', value: 3, label: { color: 'red', empty: true, circular: true }, },
-  { key: 1, text: 'Active', value: 1, label: { color: 'green', empty: true, circular: true } },
-];
-const TableRow = ({row, editAccount, typeAction}) => (
-  <Table.Row className={(row.status) ? rowBgColor[row.status] : 'bg-warning'}>
-    <Table.Cell>{ row.firstName } { row.lastName }</Table.Cell>
-    <Table.Cell>{ row.email } </Table.Cell>
-    <Table.Cell>{ row.phone }</Table.Cell>
-    <Table.Cell>
-      <a onClick={ () => editAccount(row) } >  <Icon name='edit outline' size='small' /> </a>
-      <a onClick={() => typeAction('delete', row)} > <Icon name='trash alternate outline' size='small' /> </a>
-      <a onClick={() => typeAction('active', row)} > <Icon name='check circle outline' size='small' /></a>
-      <a onClick={() => typeAction('denied', row)} > <Icon name='eye slash outline' size='small' /> </a>
-    </Table.Cell>
-  </Table.Row>
-);
+  return (
+    <Table.Row className={ row.status ? rowBgColor[row.status] : 'bg-warning' }>
+      <Table.Cell>{ row.firstName } { row.lastName }</Table.Cell>
+      <Table.Cell>{ row.email } </Table.Cell>
+      <Table.Cell>{ row.phone }</Table.Cell>
+      <Table.Cell>
+        <a onClick={ () => editAccount(row) } >  <Icon name='edit outline' size='small' /> </a>
+        <a onClick={() => typeAction('delete', row)} > <Icon name='trash alternate outline' size='small' /> </a>
+        <a onClick={() => typeAction('active', row)} > <Icon name='check circle outline' size='small' /></a>
+        <a onClick={() => typeAction('denied', row)} > <Icon name='eye slash outline' size='small' /> </a>
+      </Table.Cell>
+    </Table.Row>
+  );
+};
 
 @connect(state => ({
 	user: state.get('auth').get('user'),
   items: state.get('account').get('items'),
-	itemsFilters: (
-	  validObjectWithParameterKeys(state.get('account').get('itemsFilters'), ['page']) &&
-    state.get('account').get('itemsFilters')
-  ) || state.get('account').get('itemsFilters').toJSON() || {},
-	itemsCount: state.get('account').get('itemsCount'),
-  loadErr: state.get('account').get('loadErr'),
-  accountErr: state.get('account').get('accountErr'),
-  message: state.get('account').get('accountMsg')
+	itemsFilters: typeCastToKeyValueObject(state.get('account').get('itemsFilters'), ['page']),
+  itemsCount: state.get('account').get('itemsCount'),
+  isLoad: state.get('account').get('isLoad'),
+  message: state.get('account').get('accountMsg'),
+  loadErr: state.get('account').get('loadErr')
 }))
 @reduxForm({
   form: 'listAccountFiltersForm',
@@ -59,17 +53,19 @@ const TableRow = ({row, editAccount, typeAction}) => (
 })
 export default class Accounts extends Component {
   static propTypes = {
-	  user: PropTypes.oneOfType([
-		  PropTypes.string,
-		  PropTypes.object
-	  ]),
+	  user: PropTypes.object,
     dispatch: PropTypes.func,
+    items: PropTypes.array,
+    itemsFilters: PropTypes.object,
+    itemsCount: PropTypes.number,
+    isLoad: PropTypes.bool,
     message: PropTypes.string,
-    isLoad: PropTypes.bool
+    loadErr: PropTypes.string
   };
   
   static defaultProps = {
-    dispatch: null
+    dispatch: null,
+    items: PropTypes.object
   };
   
   state = {
@@ -80,17 +76,8 @@ export default class Accounts extends Component {
     showMessageFlag: true
   };
   
-  constructor(props) {
-    super(props);
-    this.account = this.account.bind(this);
-    this.editAccount = this.editAccount.bind(this);
-    this.typeAction = this.typeAction.bind(this);
-    this.closeConfirmBox = this.closeConfirmBox.bind(this);
-    this.handleEditUserCancel = this.handleEditUserCancel.bind(this);
-  };
-  
   componentDidMount = async () => {
-	  const { dispatch, itemsFilters } = this.props;
+    const { dispatch, itemsFilters } = this.props;
 	  await dispatch(loadAccounts(itemsFilters));
 	  this.setState({ loading: false });
   };
@@ -154,7 +141,7 @@ export default class Accounts extends Component {
       strictValidArrayWithMinLength(initialColumnOrderList[0], 2) ? initialColumnOrderList[0][1] || 'ASC' : 'ASC';
 	  const newSortDir = sortDir.toUpperCase() === 'ASC' ? 'DESC' : 'ASC';
 	  const newOrderByList = [[sortCol, newSortDir]];
-	  dispatch(loadAccounts(Object.assign(itemsFilters, { order: newOrderByList })));
+	  await dispatch(loadAccounts(Object.assign(itemsFilters, { order: newOrderByList })));
 	  this.setState({ loading: false });
   };
   
@@ -163,15 +150,15 @@ export default class Accounts extends Component {
     const { dispatch } = this.props;
 	  this.setState({ loading: true });
 	  itemsFilters.page = 1;
-    dispatch(loadAccounts(Object.assign(itemsFilters, { status })));
+    await dispatch(loadAccounts(Object.assign(itemsFilters, { status })));
 	  this.setState({ loading: false });
   };
 	
-	handleNavigatePage = (page) => {
+	handleNavigatePage = async page => {
 		const { itemsFilters } = this.props;
 		const { dispatch } = this.props;
 		this.setState({ loading: true });
-		dispatch(loadAccounts(Object.assign(itemsFilters, { page })));
+		await dispatch(loadAccounts(Object.assign(itemsFilters, { page })));
 		this.setState({ loading: false });
   };
 	
@@ -204,7 +191,7 @@ export default class Accounts extends Component {
   };
   
   render() {
-    const { items, itemsFilters, itemsCount, loadErr, accountErr, message } = this.props;
+    const { items, itemsFilters, itemsCount, isLoad, message, loadErr } = this.props;
     const { loading, selectedUser, showMessageFlag, openConfirmBox, type } = this.state;
     
 	  return (
@@ -216,17 +203,17 @@ export default class Accounts extends Component {
           </Message>
 			  }
 			  {
-				  (loadErr || accountErr) && showMessageFlag &&
+				  loadErr && showMessageFlag &&
           <Message onDismiss={this.messageDismiss}>
-            <span style={{ color: 'red' }}>{ loadErr || accountErr }</span>
+            <span style={{ color: 'red' }}>{ loadErr }</span>
           </Message>
 			  }
 	      {
-		      loading &&
+		      (loading || isLoad) &&
           <Loader active inline='centered'>Loading...</Loader>
 	      }
         {
-          !loading &&
+          !loading && !isLoad &&
           <Grid>
             <div className="ui left floated column innerAdjust">
               <h3 className="mainHeading"> Accounts</h3>
@@ -253,7 +240,7 @@ export default class Accounts extends Component {
                           className="minWidth130"
                           name="status"
                           component={ DropDown }
-                          options={ statusDropDownArr }
+                          options={ STATUS_DROPDOWN_OPTIONS_OBJECT_LIST }
                           inline={ true }
                           fluid={ true }
                           search={ true }
@@ -268,7 +255,7 @@ export default class Accounts extends Component {
               </Grid.Column>
             </Grid.Row>
             <Grid.Row>
-              <Grid.Column  computer={12}>
+              <Grid.Column computer={12}>
                 <Table celled>
                   <Table.Header>
                     <Table.Row>
@@ -316,9 +303,9 @@ export default class Accounts extends Component {
 				          strictValidArrayWithLength(items) &&
                   <Pagination
                     totalEntries={itemsCount}
-                    offset={OFFSET}
+                    offset={itemsFilters.limit}
                     currentPage={itemsFilters.page}
-                    navigate={(page) => this.handleNavigatePage(page)}
+                    navigate={page => this.handleNavigatePage(page)}
                   />
 			          }
               </Grid.Column>

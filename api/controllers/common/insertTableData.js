@@ -8,17 +8,12 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  
   auth: {
     strategy: 'default'
   },
-  
   tags: ['api', 'common'],
-  
-  description: 'Create Table Data',
-  
-  notes: 'Create Table Data',
-  
+  description: 'Create table data',
+  notes: 'Create table data',
   validate: {
     payload: {
     	table: joi.string()
@@ -27,15 +22,13 @@ module.exports = {
       dataObj: joi.array()
                         .required()
                         .single()
-                        .description('Data Object To Insert In Table')
+                        .description('Data object to insert in table')
     },
     options: { abortEarly: false },
   },
-  
   handler: async (request, h) => {
     const { payload } = request;
     const { table,dataObj } = payload;
-    
     try {
       const data = await commonService.insertTableData(table, dataObj);
       return h.response(data);

@@ -12,8 +12,8 @@ module.exports = {
     strategy: 'default'
   },
   tags: ['api', 'common'],
-  description: 'Create Table Data In Bulk',
-  notes: 'Create Table Data In Bulk',
+  description: 'Create table data in bulk',
+  notes: 'Create table data in bulk',
   validate: {
     payload: {
     	table: joi.string()
@@ -22,7 +22,7 @@ module.exports = {
       dataListOfObjects: joi.array()
                             .required()
                             .single()
-                            .description('Data List Of Objects To Insert In Table')
+                            .description('Data list of objects to insert in table')
     },
     options: { abortEarly: false },
   },

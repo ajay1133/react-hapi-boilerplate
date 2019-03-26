@@ -12,8 +12,8 @@ module.exports = {
     strategy: 'default'
   },
   tags: ['api', 'common'],
-  description: 'Delete Table Data In Bulk',
-  notes: 'Delete Table Data In Bulk',
+  description: 'Delete table data in bulk',
+  notes: 'Delete table data in bulk',
   validate: {
     payload: {
 	    table: joi.string()
@@ -21,14 +21,13 @@ module.exports = {
 	              .description('Table to update data'),
 	    whereObj: joi.object()
 	                 .required()
-	                 .description('Where Condition Object')
+	                 .description('Where condition object')
     },
     options: { abortEarly: false },
   },
   handler: async (request, h) => {
     const { payload } = request;
     const { table, whereObj } = payload;
-    
     try {
       const data = await commonService.deleteTableData(table, whereObj);
       return h.response(data);

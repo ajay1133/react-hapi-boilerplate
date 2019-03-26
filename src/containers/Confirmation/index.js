@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Grid, Message, Container, Loader } from  'semantic-ui-react';
-import { verifyToken, updatePassword } from '../../redux/modules/account';
+import { verifyInviteToken, updatePassword } from '../../redux/modules/account';
 import ChangePassword from '../../components/ChangePassword';
 import { DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES } from '../../utils/constants';
 import { push } from 'react-router-redux';
@@ -48,7 +48,7 @@ class Confirmation extends Component {
 
   componentDidMount = async () => {
     const { dispatch } = this.props;
-    await dispatch(verifyToken(this.props.match.params.inviteToken));
+    await dispatch(verifyInviteToken(this.props.match.params.inviteToken));
 	  this.setState({ loading: false });
   };
   

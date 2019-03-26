@@ -9,10 +9,12 @@ module.exports = {
       payloadType: 'form',
     },
   },
-  // auth: 'default',
+  auth: {
+    strategy: 'default'
+  },
   tags: ['api', 'account'],
-  description: 'Update user',
-  notes: 'update password',
+  description: 'Update user password with the help of email & current password',
+  notes: 'Update user password with the help of email & current password',
   validate: {
     payload: {
 	    email: joi.string()
@@ -30,7 +32,7 @@ module.exports = {
 
   handler: async (request, h) => {
     const { email, currentPassword, newPassword } = request.payload;
-	
+	  // If user is authenticated update user password 
 	  try {
 	    const user = await sessionService.authenticate(email, currentPassword);
 	    if (user && user.id) {
@@ -38,7 +40,7 @@ module.exports = {
 			    email,
 			    password: newPassword
 		    });
-		    return h.response({ success: result });
+		    return h.response({ success: !!result });
 	    } else {
 	    	return boom.badRequest('Invalid Email or Password');
 	    }

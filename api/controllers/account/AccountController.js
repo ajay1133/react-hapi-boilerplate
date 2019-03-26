@@ -4,41 +4,41 @@ module.exports = [
   {
     path: `${prefix}/all`,
     method: 'GET',
-    config: require('./accountGetAll'),
+    config: require('./getUsers'),
   },
   {
     path: `${prefix}/{id?}`,
     method: 'GET',
-    config: require('./accountGet'),
+    config: require('./getUser'),
   },
   {
     path: `${prefix}`,
     method: 'POST',
-    config: require('./accountCreate'),
+    config: require('./create'),
   },
   {
     path: `${prefix}/login`,
     method: 'POST',
-    config: require('./accountLogin'),
+    config: require('./login'),
   },
   {
-    path: `${prefix}/verify/token`,
+    path: `${prefix}/verifyInviteToken`,
     method: 'POST',
-    config: require('./accountVerifyToken'),
-  },
-  {
-    path: `${prefix}/update/password`,
-    method: 'PUT',
-    config: require('./accountUpdatePassword'),
+    config: require('./verifyInviteToken'),
   },
   {
     path: `${prefix}/{id}`,
     method: 'PUT',
-    config: require('./accountUpdate'),
+    config: require('./update'),
   },
-	{
-		path: `${prefix}/update/passwordWithoutToken`,
+  {
+		path: `${prefix}/updatePasswordWithToken`,
 		method: 'PUT',
-		config: require('./accountUpdatePasswordWithoutToken'),
+		config: require('./updatePasswordWithToken'),
+	},
+	{
+		path: `${prefix}/updatePasswordWithoutToken`,
+		method: 'PUT',
+		config: require('./updatePasswordWithoutToken'),
 	},
 ];

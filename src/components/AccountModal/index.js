@@ -4,9 +4,9 @@ import { connect } from 'react-redux';
 import { Field, reduxForm, reset } from 'redux-form/immutable';
 import { Button, Form, Grid, Loader } from 'semantic-ui-react';
 import { TextBox, TextArea, DropDown } from '../Form';
-import { required, email, normalizePhone, url, isValidZip } from '../../utils/validations';
+import { required, email, normalizePhone, isValidZip } from '../../utils/validations';
 import { validObjectWithParameterKeys, getOptionsListFromArray } from '../../utils/commonutils';
-import { US_STATES_LIST } from '../../utils/constants';
+import { STATES_LIST } from '../../utils/constants';
 
 @connect(state => ({
   initialValues: state.get('account').get('selectedUser')
@@ -18,6 +18,7 @@ import { US_STATES_LIST } from '../../utils/constants';
 export default class AccountModal extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
+    initialValues: PropTypes.object,
     handleSubmit: PropTypes.func,
     account: PropTypes.func,
     selectedUser: PropTypes.object,
@@ -29,18 +30,13 @@ export default class AccountModal extends Component {
     loading: false
   };
   
-  constructor(props) {
-    super(props);
-    this.account = this.account.bind(this);
-  };
-  
-  account = async (formData) => {
+  saveAccount = async (formData) => {
     const { dispatch, account, selectedUser } = this.props;
     const accountData = formData.toJS();
     this.setState({ loading: true });
     await account(accountData);
     if (!validObjectWithParameterKeys(selectedUser, ['id'])) {
-      dispatch(reset('accountForm'));
+      await dispatch(reset('accountForm'));
     }
 	  this.setState({ loading: false });
   };
@@ -54,15 +50,14 @@ export default class AccountModal extends Component {
   
   render() {
     const { handleSubmit, submitting, selectedUser } = this.props;
-    
-    if (this.state.loading) {
+    const { loading } = this.state;
+    if (loading) {
       return (
         <Loader active inline='centered'>Loading...</Loader>
       );
     }
-    
     return (
-      <Form className="mt-10" onSubmit={handleSubmit(this.account)}>
+      <Form className="mt-10" onSubmit={handleSubmit(this.saveAccount)}>
         <Field
           name="title"
           placeholder="Title"
@@ -114,7 +109,7 @@ export default class AccountModal extends Component {
           noResultsMessage="No results found"
           name="state"
           placeholder="State"
-          options={ getOptionsListFromArray(US_STATES_LIST) }
+          options={ getOptionsListFromArray(STATES_LIST) }
           component={DropDown}
         />
         <Field
