@@ -14,110 +14,82 @@ const constants = require('../constants');
  * Create a user
  * @param userPayload {email, password}
  */
-exports.createUser = (userPayload) => new Promise((resolve, reject) => {
+exports.createUser = async userPayload => {
   try {
 	  assert(userPayload, i18n('services.accountService.missingUserPayload'));
     const userData = Object.assign({}, userPayload);
+    // Delete password from userData object
 	  delete userData.password;
-	
-	  userData.role = userPayload.role || 2;
-	  
-    users
-	    .findOne({ where: { email: userPayload.email }})
-	    .then(existingUser => {
-	    	if (existingUser) {
-	    		reject(i18n('services.accountService.emailExists'));
-		    }
-		    if (userPayload.password) {
-			    return cryptoHelper.hashString(userPayload.password);
-		    } else {
-		    	return jwtHelper.sign(userData, '48h', 'HS512');
-		    }
-	    })
-	    .then(response => {
-		    if (userPayload.password) {
-			    userData.hash = response.hash;
-			    userData.salt = response.salt;
-		    } else {
-			    userData.inviteToken = response;
-			    userData.inviteStatus = 0;
-		    }
-		
-		    return users.create(userData);
-	    })
-	    .then(createdUser => {
-		    // User Registration Email
-		    if (userPayload.sendInvitationEmailFlag) {
-			    const url = config.BasePath.host;
-			    const subject = ' Welcome to Share Cabs';
-			    const model = {
-				    inviteLink: userData.inviteToken ? `${url}/accept/invitation/${userData.inviteToken}` : `${url}`,
-				    name: userPayload.firstName + ' ' + userPayload.lastName,
-				    inviteToken: userData.inviteToken
-			    };
-			    return Promise.all([
-			    	createdUser,
-			    	userRegistration(userPayload.email, subject, model)
-		      ]);
-		    }
-		    return Promise.resolve(createdUser);
-	    })
-	    .then(response => {
-		    if (userPayload.sendInvitationEmailFlag) {
-		    	resolve(response[0]);
-		    }
-		    resolve(response);
-	    })
-	    .catch(reject);
+    // Search for existing user with same email
+    const existingUser = await users.findOne({ where: { email: userPayload.email }});
+    // Exit with error code if same user is found
+    if (existingUser) {
+      return i18n('services.accountService.emailExists');
+    }
+    // If password is passed get hash & salt else set inviteToken by encoding userData
+    if (userPayload.password) {
+      const encryptedHash = await cryptoHelper.hashString(userPayload.password);
+      userData.hash = encryptedHash.hash || '';
+			userData.salt = encryptedHash.salt || '';
+    } else {
+      userData.inviteToken = await jwtHelper.sign(userData, '48h', 'HS512');;
+			userData.inviteStatus = 0;
+    }
+	  const createdUser = await users.create(userData);
+	  // Send user registration email if the flag is set to true
+		if (userPayload.sendInvitationEmailFlag) {
+      const url = config.BasePath.host;
+      const subject = ' Welcome to Share Cabs';
+			const model = {
+				inviteLink: userData.inviteToken ? `${url}/accept/invitation/${userData.inviteToken}` : `${url}`,
+		    name: userPayload.firstName + ' ' + userPayload.lastName,
+				inviteToken: userData.inviteToken
+      };
+      await userRegistration(userPayload.email, subject, model);
+    }
+    return createdUser.toJSON();	
   } catch(err) {
     return err;
   }
-});
+};
 
 /**
  * Return all user accounts for management
  */
-exports.getAllAccounts = (query) => new Promise(( resolve, reject ) => {
+exports.getAllAccounts = async query => {
   let { page, limit, order } = query;
   let conditionArr = [];
   let finalInclude = [];
-  
   page = page && page > 1 ? page : 1;
   let offset = page - 1;
   limit = (limit && parseInt(limit)) || 0;
   offset *= limit;
-  
   if (!order) {
     order = JSON.stringify([['id', 'ASC']]);
   }
-  
-	users
-    .findAndCountAll({
-	    attributes: constants.DEFAULT_USER_ATTRIBUTES,
-      include: finalInclude,
-      where: {
-        role: { $in: constants.DEFAULT_USER_ROLES },
-        $and: conditionArr
-      },
-      offset,
-      limit,
-      order: JSON.parse(order)
-    })
-    .then(resolve)
-    .catch (reject);
-});
+	return await users.findAndCountAll({
+	  attributes: constants.DEFAULT_USER_ATTRIBUTES,
+    include: finalInclude,
+    where: {        
+      role: { $in: constants.DEFAULT_USER_ROLES },
+      $and: conditionArr
+    },
+    offset,
+    limit,
+    order: JSON.parse(order)
+  });
+};
 
 /**
  * Get User on basis of user id
  * @param userId
  */
-exports.getUser = async (userId) => {
+exports.getUser = async userId => {
   try {
     let userDetails = await users.findOne({
       attributes: constants.DEFAULT_USER_ATTRIBUTES,
       where: { id: userId }
     });
-    
     if (userDetails) {
       return userDetails.toJSON();
     } else {
@@ -132,12 +104,11 @@ exports.getUser = async (userId) => {
  * Get User on basis of user email
  * @param email
  */
-exports.getUserByEmail = async (email) => {
+exports.getUserByEmail = async email => {
 	try {
 		let userDetails = await users.findOne({
 			where: { email }
 		});
-		
 		if (userDetails) {
 			return userDetails.toJSON();
 		} else {
@@ -152,49 +123,32 @@ exports.getUserByEmail = async (email) => {
  * Update User
  * @param userPayload { email, password, firstName, lastName } etc
  */
- exports.updateUser = (id, userPayload) => new Promise((resolve, reject) => {
+ exports.updateUser = async (id, userPayload) => {
    // assert(userPayload, i18n('services.accountService.missingUserPayload'));
    const userData = Object.assign({}, userPayload);
    if (userPayload.password) {
      delete userData.password;
      delete userData.id;
-     
-     cryptoHelper
-       .hashString(userPayload.password)
-       .then(({ hash, salt }) => {
-         userData.pwd = hash;
-         userData.pwdSalt = salt;
-       })
-       .catch((dbErr) => {
-         logger.error(dbErr);
-         reject(i18n('db.error'));
-       });
+     const encryptedHash = await cryptoHelper.hashString(userPayload.password);
+     userData.pwd = encryptedHash.hash || '';
+     userData.pwdSalt = encryptedHash.salt || '';
    }
-   else {
-     users
-       .update(userData, { where: { id } })
-       .then((data) => resolve(data))
-       .catch('error');
-   }
- });
+   const updatedUser = await users.update(userData, { where: { id } });
+   return updatedUser;
+ };
 
  /**
   * Update user password on confirmation
   * @param userPayload { password, email }
   */
- exports.updatePassword = async (userPayload) => {
+ exports.updatePassword = async userPayload => {
   try {
     const userData = Object.assign({}, userPayload);
     delete userData.password;
-    
-    let hashDetails = await cryptoHelper.hashString(userPayload.password);
-    
-    if (hashDetails) {
-      userData.hash = hashDetails.hash;
-      userData.salt = hashDetails.salt;
-  
-      return await users.update(userData, { where:{ email: userPayload.email }});
-    }
+    let encryptedHash = await cryptoHelper.hashString(userPayload.password);
+    userData.hash = encryptedHash.hash || '';
+    userData.salt = encryptedHash.salt || '';
+    return await users.update(userData, { where:{ email: userPayload.email }});
   } catch(err) {
     return err;
   }
@@ -203,9 +157,8 @@ exports.getUserByEmail = async (email) => {
 /**
  * contactUs: Used to send contact us email
  * @param payload
- * @returns {Promise.<*>}
  */
-exports.contactUs = async (payload) =>  {
+exports.contactUs = async payload =>  {
   try {
     const { name, email, message } = payload;
     // Contact Us Email
