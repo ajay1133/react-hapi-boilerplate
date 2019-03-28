@@ -1,17 +1,14 @@
 const accountService = require('../../services/accountService');
 module.exports = {
-  up: () => new Promise((resolve, reject) => {
+  up: async () => {
     const adminUser = {
-      email: 'admin@shareCabs.com',
+      email: `admin@premierRecruiter.com`,
       password: "admin123",
       role: 1,
       firstName: "Super",
       lastName: "Admin"
     };
-    accountService
-      .createUser(adminUser)
-      .then(resolve)
-      .catch(reject);
-  }),
-  down: () => { }
+    await accountService.createUser(adminUser);
+  },
+  down: () => {}
 };

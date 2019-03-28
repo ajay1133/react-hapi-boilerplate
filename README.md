@@ -1,9 +1,9 @@
-## shareCabs
+## premierRecruiter
 
 ### Local Environment Setup
 * Use Node Version: 10.x.x
 
-* Clone Project: git clone https://github.com/ajay1133/shareCabs.git
+* Clone Project: git clone https://github.com/ajay1133/premierRecruiter.git
 
 * Switch to staging Branch: git checkout staging
 
@@ -13,7 +13,7 @@
 
 * Copy config/db_bak.js => config/db.js
 
-* Run Command (create db, migration, seeders): npm run db
+* Run Command (create db, migration, seeders (Insert admin)): npm run db
 
 * Run Client App: npm start
 
@@ -21,7 +21,7 @@
 
 * Swagger API: http://localhost:5000/documentation
 
-* Admin User Details: admin@shareCabs.com/admin123
+* Inserted Admin User Details: admin@premierRecruiter.com/admin123
 
 
 #### Development process for new tasks:

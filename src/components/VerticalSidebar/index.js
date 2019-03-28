@@ -86,12 +86,10 @@ class VerticalSidebar extends Component {
 				icon='labeled'
 				inverted
 				vertical
-				visible
+				visible={false}
 				width='thin'
 			>
-				<Menu.Item as='a'>
-					<Image src='/images/logo.png' centered />
-				</Menu.Item>
+				<Menu.Item as='a'></Menu.Item>
 				{
 					isValidUserFlag &&
 					<Menu.Item>

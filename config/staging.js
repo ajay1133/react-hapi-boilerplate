@@ -10,7 +10,7 @@ module.exports = {
   redis: {
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT,
-    prefix: 'shareCabs_'
+    prefix: 'premierRecruiter_'
   },
   bitBucket: {
     username: db.bitBucket.username,

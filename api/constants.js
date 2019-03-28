@@ -1,3 +1,4 @@
+// Api folder constants
 exports.DEFAULT_USER_ATTRIBUTES = [
 	'id',
 	'role',
@@ -28,9 +29,12 @@ exports.USER_AUTHENTICATION_ATTRIBUTES = [
 exports.DEFAULT_USER_ROLES = [ 2 ];
 
 exports.RELATIONAL_MAPPING_LIST = [
-	/*{
-		primaryTable: 'primaryTable',
-		secondaryTable: 'secondaryTable',
-		targetKey: 'targetKey'
-	}*/
+	/*
+	** Follow the format
+	** {
+	** 		primaryTable: 'primaryTable',
+	**		secondaryTable: 'secondaryTable',
+	**		targetKey: 'targetKey'
+	** }
+	*/
 ];

@@ -4,9 +4,9 @@ orig_path=`pwd`
 source_dir=$(cd "$(dirname "$0")"; pwd)
 
 
-bucket="deploy.shareCabs.com"
+bucket="deploy.premierRecruiter.com"
 
-app_name=shareCabs
+app_name=premierRecruiter
 build_version=`date +"%Y-%m-%d-%H%M%S"`
 build_dir=./build_dir
 build_file=$app_name-$build_version.zip
@@ -33,7 +33,7 @@ cp ./api.js $build_dir
 
 echo "Creating a new revision..."
 
-aws --profile shareCabs-deploy \
+aws --profile premierRecruiter-deploy \
   deploy push \
   --no-ignore-hidden-files \
   --application-name $app_name \
@@ -45,12 +45,12 @@ rm -rf $build_dir
 echo "*** Revision: s3://$bucket/$app_name/$build_file"
 
 echo "Creating Deployment"
-aws --profile shareCabs-deploy deploy create-deployment \
+aws --profile premierRecruiter-deploy deploy create-deployment \
   --application-name $app_name \
   --deployment-config-name CodeDeployDefault.AllAtOnce \
   --deployment-group-name Stage \
   --s3-location bundleType=zip,bucket=$bucket,key=$app_name/$build_file
 
-aws --profile shareCabs-deploy s3 sync build/ s3://stagingapp.shareCabs.com
+aws --profile premierRecruiter-deploy s3 sync build/ s3://stagingapp.premierRecruiter.com
 
 cd $orig_path

@@ -1,38 +1,38 @@
 module.exports = {
-    development: {
-      username: 'root',
-      password: 'root',
-      database: 'shareCabs',
-      host: 'localhost',
-      dialect: 'mysql'
-    },
-    test: {
-      username: 'root',
-      password: null,
-      database: 'shareCabs_test',
-      host: '127.0.0.1',
-      dialect: 'mysql'
-    },
-    production: {
-      host: process.env.DB_HOST,
-      database: process.env.DB,
-      username: process.env.DB_USER,
-      password: process.env.DB_PWD,
-      dialect: 'mysql'
-    },
-    staging: {
-      host: process.env.DB_HOST,
-      database: process.env.DB,
-      username: process.env.DB_USER,
-      password: process.env.DB_PWD,
-      dialect: 'mysql'
-    },
-    aws: {
-      key: process.env.AWS_KEY,
-      secret: process.env.AWS_SECRET
-    },
-    redis: {
-      host: process.env.REDIS_HOST || '127.0.0.1',
-      port: process.env.REDIS_POST || '6379'
-    },
-  };
+  development: {
+    username: 'root',
+    password: 'root',
+    database: 'premierRecruiter',
+    host: 'localhost',
+    dialect: 'mysql'
+  },
+  test: {
+    username: 'root',
+    password: null,
+    database: 'premierRecruiter_test',
+    host: '127.0.0.1',
+    dialect: 'mysql'
+  },
+  production: {
+    host: process.env.DB_HOST,
+    database: process.env.DB,
+    username: process.env.DB_USER,
+    password: process.env.DB_PWD,
+    dialect: 'mysql'
+  },
+  staging: {
+    host: process.env.DB_HOST,
+    database: process.env.DB,
+    username: process.env.DB_USER,
+    password: process.env.DB_PWD,
+    dialect: 'mysql'
+  },
+  aws: {
+    key: process.env.AWS_KEY,
+    secret: process.env.AWS_SECRET
+  },
+  redis: {
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: process.env.REDIS_POST || '6379'
+  },  
+};

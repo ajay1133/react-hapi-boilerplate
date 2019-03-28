@@ -49,7 +49,7 @@ exports.createUser = (userPayload) => new Promise((resolve, reject) => {
 		    // User Registration Email
 		    if (userPayload.sendInvitationEmailFlag) {
 			    const url = config.BasePath.host;
-			    const subject = ' Welcome to ShareCabs';
+			    const subject = ' Welcome to Premier Recruiter';
 			    const model = {
 				    inviteLink: userData.inviteToken ? `${url}/accept/invitation/${userData.inviteToken}` : `${url}`,
 				    name: userPayload.firstName + ' ' + userPayload.lastName,

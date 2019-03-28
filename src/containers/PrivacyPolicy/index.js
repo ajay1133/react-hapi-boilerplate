@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Grid, Container, Image, List } from  'semantic-ui-react';
+import { Grid, Container, List } from  'semantic-ui-react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import '../../style/css/style.css';
@@ -10,14 +10,7 @@ const PrivacyPolicy = withRouter(({ location, user }) => {
     <Container fluid>
       <Grid centered verticalAlign="middle">
         <Grid.Row className="mainLogin p-0">
-          <Grid.Column mobile={16} tablet={8} computer={9} style={{ padding: 0}}>
-            <div className="blueBg">
-              <Image src='images/logo.png' size='medium' as="a" href="/"/>
-              <h1 className="pt-15  text-white">Welcome To</h1>
-              <p>ShareCabs</p>
-            </div>
-          </Grid.Column>
-          <Grid.Column mobile={16} tablet={8} computer={7} style={{ padding: 0}}>
+          <Grid.Column width={16} style={{ padding: 0}}>
             <div className="plainTextContent">
               <h1>Privacy Policy</h1>
               <div>

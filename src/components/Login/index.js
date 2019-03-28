@@ -62,7 +62,6 @@ export default class Login extends Component {
     const { showForgotPasswordFlag } = this.state;
     const { dispatch } = this.props;
     const { email, password } = formData.toJS() || {};
-    
     if (showForgotPasswordFlag) {
       await dispatch(forgotPassword(email));
     } else {
@@ -82,7 +81,6 @@ export default class Login extends Component {
       handleSubmit, isLoading, loginBusy, loginError, passwordUpdated, passwordUpdatedMsg, loginMsg, user
     } = this.props;
     const { showForgotPasswordFlag } = this.state;
-    
     return (
       !validObjectWithParameterKeys(user, ['id']) &&
       <Segment className="centered loginOuter">

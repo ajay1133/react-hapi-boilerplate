@@ -2,10 +2,9 @@ const path = require('path');
 const Glue = require('glue');
 const i18n = require('i18n');
 process.env.NODE_CONFIG_DIR = path.join(__dirname, '../config');
-
+// Helpers
 const appHelper = require('./helpers/appHelper');
 const logger = require('./helpers/logHelper');
-
 // Glue server
 const manifest = require('./manifest');
 // Locale Settings
@@ -16,14 +15,12 @@ i18n.configure({
   autoReload: true,
   objectNotation: true
 });
-
+// Start server definition
 const startServer = async function () {
   try {
-      const server = await Glue.compose(manifest,  { relativeTo: path.join(__dirname) });
+      const server = await Glue.compose(manifest, { relativeTo: path.join(__dirname) });
       server.events.on('log', logger);
-      
       const healthCheck = async () => await appHelper.checkDbConnection();
-      
       // Health route
       server.route({
         path: '/heart-beat',
@@ -35,7 +32,6 @@ const startServer = async function () {
           }
         },
       });
-    
       // Health route
       server.route({
         path: '/',
@@ -44,18 +40,14 @@ const startServer = async function () {
           return h.response(i18n.__('db.error'));
         },
       });
-    
-      // Check health and START SERVER
-      healthCheck()
-        .then(async () => {
-          await server.start();
-        })
-        .catch(healthErr => server.log(['error'], healthErr));
+      // Check health and start server
+      await healthCheck();
+      await server.start();
   }
   catch (err) {
       console.error(err);
       process.exit(1);
   }
 };
-
+// Start server
 startServer();

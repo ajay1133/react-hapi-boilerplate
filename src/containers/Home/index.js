@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Grid, Container, Image, List } from 'semantic-ui-react';
+import { Grid, Container, List } from 'semantic-ui-react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import Login from '../../components/Login';
@@ -11,16 +11,17 @@ const Home = withRouter(({ location, user, match }) => {
     <Container fluid>
       <Grid centered verticalAlign="middle">
         <Grid.Row className="mainLogin p-0">
-          <Grid.Column mobile={16} tablet={8} computer={9} style={{ padding: 0}}>
-            <div className="blueBg">
-              <Image src='images/logo.png' size='medium' as="a" href="/"/>
-              <h1 className="pt-15  text-white">Welcome To</h1>
-              <p>ShareCabs</p>
-            </div>
-          </Grid.Column>
-          <Grid.Column mobile={16} tablet={8} computer={7} style={{ padding: 0}}>
+          <Grid.Column width={16} style={{ padding: 0}}>
             <div className="loginForm">
-              <Login location={ location } />
+              <Grid>
+                <Grid.Row columns="equal">
+                  <Grid.Column></Grid.Column>
+                  <Grid.Column width computer={8}>
+                    <Login location={ location } />
+                  </Grid.Column> 
+                  <Grid.Column></Grid.Column>
+                </Grid.Row>
+              </Grid>
             </div>
             <div className="footer">
               <List horizontal>
