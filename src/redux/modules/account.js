@@ -37,7 +37,8 @@ const RESET_MESSAGE = 'account/RESET_MESSAGE';
 const FLUSH = 'account/FLUSH';
 
 const initialState = Immutable.fromJS({
-  isLoad: false,
+	isLoad: false,
+	message: null,
   loadErr: null,
   items: [],
   itemsCount: 0,
@@ -207,7 +208,7 @@ export const loadAccounts = filters => async (dispatch, getState, api) => {
 		dispatch({ type: LOAD_SUCCESS });
   } catch (err) {
     // If an error occurs, set error field
-    dispatch({ 
+    await dispatch({ 
 			type: LOAD_FAIL, 
 			error: (validObjectWithParameterKeys(err, ['message']) && typeCastToString(err.message)) || typeCastToString(err) 
 		});
@@ -228,12 +229,12 @@ export const saveAccount = accountDetails => async (dispatch, getState, api) => 
     // If result is valid
     if (validObjectWithParameterKeys(res, ['id', 'status'])) {
 			await dispatch(loadAccounts());
-	    dispatch({ type: LOAD_SUCCESS, message: 'Added Successfully' });
+	    await dispatch({ type: LOAD_SUCCESS, message: 'Added Successfully' });
 	    dispatch(internals.resetMessage());
     }
   } catch (err) {
 		// If an error occurs, set error field
-    dispatch({ 
+    await dispatch({ 
 			type: LOAD_FAIL, 
 			error: (validObjectWithParameterKeys(err, ['message']) && typeCastToString(err.message)) || typeCastToString(err) 
 		});
@@ -251,7 +252,6 @@ export const updateAccount = accountDetails => async (dispatch, getState, api) =
   try {
 		// Get users object from reducer
 		let users = getState().get('account').get('items');
-		let usersCount = getState().get('account').get('itemsCount');
 		let selectedUser = {};
 		// Fetch user id & delete it from accountDetails object
     const { id } = accountDetails;
@@ -276,25 +276,26 @@ export const updateAccount = accountDetails => async (dispatch, getState, api) =
 		// Update user in database by calling put api
     await api.put(`/account/${id}`, { data: accountDetails });
 		await dispatch(loadAccounts());
-    dispatch({
+    await dispatch({
 	    type: LOAD_ACCOUNTS,
 			items: users
 		});
-		dispatch({
+		await dispatch({
 			type: SELECT_USER,
 			selectedUser: accountDetails.status ? selectedUser : {}
 		});
-		dispatch({
+		await dispatch({
 			type: LOAD_SUCCESS,
 			message: 'Updated Successfully'
 		});
 	  dispatch(internals.resetMessage());
   } catch (err) {
     // If an error occurs, set error field
-    dispatch({ 
+    await dispatch({ 
 			type: LOAD_FAIL, 
 			error: (validObjectWithParameterKeys(err, ['message']) && typeCastToString(err.message)) || typeCastToString(err) 
 		});
+		dispatch(internals.resetMessage());
   }
 };
 
@@ -320,16 +321,17 @@ export const updateUserProfile = formData => async (dispatch, getState, api) => 
 				newPassword: formData.password.password
 			};
 			// Update user password with the help of email & current password
-			await dispatch(updatePassword(updatePasswordObj, true));
+			await dispatch(updatePassword(updatePasswordObj));
 		}
-		dispatch({ type: LOAD_SUCCESS, message: 'Updated Successfully' });
+		await dispatch({ type: LOAD_SUCCESS, message: 'Updated Successfully' });
 		dispatch(internals.resetMessage());
 	} catch (err) {
 		// If an error occurs, set error field
-    dispatch({ 
+    await dispatch({ 
 			type: LOAD_FAIL, 
 			error: (validObjectWithParameterKeys(err, ['message']) && typeCastToString(err.message)) || typeCastToString(err) 
 		});
+		dispatch(internals.resetMessage());
 	}
 };
 
@@ -346,10 +348,11 @@ export const verifyInviteToken = inviteToken => async (dispatch, getState, api) 
     return res;
   } catch (err) {
 		// If an error occurs, set error field
-    dispatch({ 
+    await dispatch({ 
 			type: VERIFY_TOKEN_FAIL, 
 			error: (validObjectWithParameterKeys(err, ['message']) && typeCastToString(err.message)) || typeCastToString(err) 
 		});
+		dispatch(internals.resetMessage());
   }
 };
 
@@ -371,7 +374,7 @@ export const updatePassword = (updateDetails, tokenPassedFlag = false) => async 
     return res;
   } catch (err) {
 		// If an error occurs, set error field
-    dispatch({ 
+    await dispatch({ 
 			type: UPDATE_PASSWORD_FAIL, 
 			error: (validObjectWithParameterKeys(err, ['message']) && typeCastToString(err.message)) || typeCastToString(err) 
 		});

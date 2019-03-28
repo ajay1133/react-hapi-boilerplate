@@ -45,8 +45,8 @@ const TableRow = ({ row, editAccount, typeAction }) => {
 	itemsFilters: typeCastToKeyValueObject(state.get('account').get('itemsFilters'), ['page']),
   itemsCount: state.get('account').get('itemsCount'),
   isLoad: state.get('account').get('isLoad'),
-  message: state.get('account').get('accountMsg'),
-  loadErr: state.get('account').get('loadErr')
+  message: state.get('account').get('message'),
+  loadErr: state.get('auth').get('loadErr') || state.get('account').get('loadErr')
 }))
 @reduxForm({
   form: 'listAccountFiltersForm',

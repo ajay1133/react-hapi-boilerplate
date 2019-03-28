@@ -36,8 +36,8 @@ const selector = formValueSelector('profileForm');
   ),
 	user: state.get('auth').get('user'),
 	isLoad: state.get('auth').get('isLoad'),
-	message: state.get('auth').get('message'),
-	loadErr: state.get('auth').get('loadErr'),
+	message: state.get('account').get('message'),
+	loadErr: state.get('auth').get('loadErr') || state.get('account').get('loadErr'),
 	currentPassword: selector(state, 'currentPassword'),
 	password: selector(state, 'password'),
 	confirmPassword: selector(state, 'confirmPassword')
@@ -55,6 +55,7 @@ export default class Profile extends Component {
 		isLoad: PropTypes.bool,
 		message: PropTypes.string,
 		loadErr: PropTypes.string,
+		error: PropTypes.string,
 		currentPassword: PropTypes.string,
 		password: PropTypes.string,
 		confirmPassword: PropTypes.string
@@ -441,15 +442,14 @@ export default class Profile extends Component {
   };
 	
 	render() {
-    const { isLoad, loadErr, accountMsg, error } = this.props;
-		const {loading, showMessageFlag} = this.state;
-		const loadingCompleteFlag = !isLoad && !loading;
+    const { isLoad, loadErr, message, error } = this.props;
+		const {	loading, showMessageFlag } = this.state;
 		return (
 			<AuthenticatedUser>
 				{
-	        accountMsg && showMessageFlag &&
+	        message && showMessageFlag &&
 	        <Message onDismiss={this.messageDismiss}>
-            <span style={{ color: 'green' }}>{ accountMsg }</span>
+            <span style={{ color: 'green' }}>{ message }</span>
 	        </Message>
 				}
 				{
