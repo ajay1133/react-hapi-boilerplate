@@ -8,7 +8,7 @@ const ses = require('../helpers/awsHelper').ses;
 const transporter = nodemailer.createTransport(sesTransport({ ses }));
 const { error, info } = logger;
 const internals = {};
-const FROM_EMAIL = 'Share Cabs <admin@shareCabs.com>';
+const FROM_EMAIL = 'Premier Recruiter <admin@premierRecruiter.com>';
 const DEV_SERVER = true; // process.env.NODE_ENV !== 'production';
 
 /**

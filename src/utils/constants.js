@@ -11,7 +11,7 @@ DEFAULT_HOME_PAGE_ROUTES[2] = '/profile';
 
 export const DEFAULT_PASSWORD_MIN_LENGTH = 6;
 
-export const DEFAULT_ACTIVE_TAB_INDEX = 1;
+export const DEFAULT_ACTIVE_TAB_INDEX = 0;
 
 export const DEFAULT_USER_PROFILE_IMAGE_URL = 'images/default_User_Profile_Image.jpg';
 

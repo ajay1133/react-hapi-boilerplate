@@ -31,8 +31,8 @@ const selector = formValueSelector('profileForm');
 @connect(state => ({
   initialValues: Object.assign(
   	{},
-	  typeCastToKeyValueObject(state.get('auth').get('user')),
-	  state.get('account').get('userDetails') || {}
+	  typeCastToKeyValueObject(state.get('auth').get('user'), ['id']),
+	  state.get('account').get('relationalMappedData') || {}
   ),
 	user: state.get('auth').get('user'),
 	isLoad: state.get('auth').get('isLoad'),
@@ -443,9 +443,7 @@ export default class Profile extends Component {
 	render() {
     const { isLoad, loadErr, accountMsg, error } = this.props;
 		const {loading, showMessageFlag} = this.state;
-
 		const loadingCompleteFlag = !isLoad && !loading;
-  
 		return (
 			<AuthenticatedUser>
 				{
@@ -464,8 +462,14 @@ export default class Profile extends Component {
 				<Grid>
 					<Grid.Row>
 						<Grid.Column mobile={16} tablet={8} computer={12}>
-              { !loadingCompleteFlag && <Loader active inline='centered'>Loading...</Loader> }
-              { loadingCompleteFlag && this.renderTabs() }
+              { 
+								(isLoad || loading) && 
+								<Loader active inline='centered'>Loading...</Loader> 
+							}
+              { 
+								!isLoad && !loading && 
+								this.renderTabs() 
+							}
 						</Grid.Column>
 					</Grid.Row>
 				</Grid>
