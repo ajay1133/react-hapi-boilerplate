@@ -4,9 +4,9 @@ orig_path=`pwd`
 source_dir=$(cd "$(dirname "$0")"; pwd)
 
 
-bucket="deploy.premierRecruiter.com"
+bucket="deploy.shareCabs.com"
 
-app_name=premierRecruiter
+app_name=shareCabs
 build_version=`date +"%Y-%m-%d-%H%M%S"`
 build_dir=./build_dir
 build_file=$app_name-$build_version.zip
@@ -34,7 +34,7 @@ cp ./.babelrc $build_dir
 
 echo "Creating a new revision..."
 
-aws --profile premierRecruiter-deploy \
+aws --profile shareCabs-deploy \
   deploy push \
   --no-ignore-hidden-files \
   --application-name $app_name \
@@ -46,12 +46,12 @@ rm -rf $build_dir
 echo "*** Revision: s3://$bucket/$app_name/$build_file"
 
 echo "Creating Deployment"
-aws --profile premierRecruiter-deploy deploy create-deployment \
+aws --profile shareCabs-deploy deploy create-deployment \
   --application-name $app_name \
   --deployment-config-name CodeDeployDefault.AllAtOnce \
   --deployment-group-name Live \
   --s3-location bundleType=zip,bucket=$bucket,key=$app_name/$build_file
 
-aws --profile premierRecruiter-deploy s3 sync build/ s3://app.premierRecruiter.com  --cache-control max-age=3600
+aws --profile shareCabs-deploy s3 sync build/ s3://app.shareCabs.com  --cache-control max-age=3600
 
 cd $orig_path

@@ -35,7 +35,7 @@ module.exports = {
               version: rootPackage.version,
               contact: {
                 name: 'Simsaw',
-                email: 'info@premier-recruiter.com',
+                email: 'info@shareCabs.com',
               },
             },
           },

@@ -39,7 +39,7 @@ exports.createUser = async userPayload => {
 	  // Send user registration email if the flag is set to true
 		if (userPayload.sendInvitationEmailFlag) {
       const url = config.BasePath.host;
-      const subject = ' Welcome to Premier Recruiter';
+      const subject = ' Welcome to Share Cabs';
 			const model = {
 				inviteLink: userData.inviteToken ? `${url}/accept/invitation/${userData.inviteToken}` : `${url}`,
 		    name: userPayload.firstName + ' ' + userPayload.lastName,
