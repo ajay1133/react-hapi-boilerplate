@@ -57,14 +57,18 @@ const db = new Sequelize(settings.database, settings.username, settings.password
 });
 
 db.models = {};
-const dbModelsDirAbsPath = path.resolve(__dirname, './models');
+const modelsDirRelativePath = './models';
+const dbModelsDirAbsPath = path.resolve(__dirname, modelsDirRelativePath);
 
 // Read ./models directory in db folder and assign to db.models object
 fs.readdirSync(dbModelsDirAbsPath).forEach(file => {
 	const fileName = path.parse(file).name;
 	const fileExt = path.parse(file).ext;
 	if (fileName && fileExt.toLowerCase() === '.js') {
-		db.models[fileName] = db.import(`./models/${fileName}`);
+    const modelToAssign = db.import(`${modelsDirRelativePath}/${fileName}`);
+    if (typeof modelToAssign === 'function') {
+      db.models[fileName] = modelToAssign;
+    }
 	}
 });
 
@@ -75,18 +79,21 @@ constants.RELATIONAL_MAPPING_LIST.forEach(v => {
   if (Object.keys(db.models).filter(r => parameterKeysList.indexOf(r) > -1).length === parameterKeysList.length) {
 	  // create association
 	  db.models[`${v.secondaryTable}`]
-		  .hasMany(db.models[`${v.secondaryTable}`], { foreignKey: 'id' });
+		  .hasMany(
+        db.models[`${v.secondaryTable}`], 
+        { foreignKey: 'id' }
+      );
 	  db.models[`${v.primaryTable}`]
-		  .belongsTo(db.models[`${v.secondaryTable}`], { foreignKey: 'id', targetKey: v.targetKey });
+		  .belongsTo(
+        db.models[`${v.secondaryTable}`], 
+        { 
+          foreignKey: 'id', 
+          targetKey: v.targetKey 
+        }
+      );
   } else {
     console.log('Invalid db models entry in Relational Mapping List', v.primaryTable, v.secondaryTable);
   }
-});
-
-//Hooks
-//User Hooks
-db.models.users.addHook('afterCreate', 'sendInviteLink', (user, options) => {
-  console.log("User Created");
 });
 
 // Export

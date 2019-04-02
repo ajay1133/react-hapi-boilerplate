@@ -16,7 +16,7 @@ exports.isValidTable = table => {
 		!!Object.keys(tableModel.tableAttributes).length;
 	return isValidTable;
 };
-
+ 
 exports.getTableData = async (table, query) => {
 	try {
 		let isValidTable = exports.isValidTable(table);

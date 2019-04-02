@@ -34,7 +34,7 @@ module.exports = {
               title: `${rootPackage.name} Documentation`,
               version: rootPackage.version,
               contact: {
-                name: 'Simsaw',
+                name: 'ShareCabs',
                 email: 'info@shareCabs.com',
               },
             },

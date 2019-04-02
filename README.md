@@ -1,5 +1,12 @@
 ## shareCabs
 
+### Technology used
+* NodeJs - Hapi framework with swagger documentation & auth plugin
+
+* React Js + Semantic UI
+
+* Mysql + Sequelize
+
 ### Local Environment Setup
 * Use Node Version: 10.x.x
 

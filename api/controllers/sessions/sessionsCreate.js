@@ -2,20 +2,15 @@ const joi = require('joi');
 const boom = require('boom');
 const sessionService = require('../../services/sessionService');
 const jwtHelper = require('../../helpers/jwtHelper');
-
 module.exports = {
   plugins: {
     'hapi-swagger': {
       payloadType: 'form',
     },
   },
-
   tags: ['api', 'session'],
-
   description: 'Create session either via token or by email/password',
-
   notes: 'User login through token generation or input email/password',
-
   validate: {
     query: {
       jwt: joi.number()
@@ -23,7 +18,6 @@ module.exports = {
               .default(0)
               .description('set 1 to get jwt token'),
     },
-    
     payload: {
 	    token: joi.string()
 	              .optional(),
@@ -34,17 +28,13 @@ module.exports = {
                    .optional()
                    .allow(['', null])
     },
-    
     options: { abortEarly: false },
   },
-
   handler: async (request, h) => {
     const { token, email, password } = request.payload;
-    
-    const onError = (err) => {
+    const onError = err => {
       throw boom.badRequest(err);
     };
-	
 	  let user = {};
     try {
 	    if (token) {
@@ -55,15 +45,12 @@ module.exports = {
       }
       if (user && user.id) {
         let scope = ['user'];
-        
         if (user.role === 1) {
           scope.push('admin');
         } else {
           scope.push('customer');
         }
-        
         user.scope = scope;
-        
         if (request.query.jwt) {
           try {
             let accessToken =  await jwtHelper.sign(user);
@@ -81,5 +68,5 @@ module.exports = {
     } catch(err) {
       onError("Invalid Email or Password");
     }
-  },
+  }
 };

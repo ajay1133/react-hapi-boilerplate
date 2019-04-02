@@ -43,14 +43,12 @@ class VerticalSidebar extends Component {
 			setTimeout(() => this.setState({ uploadProfileImageError: null }), DEFAULT_MILLISECONDS_TO_SHOW_MESSAGES);
 			return;
 		}
-		
 		this.setState({ uploadProfileImageUrl: s3Key });
 	};
 	
 	resetProfileImageOnComplete = async ({ name }) => {
 		const { dispatch } = this.props;
 		const { uploadProfileImageUrl } = this.state;
-		
 		try {
 			if (validFileName(name, VALID_ACCESSIBLE_IMAGE_FILE_FORMATS, IMAGE_FILE_NAME_BEGIN_REG_EXP)) {
 				this.setState({ imageLoading: true });
@@ -77,7 +75,6 @@ class VerticalSidebar extends Component {
 		const { animation, direction, user } = this.props;
 		const { imageLoading, uploadProfileImageUrl, uploadProfileImageError } = this.state;
 		const isValidUserFlag = validObjectWithParameterKeys(user, ['id', 'role']) && user.role > 1;
-		
 		return (
 			<Sidebar
 				as={Menu}
@@ -86,7 +83,7 @@ class VerticalSidebar extends Component {
 				icon='labeled'
 				inverted
 				vertical
-				visible={false}
+				visible={isValidUserFlag}
 				width='thin'
 			>
 				<Menu.Item as='a'></Menu.Item>
@@ -138,31 +135,6 @@ class VerticalSidebar extends Component {
 					<Menu.Item as='a' onClick={ () => this.handleLinkClick('Home') }>
 						<Icon name='home' />
 						Home
-					</Menu.Item>
-				}
-				{
-					isValidUserFlag &&
-					<Menu.Item>
-						<Icon name='edit' />
-						Edit Profile
-						<Menu fluid vertical tabular>
-							{
-								USER_PROFILE_TABS
-									.filter(v => validObjectWithParameterKeys(v, ['tabName', 'section']) && v.section === 'Edit Profile')
-									.map(v => (
-										<Menu.Item as='a' onClick={ () => this.handleLinkClick(v.tabName) }>
-											{ v.tabName }
-										</Menu.Item>
-									))
-							}
-						</Menu>
-					</Menu.Item>
-				}
-				{
-					isValidUserFlag &&
-					<Menu.Item as='a' onClick={ () => this.handleLinkClick('Account') }>
-						<Icon name='user' />
-						Account
 					</Menu.Item>
 				}
 			</Sidebar>

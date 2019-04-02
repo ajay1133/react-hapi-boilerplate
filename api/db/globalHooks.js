@@ -5,7 +5,8 @@ module.exports = {
             if(!options.attributes){
               options.attributes = {};
             }
-            options.attributes.exclude = [ 'is_deleted','updatedAt']; //Exclude the defined column in array from every select query results.
+            //Exclude the defined column in array from every select query results.
+            options.attributes.exclude = [ 'is_deleted','updatedAt']; 
             return options;
           }
       }
