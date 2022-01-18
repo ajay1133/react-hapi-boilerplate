@@ -2,14 +2,14 @@ module.exports = {
   development: {
     username: 'root',
     password: 'root',
-    database: 'shareCabs',
+    database: 'react-hapi-boilerplate-db',
     host: 'localhost',
     dialect: 'mysql'
   },
   test: {
     username: 'root',
     password: null,
-    database: 'shareCabs_test',
+    database: 'react-hapi-boilerplate-test-db',
     host: '127.0.0.1',
     dialect: 'mysql'
   },
