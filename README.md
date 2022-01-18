@@ -1,4 +1,4 @@
-## shareCabs
+## React + HAPI Boilerplate
 
 ### Technology used
 * NodeJs - Hapi framework with swagger documentation & auth plugin
@@ -10,7 +10,7 @@
 ### Local Environment Setup
 * Use Node Version: 10.x.x
 
-* Clone Project: git clone https://github.com/ajay1133/shareCabs.git
+* Clone Project: git clone https://github.com/ajay1133/react-hapi-boilerplate.git
 
 * Switch to staging Branch: git checkout staging
 
@@ -28,7 +28,7 @@
 
 * Swagger API: http://localhost:5000/documentation
 
-* Inserted Admin User Details: admin@shareCabs.com/admin123
+* Inserted Admin User Details: admin@test.com/admin123
 
 
 #### Development process for new tasks:
