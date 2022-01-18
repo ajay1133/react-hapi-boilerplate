@@ -1,9 +1,9 @@
 ## React + HAPI Boilerplate
 
 ### Technology used
-* NodeJs - Hapi framework with swagger documentation & auth plugin
+* NodeJs - Hapi framework with Swagger documentation & auth plugin
 
-* React Js + Semantic UI
+* React Js, Redux plus Semantic UI
 
 * Mysql + Sequelize
 
